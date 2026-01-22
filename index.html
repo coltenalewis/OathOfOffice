@@ -12,6 +12,15 @@
       body {
         font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
       }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-12px);
+        }
+      }
     </style>
   </head>
   <body class="min-h-screen bg-slate-200 text-slate-800">
@@ -37,9 +46,9 @@
                     Oath of Office
                   </h1>
                   <p className="max-w-xl text-lg leading-relaxed text-slate-600">
-                    Step into the strategy room. Shape your candidate, manage your
-                    message, and prepare for the race ahead with a crisp interface
-                    inspired by modern political sims.
+                    A multiplayer political RP simulation where you run campaigns,
+                    argue court cases, and build a lasting political career alongside
+                    other players.
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="rounded-2xl border border-slate-300/70 bg-white/80 p-4 shadow-sm">
@@ -103,6 +112,16 @@
                     Placeholder panel for future campaign intelligence widgets
                   </div>
                 </section>
+              </div>
+            </div>
+
+            <div className="pointer-events-none absolute inset-x-0 bottom-6 mx-auto flex max-w-6xl justify-start px-6 lg:bottom-10">
+              <div className="w-56 sm:w-64 lg:w-72">
+                <img
+                  src="https://chatgpt.com/backend-api/estuary/content?id=file_00000000235c71f8a9e2b71a3354ecd2&ts=491423&p=fs&cid=1&sig=b4d5ce1c0851c41b831034b04b19847f0a8e7123245aab15c2e80e285a2c4ef4&v=0"
+                  alt="Isometric White House illustration"
+                  className="w-full animate-[float_6s_ease-in-out_infinite] drop-shadow-2xl"
+                />
               </div>
             </div>
           </main>
