@@ -140,20 +140,22 @@
       ];
 
       const lastNameSets = [
-        "Ashford",
-        "Brax",
-        "Cassel",
-        "Dondarrion",
-        "Fowler",
-        "Glover",
-        "Hornwood",
-        "Mallery",
-        "Mormont",
-        "Payne",
-        "Reed",
-        "Selmy",
-        "Stone",
-        "Tallhart",
+        {
+          label: "Northern",
+          names: ["Cassel", "Glover", "Hornwood", "Mormont", "Reed", "Tallhart"],
+        },
+        {
+          label: "Riverlands",
+          names: ["Brax", "Darry", "Mallister", "Piper", "Smallwood", "Vance"],
+        },
+        {
+          label: "Crownlands",
+          names: ["Celtigar", "Massey", "Rosby", "Staunton", "Wendwater", "Wyk"],
+        },
+        {
+          label: "Dorne",
+          names: ["Dayne", "Fowler", "Jordayne", "Santagar", "Uller", "Yronwood"],
+        },
       ];
 
       const App = () => {
@@ -167,10 +169,13 @@
         const [characterRole] = useState("Wandering Traveler");
         const [characterGender, setCharacterGender] = useState(null);
         const [skinTone, setSkinTone] = useState(skinTones[1]);
+        const [hasPremium, setHasPremium] = useState(false);
         const [goldCoins, setGoldCoins] = useState(120);
         const [stats, setStats] = useState(baseStats);
         const [pointsAvailable, setPointsAvailable] = useState(6);
         const detailsRef = useRef(null);
+        const shopRef = useRef(null);
+        const [showShop, setShowShop] = useState(false);
 
         useEffect(() => {
           if (screen !== "loading") return;
@@ -242,10 +247,12 @@
 
         const handleRollName = () => {
           const firstNames = activeNameSet.names;
+          const lastNames =
+            lastNameSets.find((set) => set.label === activeNameSet.label)?.names ||
+            lastNameSets[0].names;
           const firstName =
             firstNames[Math.floor(Math.random() * firstNames.length)];
-          const lastName =
-            lastNameSets[Math.floor(Math.random() * lastNameSets.length)];
+          const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
           setCharacterFirstName(firstName);
           setCharacterLastName(lastName);
         };
@@ -275,6 +282,115 @@
             </div>
 
             <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-10 px-5 py-10 sm:px-6">
+              <nav className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-700/60 bg-slate-900/60 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 overflow-hidden rounded-full border border-amber-300/40 bg-slate-950/70">
+                    <img
+                      src="blob:https://imgur.com/ede4746b-c4bd-42ed-8345-6a1b39428017"
+                      alt="An Iron Reign logo"
+                      className="h-full w-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.4em] text-slate-400">An Iron Reign</p>
+                    <p className="text-sm text-amber-100">Realm Access</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
+                  <button
+                    type="button"
+                    onClick={() => setShowShop(true)}
+                    className="rounded-xl border border-amber-300/60 px-4 py-2 font-semibold text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                  >
+                    Shop
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScreen("servers")}
+                    className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
+                  >
+                    Realms
+                  </button>
+                </div>
+              </nav>
+
+              {showShop && (
+                <section
+                  ref={shopRef}
+                  className="rounded-3xl border border-amber-300/30 bg-slate-950/80 p-6 shadow-2xl shadow-black/50"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Realm Shop</p>
+                      <h2 className="mt-2 text-2xl font-semibold text-amber-100">
+                        Support the reign
+                      </h2>
+                      <p className="mt-2 text-sm text-slate-300">
+                        Templates for premium one-time items and subscriptions. Test unlocking below.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowShop(false)}
+                      className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-5">
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                        One-time purchases
+                      </p>
+                      <div className="mt-4 space-y-3 text-sm text-slate-300">
+                        <div className="flex items-center justify-between rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
+                          <span>Founder Sigil Pack</span>
+                          <span className="text-amber-200">120 coins</span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
+                          <span>Banner Cosmetics</span>
+                          <span className="text-amber-200">80 coins</span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
+                          <span>Royal Mount Skin</span>
+                          <span className="text-amber-200">150 coins</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-amber-300/40 bg-slate-900/70 p-5">
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                        Subscriptions
+                      </p>
+                      <div className="mt-4 space-y-3 text-sm text-slate-300">
+                        <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
+                          <p className="text-amber-100">Realm Pass</p>
+                          <p className="text-xs text-slate-400">
+                            Unlock custom names, exclusive halls, and weekly bonuses.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setHasPremium(true)}
+                          className="w-full rounded-xl bg-amber-400 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-900 transition hover:bg-amber-300"
+                        >
+                          Test Subscription Unlock
+                        </button>
+                        {hasPremium && (
+                          <p className="text-xs uppercase tracking-[0.3em] text-amber-200">
+                            Premium active
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
               <header className="space-y-4 text-center">
                 <p className="text-xs font-semibold uppercase tracking-[0.5em] text-amber-200/70">
                   A Medieval Fantasy RP Experience
@@ -517,7 +633,7 @@
                                 <img
                                   src={genderImage}
                                   alt={`${characterGender} base model`}
-                                  className="h-64 w-auto translate-y-2 scale-110 object-contain"
+                                  className="h-80 w-auto translate-y-3 scale-125 object-contain"
                                   style={{ filter: skinTone.filter }}
                                 />
                               ) : (
@@ -600,6 +716,9 @@
                                     Roll Name
                                   </button>
                                 </div>
+                                <p className="mt-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                  {activeNameSet.label} name set
+                                </p>
                                 <div className="mt-4 rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-xs text-slate-400">
                                   Custom names are locked behind a premium pass.
                                   <span className="ml-2 rounded-full border border-amber-300/40 px-2 py-0.5 text-[10px] uppercase tracking-[0.3em] text-amber-200">
@@ -607,6 +726,34 @@
                                   </span>
                                 </div>
                               </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                Custom name
+                              </p>
+                              {hasPremium ? (
+                                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                  <input
+                                    type="text"
+                                    value={characterFirstName}
+                                    onChange={(event) => setCharacterFirstName(event.target.value)}
+                                    placeholder="First"
+                                    className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={characterLastName}
+                                    onChange={(event) => setCharacterLastName(event.target.value)}
+                                    placeholder="Last"
+                                    className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="mt-3 rounded-xl border border-dashed border-slate-700/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                  Unlock with Realm Pass
+                                </div>
+                              )}
                             </div>
 
                             <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
