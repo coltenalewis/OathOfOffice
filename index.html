@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>An Iron Reign</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      body {
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-12px);
+        }
+      }
+      .ember-field {
+        background-image: radial-gradient(circle at 1px 1px, rgba(248, 200, 125, 0.35) 1px, transparent 0);
+        background-size: 26px 26px;
+      }
+      .parchment {
+        background-image: linear-gradient(135deg, rgba(29, 24, 16, 0.95), rgba(42, 30, 18, 0.92)),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+        background-size: cover;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-200 text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const SCREENS = {
+        LANDING: "landing",
+        BROWSER: "browser",
+        LOADING: "loading",
+        GAME: "game",
+      };
+
+      const App = () => {
+        const [screen, setScreen] = React.useState(SCREENS.LANDING);
+        const [selectedServer, setSelectedServer] = React.useState(null);
+
+        const handlePlay = () => {
+          setScreen(SCREENS.BROWSER);
+        };
+
+        const handleSelectServer = (server) => {
+          setSelectedServer(server);
+          setScreen(SCREENS.LOADING);
+          setTimeout(() => {
+            setScreen(SCREENS.GAME);
+          }, 2200);
+        };
+
+        const handleBack = () => {
+          setScreen(SCREENS.LANDING);
+          setSelectedServer(null);
+        };
+
+        const servers = [
+          { name: "King's Landing - RP Nexus", players: "128/200", status: "High Court" },
+          { name: "The Wall - Night's Watch", players: "84/150", status: "Active Patrol" },
+          { name: "Dragonstone - Test Realm", players: "12/64", status: "Training Grounds" },
+        ];
+
+        return (
+          <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#0b0b0c] via-[#1c1a16] to-[#2a241a] text-amber-50">
+            <div className="absolute inset-0 opacity-60">
+              <div className="absolute -left-24 top-10 h-56 w-56 rounded-full bg-amber-900/40 blur-3xl" />
+              <div className="absolute right-10 top-24 h-72 w-72 rounded-full bg-red-900/40 blur-3xl" />
+              <div className="absolute bottom-10 left-1/3 h-64 w-64 rounded-full bg-stone-900/50 blur-3xl" />
+            </div>
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-[#3b2b1a] via-[#6b4b2b] to-[#2b1e12] opacity-80" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 ember-field opacity-40" />
+
+            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center px-6 py-16">
+              {screen === SCREENS.LANDING && (
+                <div className="grid w-full gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+                  <section className="space-y-6">
+                    <span className="inline-flex items-center rounded-full border border-amber-500/40 bg-black/40 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200">
+                      Westeros RP Chronicle
+                    </span>
+                    <h1 className="text-4xl font-semibold uppercase tracking-[0.35em] text-amber-100 md:text-5xl">
+                      An Iron Reign
+                    </h1>
+                    <p className="max-w-xl text-lg leading-relaxed text-amber-100/80">
+                      A medieval fantasy RP world inspired by Game of Thrones. Create your
+                      character, forge alliances, and carve your legacy across the Seven
+                      Kingdoms.
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-2xl border border-amber-700/40 bg-black/40 p-4 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-amber-300">
+                          Noble Reputation
+                        </p>
+                        <div className="mt-3 h-2 w-full rounded-full bg-amber-900/40">
+                          <div className="h-2 w-2/3 rounded-full bg-amber-400" />
+                        </div>
+                      </div>
+                      <div className="rounded-2xl border border-red-700/40 bg-black/40 p-4 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-red-300">
+                          House Influence
+                        </p>
+                        <div className="mt-3 h-2 w-full rounded-full bg-red-900/40">
+                          <div className="h-2 w-1/2 rounded-full bg-red-500" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200/70">
+                      <span className="rounded-full border border-amber-700/40 bg-black/40 px-3 py-1">
+                        Character Creation
+                      </span>
+                      <span className="rounded-full border border-amber-700/40 bg-black/40 px-3 py-1">
+                        Realm Roleplay
+                      </span>
+                      <span className="rounded-full border border-amber-700/40 bg-black/40 px-3 py-1">
+                        Court Politics
+                      </span>
+                    </div>
+                  </section>
+
+                  <section className="rounded-[32px] border border-amber-900/50 bg-black/60 p-8 shadow-2xl">
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-300/80">
+                        Create Account
+                      </p>
+                      <h2 className="text-2xl font-semibold text-amber-100">
+                        Begin your reign
+                      </h2>
+                      <p className="text-sm text-amber-100/70">
+                        Choose a name and password to claim your identity in Westeros.
+                      </p>
+                    </div>
+
+                    <form className="mt-8 space-y-6">
+                      <label className="block space-y-2 text-sm font-medium text-amber-100/80">
+                        Character Name
+                        <input
+                          type="text"
+                          placeholder="Enter your character name"
+                          className="w-full rounded-xl border border-amber-900/50 bg-black/70 px-4 py-3 text-amber-50 shadow-inner focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+                        />
+                      </label>
+                      <label className="block space-y-2 text-sm font-medium text-amber-100/80">
+                        Password
+                        <input
+                          type="password"
+                          placeholder="Create a password"
+                          className="w-full rounded-xl border border-amber-900/50 bg-black/70 px-4 py-3 text-amber-50 shadow-inner focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handlePlay}
+                        className="w-full rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold uppercase tracking-[0.25em] text-black shadow-lg shadow-amber-900/40 transition hover:bg-amber-500"
+                      >
+                        Play
+                      </button>
+                    </form>
+
+                    <div className="mt-8 rounded-2xl border border-dashed border-amber-900/50 bg-black/50 p-4 text-xs uppercase tracking-[0.3em] text-amber-200/70">
+                      Placeholder panel for future realm announcements
+                    </div>
+                  </section>
+                </div>
+              )}
+
+              {screen === SCREENS.BROWSER && (
+                <div className="w-full space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.3em] text-amber-300/70">Server Browser</p>
+                      <h2 className="text-3xl font-semibold text-amber-100">Choose a Realm</h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="rounded-full border border-amber-700/50 px-4 py-2 text-xs uppercase tracking-[0.3em] text-amber-200 hover:border-amber-400"
+                    >
+                      Back
+                    </button>
+                  </div>
+
+                  <div className="grid gap-4">
+                    {servers.map((server) => (
+                      <button
+                        key={server.name}
+                        type="button"
+                        onClick={() => handleSelectServer(server.name)}
+                        className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-900/40 bg-black/60 p-5 text-left transition hover:border-amber-400/60"
+                      >
+                        <div>
+                          <p className="text-lg font-semibold text-amber-100">{server.name}</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-amber-300/70">{server.status}</p>
+                        </div>
+                        <div className="text-xs uppercase tracking-[0.3em] text-amber-200/70">
+                          Players {server.players}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {screen === SCREENS.LOADING && (
+                <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
+                  <div className="parchment w-full rounded-[32px] border border-amber-900/50 px-8 py-10 shadow-2xl">
+                    <p className="text-xs uppercase tracking-[0.4em] text-amber-300/70">Summoning the Realm</p>
+                    <h2 className="mt-4 text-3xl font-semibold text-amber-100">Preparing {selectedServer}</h2>
+                    <div className="mt-8 w-full space-y-4">
+                      <div className="h-2 w-full rounded-full bg-amber-900/40">
+                        <div className="h-2 w-3/4 animate-pulse rounded-full bg-amber-400" />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-2xl border border-amber-900/40 bg-black/60 p-4">
+                          <p className="text-xs uppercase tracking-[0.3em] text-amber-300/70">Heralds</p>
+                          <div className="mt-2 h-2 w-full rounded-full bg-amber-900/40">
+                            <div className="h-2 w-2/3 animate-pulse rounded-full bg-amber-500" />
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-amber-900/40 bg-black/60 p-4">
+                          <p className="text-xs uppercase tracking-[0.3em] text-amber-300/70">Castle Gates</p>
+                          <div className="mt-2 h-2 w-full rounded-full bg-amber-900/40">
+                            <div className="h-2 w-1/2 animate-pulse rounded-full bg-amber-500" />
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-amber-900/40 bg-black/60 p-4">
+                          <p className="text-xs uppercase tracking-[0.3em] text-amber-300/70">Citadel</p>
+                          <div className="mt-2 h-2 w-full rounded-full bg-amber-900/40">
+                            <div className="h-2 w-4/5 animate-pulse rounded-full bg-amber-500" />
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm text-amber-200/70">
+                        Raising banners and synchronizing chronicles...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {screen === SCREENS.GAME && (
+                <div className="w-full space-y-8">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.35em] text-amber-300/70">Realm Live</p>
+                      <h2 className="text-3xl font-semibold text-amber-100">An Iron Reign</h2>
+                      <p className="text-sm text-amber-200/70">Temporary game scene - roleplay space loading soon.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="rounded-full border border-amber-700/50 px-4 py-2 text-xs uppercase tracking-[0.3em] text-amber-200 hover:border-amber-400"
+                    >
+                      Exit to Menu
+                    </button>
+                  </div>
+                  <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+                    <div className="rounded-[32px] border border-amber-900/50 bg-black/60 p-6 shadow-xl">
+                      <h3 className="text-lg font-semibold text-amber-100">Current Scene</h3>
+                      <div className="mt-4 h-64 rounded-2xl border border-amber-900/40 bg-gradient-to-br from-black via-[#1b140c] to-[#2a1e12]">
+                        <div className="flex h-full items-center justify-center text-sm uppercase tracking-[0.3em] text-amber-300/60">
+                          Temp Game World View
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="rounded-[24px] border border-amber-900/50 bg-black/60 p-5 shadow-xl">
+                        <h4 className="text-sm uppercase tracking-[0.3em] text-amber-300/70">Party Status</h4>
+                        <ul className="mt-3 space-y-2 text-sm text-amber-100/80">
+                          <li>House allegiance: Unbound</li>
+                          <li>Roleplay channel: Open Court</li>
+                          <li>Questing: Awaiting storyteller</li>
+                        </ul>
+                      </div>
+                      <div className="rounded-[24px] border border-amber-900/50 bg-black/60 p-5 shadow-xl">
+                        <h4 className="text-sm uppercase tracking-[0.3em] text-amber-300/70">Realm Objectives</h4>
+                        <ul className="mt-3 space-y-2 text-sm text-amber-100/80">
+                          <li>Meet your bannermen at the great hall.</li>
+                          <li>Announce your house oath.</li>
+                          <li>Join the council chambers.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
