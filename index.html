@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       body {
@@ -169,6 +170,13 @@
         },
       ];
 
+      const supabaseUrl = window.SUPABASE_URL;
+      const supabaseKey = window.SUPABASE_PUBLISHABLE_KEY;
+      const supabaseClient =
+        window.supabase && supabaseUrl && supabaseKey
+          ? window.supabase.createClient(supabaseUrl, supabaseKey)
+          : null;
+
       const App = () => {
         const [screen, setScreen] = useState("landing");
         const [selectedServer, setSelectedServer] = useState(null);
@@ -186,6 +194,7 @@
         const [pointsAvailable, setPointsAvailable] = useState(6);
         const detailsRef = useRef(null);
         const [showShop, setShowShop] = useState(false);
+        const [authUser, setAuthUser] = useState(null);
 
         useEffect(() => {
           if (screen !== "loading") return;
@@ -203,6 +212,22 @@
 
           return () => clearInterval(interval);
         }, [screen]);
+
+        useEffect(() => {
+          if (!supabaseClient) return;
+          supabaseClient.auth.getUser().then(({ data }) => {
+            setAuthUser(data?.user ?? null);
+          });
+          const { data: authListener } = supabaseClient.auth.onAuthStateChange(
+            (_event, session) => {
+              setAuthUser(session?.user ?? null);
+            }
+          );
+
+          return () => {
+            authListener?.subscription?.unsubscribe();
+          };
+        }, []);
 
         const immersionLines = useMemo(
           () => [
@@ -282,6 +307,22 @@
           setPointsAvailable(6);
         };
 
+        const handleDiscordLogin = async () => {
+          if (!supabaseClient) {
+            alert("Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY first.");
+            return;
+          }
+          await supabaseClient.auth.signInWithOAuth({
+            provider: "discord",
+            options: { redirectTo: window.location.href },
+          });
+        };
+
+        const handleLogout = async () => {
+          if (!supabaseClient) return;
+          await supabaseClient.auth.signOut();
+        };
+
         return (
           <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
             <div className="absolute inset-0 mist-layer opacity-80" />
@@ -318,6 +359,23 @@
                   >
                     🛒
                   </button>
+                  {authUser ? (
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="rounded-xl border border-amber-300/60 px-4 py-2 font-semibold text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                    >
+                      Sign Out
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleDiscordLogin}
+                      className="rounded-xl border border-amber-300/60 px-4 py-2 font-semibold text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                    >
+                      Discord Login
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setScreen("servers")}
@@ -881,7 +939,7 @@
                               <img
                                 src={genderImage}
                                 alt="Character portrait"
-                                className="h-full w-full -translate-y-1 scale-[1.85] object-cover object-top"
+                                className="h-full w-full translate-y-0 scale-[1.55] object-cover object-top"
                                 style={{ filter: skinTone.filter }}
                               />
                             ) : (
