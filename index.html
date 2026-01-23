@@ -210,7 +210,9 @@
         const [loadingProgress, setLoadingProgress] = useState(0);
         const [loadingLineIndex, setLoadingLineIndex] = useState(0);
         const [selectedServer, setSelectedServer] = useState(null);
-        const [isPremium, setIsPremium] = useState(false);
+        const [hasSubscription, setHasSubscription] = useState(false);
+        const [hasCustomNamePass, setHasCustomNamePass] = useState(false);
+        const [showShop, setShowShop] = useState(false);
         const [profileIcon, setProfileIcon] = useState(profileIcons[0]);
         const [username, setUsername] = useState("");
         const [customUsername, setCustomUsername] = useState("");
@@ -220,8 +222,8 @@
         const [appLoading, setAppLoading] = useState(false);
         const [activeApp, setActiveApp] = useState(null);
         const [bankAccount, setBankAccount] = useState(null);
-        const [depositAmount, setDepositAmount] = useState("500");
         const [accountAlias, setAccountAlias] = useState("Main Vault");
+        const [creditLine, setCreditLine] = useState(null);
         const [bootTimestamp] = useState(Date.now());
 
         useEffect(() => {
@@ -305,26 +307,47 @@
         const profileProgress = useMemo(() => {
           let progress = 0;
           if (profileIcon) progress += 34;
-          if ((isPremium && customUsername.trim()) || username.trim()) progress += 33;
+          if ((hasCustomNamePass && customUsername.trim()) || username.trim()) progress += 33;
           if (selectedCity) progress += 33;
           return Math.min(progress, 100);
-        }, [profileIcon, username, customUsername, selectedCity, isPremium]);
+        }, [profileIcon, username, customUsername, selectedCity, hasCustomNamePass]);
 
         const profileComplete = profileProgress === 100;
-        const displayUsername = isPremium && customUsername.trim() ? customUsername : username;
+        const displayUsername =
+          hasCustomNamePass && customUsername.trim() ? customUsername : username;
+        const totalCash = useMemo(() => {
+          const bankBalance = bankAccount?.balance || 0;
+          const creditAvailable = creditLine?.available || 0;
+          return bankBalance + creditAvailable;
+        }, [bankAccount, creditLine]);
 
         const handleOpenApp = (appId) => {
           setActiveApp(appId);
           setAppLoading(true);
         };
 
+        const generateCardNumber = () => {
+          const chunks = Array.from({ length: 3 }, () =>
+            Math.floor(Math.random() * 9000 + 1000)
+          );
+          return `7777-${chunks.join("-")}`;
+        };
+
         const handleCreateBankAccount = () => {
           if (bankAccount) return;
-          const amount = Number.parseFloat(depositAmount) || 0;
           setBankAccount({
             alias: accountAlias || "Primary Vault",
-            balance: amount,
+            balance: 0,
             id: `DV-${Math.floor(Math.random() * 900000 + 100000)}`,
+          });
+        };
+
+        const handleRequestCreditLine = () => {
+          if (creditLine) return;
+          setCreditLine({
+            limit: 500,
+            available: 500,
+            cardNumber: generateCardNumber(),
           });
         };
 
@@ -341,6 +364,14 @@
                   </p>
                   <h1 className="text-2xl font-semibold text-cyan-100">Dark Web Simulation</h1>
                 </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowShop(true)}
+                    className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
+                  >
+                    Shop
+                  </button>
                 {screen === "dashboard" && (
                   <div className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.3em]">
                     <div className="rounded-full border border-cyan-400/40 px-3 py-1 text-cyan-200">
@@ -351,7 +382,78 @@
                     </div>
                   </div>
                 )}
+                </div>
               </header>
+
+              <div
+                className={`panel-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-8 ${
+                  showShop ? "is-open" : ""
+                }`}
+              >
+                {showShop && (
+                  <div className="w-full max-w-2xl rounded-3xl border border-emerald-400/30 bg-slate-950 p-6 shadow-2xl shadow-emerald-500/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-400/70">
+                          Black Ops Store
+                        </p>
+                        <p className="text-sm text-slate-300">
+                          Test entitlements for subscription and custom handle access.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowShop(false)}
+                        className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300"
+                      >
+                        Close
+                      </button>
+                    </div>
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-2xl border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                          Test Subscription
+                        </p>
+                        <p className="mt-2 text-sm text-slate-300">
+                          Unlock premium status for experimental features.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setHasSubscription(true)}
+                          className="mt-4 w-full rounded-xl border border-emerald-400/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
+                        >
+                          Activate Test Subscription
+                        </button>
+                        {hasSubscription && (
+                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-emerald-200">
+                            Active
+                          </p>
+                        )}
+                      </div>
+                      <div className="rounded-2xl border border-amber-400/40 bg-black/70 p-4 text-sm text-slate-300">
+                        <p className="text-xs uppercase tracking-[0.3em] text-amber-300">
+                          Custom Handle Pass
+                        </p>
+                        <p className="mt-2 text-sm text-slate-300">
+                          Permanent access to custom handles. $5 test pass.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setHasCustomNamePass(true)}
+                          className="mt-4 w-full rounded-xl border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                        >
+                          Purchase $5 Pass
+                        </button>
+                        {hasCustomNamePass && (
+                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-amber-200">
+                            Active
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {screen === "landing" && (
                 <section className="relative overflow-hidden rounded-3xl border border-cyan-500/40 bg-black/80 p-10 shadow-2xl shadow-cyan-500/20">
@@ -554,10 +656,9 @@
                                     : "border-slate-700/70 text-slate-300 hover:border-cyan-400/70"
                                 }`}
                               >
-                                <div className="text-2xl">{icon.glyph}</div>
-                                <p className="mt-2 text-xs uppercase tracking-[0.3em] text-slate-400">
-                                  {icon.label}
-                                </p>
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700/70 bg-black/70 text-2xl">
+                                  {icon.glyph}
+                                </div>
                               </button>
                             ))}
                           </div>
@@ -613,19 +714,17 @@
                                 <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                                   Custom handle
                                 </p>
-                                <button
-                                  type="button"
-                                  onClick={() => setIsPremium((prev) => !prev)}
-                                  className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.3em] transition ${
-                                    isPremium
-                                      ? "border-cyan-300 text-cyan-200"
+                                <span
+                                  className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.3em] ${
+                                    hasCustomNamePass
+                                      ? "border-amber-300 text-amber-200"
                                       : "border-slate-700 text-slate-400"
                                   }`}
                                 >
-                                  {isPremium ? "Premium Enabled" : "Unlock Premium"}
-                                </button>
+                                  {hasCustomNamePass ? "Pass Active" : "Locked"}
+                                </span>
                               </div>
-                              {isPremium ? (
+                              {hasCustomNamePass ? (
                                 <input
                                   type="text"
                                   value={customUsername}
@@ -635,7 +734,7 @@
                                 />
                               ) : (
                                 <div className="mt-3 rounded-xl border border-dashed border-slate-700/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                  Premium required for custom handle
+                                  Custom handle pass required
                                 </div>
                               )}
                             </div>
@@ -698,91 +797,172 @@
                           <p>• Access limited to Tier-1 apps.</p>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!profileComplete) return;
-                          setScreen("dashboard");
-                        }}
-                        disabled={!profileComplete}
-                        className={`w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                          profileComplete
-                            ? "bg-cyan-500/30 text-cyan-100 hover:bg-cyan-400/40"
-                            : "cursor-not-allowed bg-slate-800 text-slate-500"
-                        }`}
-                      >
-                        Enter The Dark
-                      </button>
+                      {profileComplete && profileStep === 3 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setScreen("dashboard");
+                          }}
+                          className="w-full rounded-xl bg-cyan-500/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-100 transition hover:bg-cyan-400/40"
+                        >
+                          Enter The Dark
+                        </button>
+                      )}
                     </div>
                   </div>
                 </section>
               )}
 
               {screen === "dashboard" && (
-                <section className="rounded-3xl border border-slate-700/60 bg-slate-950/80 p-6 shadow-2xl shadow-cyan-500/10">
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/60 pb-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/40 bg-slate-950/70 text-2xl">
-                        {profileIcon?.glyph}
-                      </div>
-                      <div>
-                        <p className="text-lg font-semibold text-cyan-100">
-                          {displayUsername || "Anonymous"}
-                        </p>
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                          {selectedCity.city} · {selectedCity.country}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.3em]">
-                      <div className="rounded-xl border border-slate-700 bg-black/60 px-3 py-2">
-                        <p className="text-[10px] text-slate-400">System</p>
-                        <p className="text-cyan-100">{systemTimeLabel}</p>
-                      </div>
-                      <div className="rounded-xl border border-cyan-400/40 bg-black/60 px-3 py-2">
-                        <p className="text-[10px] text-slate-400">City Time</p>
-                        <p className="text-cyan-100">{localTimeLabel}</p>
-                      </div>
-                      <div className="rounded-xl border border-slate-700 bg-black/60 px-3 py-2">
-                        <p className="text-[10px] text-slate-400">Cycle Day</p>
-                        <p className="text-cyan-100">{inGameDay}</p>
-                        <div className="mt-2 h-1.5 w-24 rounded-full bg-slate-800">
-                          <div
-                            className="h-1.5 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400"
-                            style={{ width: `${inGameProgress}%` }}
-                          />
+                <section className="rounded-3xl border border-slate-700/60 bg-slate-950/80 p-6 shadow-2xl shadow-emerald-500/10">
+                  <div className="grid gap-6 lg:grid-cols-[0.25fr_1fr]">
+                    <aside className="rounded-2xl border border-slate-800/80 bg-black/70 p-4 text-sm text-slate-300">
+                      <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-400/40 bg-slate-950/70 text-2xl">
+                          {profileIcon?.glyph}
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold text-emerald-100">
+                            {displayUsername || "Anonymous"}
+                          </p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                            Level 1 Operator
+                          </p>
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 grid gap-6 lg:grid-cols-[0.65fr_1fr]">
-                    <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
-                      <p className="text-xs uppercase tracking-[0.3em] text-cyan-400/70">Applications</p>
-                      <div className="mt-4 space-y-3">
-                        {appModules.map((app) => (
-                          <button
-                            key={app.id}
-                            type="button"
-                            onClick={() => handleOpenApp(app.id)}
-                            className="flex w-full items-center justify-between rounded-2xl border border-slate-700/70 bg-slate-950/70 px-4 py-3 text-left text-sm text-slate-200 transition hover:border-cyan-400/70"
-                          >
-                            <span>{app.label}</span>
-                            <span className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                              {app.status}
-                            </span>
-                          </button>
-                        ))}
+                      <div className="mt-4 space-y-2 text-xs uppercase tracking-[0.3em] text-slate-400">
+                        {["Supply", "Contracts", "Transit", "Network", "Map", "Messages"].map(
+                          (item) => (
+                            <div
+                              key={item}
+                              className="rounded-xl border border-slate-800 bg-black/60 px-3 py-2 text-slate-300"
+                            >
+                              {item}
+                            </div>
+                          )
+                        )}
                       </div>
-                    </div>
+                      <div className="mt-6 rounded-2xl border border-emerald-400/30 bg-black/70 p-3 text-xs">
+                        <p className="uppercase tracking-[0.3em] text-emerald-300">Total Cash</p>
+                        <p className="mt-2 text-lg font-semibold text-emerald-100">
+                          ${totalCash.toFixed(2)} USD
+                        </p>
+                      </div>
+                    </aside>
 
-                    <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
-                      <p className="text-xs uppercase tracking-[0.3em] text-cyan-400/70">System feed</p>
-                      <div className="mt-4 space-y-3 text-sm text-slate-300">
-                        <p>• DarkVault routing table synced.</p>
-                        <p>• Shadow Archives encryption key pending.</p>
-                        <p>• Ghost Market indexers asleep.</p>
-                        <p>• Dead Drop courier scheduled for 02:00.</p>
+                    <div className="space-y-6">
+                      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800/80 bg-black/60 px-4 py-3">
+                        <div className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                          {selectedCity.city} · {selectedCity.country}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
+                          <div className="rounded-xl border border-slate-700 bg-black/60 px-3 py-2">
+                            <p className="text-[10px] text-slate-400">System</p>
+                            <p className="text-emerald-100">{systemTimeLabel}</p>
+                          </div>
+                          <div className="rounded-xl border border-amber-400/40 bg-black/60 px-3 py-2">
+                            <p className="text-[10px] text-slate-400">City Time</p>
+                            <p className="text-amber-200">{localTimeLabel}</p>
+                          </div>
+                          <div className="rounded-xl border border-slate-700 bg-black/60 px-3 py-2">
+                            <p className="text-[10px] text-slate-400">Cycle Day</p>
+                            <p className="text-emerald-100">{inGameDay}</p>
+                            <div className="mt-2 h-1.5 w-24 rounded-full bg-slate-800">
+                              <div
+                                className="h-1.5 rounded-full bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400"
+                                style={{ width: `${inGameProgress}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
+                        <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                              Active Contracts
+                            </p>
+                            <span className="text-xs text-slate-500">Status: Green</span>
+                          </div>
+                          <div className="mt-4 space-y-3 text-sm text-slate-300">
+                            {[
+                              { label: "Coastal Syndicate", payout: "$9,600", time: "2h 15m" },
+                              { label: "Nightfall Crew", payout: "$15,000", time: "3h 10m" },
+                              { label: "Shadow Cartel", payout: "$11,500", time: "1h 45m" },
+                            ].map((contract) => (
+                              <div
+                                key={contract.label}
+                                className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <p className="text-sm font-semibold text-emerald-100">
+                                    {contract.label}
+                                  </p>
+                                  <span className="rounded-full border border-emerald-400/40 px-3 py-1 text-xs text-emerald-200">
+                                    {contract.payout}
+                                  </span>
+                                </div>
+                                <p className="mt-2 text-xs text-slate-400">
+                                  Payout: {contract.payout} · Time: {contract.time}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-4 text-sm text-slate-300">
+                            <p className="text-xs uppercase tracking-[0.3em] text-amber-300">
+                              Broker Updates
+                            </p>
+                            <div className="mt-3 space-y-2 text-xs text-slate-400">
+                              <p>• Elite client requests incoming.</p>
+                              <p>• Heat spike detected in sector 4.</p>
+                              <p>• New opportunities available.</p>
+                            </div>
+                          </div>
+                          <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-4 text-sm text-slate-300">
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                              Application Dock
+                            </p>
+                            <div className="mt-3 grid gap-3">
+                              {appModules.map((app) => (
+                                <button
+                                  key={app.id}
+                                  type="button"
+                                  onClick={() => handleOpenApp(app.id)}
+                                  className="flex w-full items-center justify-between rounded-2xl border border-slate-700/70 bg-slate-950/70 px-4 py-3 text-left text-sm text-slate-200 transition hover:border-emerald-400/70"
+                                >
+                                  <span>{app.label}</span>
+                                  <span className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                                    {app.status}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
+                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                          Operations Ledger
+                        </p>
+                        <div className="mt-4 grid gap-3 md:grid-cols-3 text-xs text-slate-400">
+                          <div>
+                            <p className="text-slate-500">Verdant Supply</p>
+                            <p className="text-emerald-200">250 units</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500">Bloom Stock</p>
+                            <p className="text-amber-200">180 units</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500">Dust Reserve</p>
+                            <p className="text-rose-200">90 units</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -847,14 +1027,14 @@
                                 </div>
                               ) : (
                                 <p className="mt-3 text-sm text-slate-400">
-                                  No vault created. Initialize your first account below.
+                                  No vault created. Submit a request to open your first account.
                                 </p>
                               )}
                             </div>
 
                             <div className="rounded-2xl border border-slate-700/70 bg-black/70 p-4">
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                Create account
+                                Request account
                               </p>
                               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                 <input
@@ -865,14 +1045,9 @@
                                   disabled={!!bankAccount}
                                   className="w-full rounded-xl border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-500"
                                 />
-                                <input
-                                  type="number"
-                                  value={depositAmount}
-                                  onChange={(event) => setDepositAmount(event.target.value)}
-                                  placeholder="Initial deposit"
-                                  disabled={!!bankAccount}
-                                  className="w-full rounded-xl border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-500"
-                                />
+                                <div className="flex items-center rounded-xl border border-slate-800 bg-black/60 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                  Initial balance: $0.00
+                                </div>
                               </div>
                               <button
                                 type="button"
@@ -884,7 +1059,42 @@
                                     : "bg-cyan-500/30 text-cyan-100 hover:bg-cyan-400/40"
                                 }`}
                               >
-                                {bankAccount ? "Account Active" : "Create Vault"}
+                                {bankAccount ? "Account Active" : "Submit Request"}
+                              </button>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                Credit line request
+                              </p>
+                              {creditLine ? (
+                                <div className="mt-3 space-y-2">
+                                  <p className="text-sm text-slate-300">
+                                    Approved limit: ${creditLine.limit.toFixed(2)} USD
+                                  </p>
+                                  <p className="text-sm text-slate-300">
+                                    Available: ${creditLine.available.toFixed(2)} USD
+                                  </p>
+                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                    Card: {creditLine.cardNumber}
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="mt-3 text-sm text-slate-400">
+                                  Apply for a $500 line of credit for immediate access.
+                                </p>
+                              )}
+                              <button
+                                type="button"
+                                onClick={handleRequestCreditLine}
+                                disabled={!!creditLine}
+                                className={`mt-4 w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                  creditLine
+                                    ? "cursor-not-allowed bg-slate-800 text-slate-500"
+                                    : "bg-amber-500/20 text-amber-200 hover:bg-amber-400/30"
+                                }`}
+                              >
+                                {creditLine ? "Credit Active" : "Apply for Credit"}
                               </button>
                             </div>
                           </div>
