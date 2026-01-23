@@ -120,13 +120,51 @@
         { name: "Deep", filter: "brightness(0.55) sepia(0.55) saturate(1.25)" },
       ];
 
+      const firstNameSets = [
+        {
+          label: "Northern",
+          names: ["Arya", "Bran", "Eddard", "Lyanna", "Rickon", "Sansa", "Theon"],
+        },
+        {
+          label: "Riverlands",
+          names: ["Ellyn", "Hoster", "Marra", "Roslin", "Tansy", "Walder", "Wylla"],
+        },
+        {
+          label: "Crownlands",
+          names: ["Aemon", "Alys", "Baelor", "Davos", "Rhae", "Shiera", "Visenya"],
+        },
+        {
+          label: "Dorne",
+          names: ["Arianne", "Edric", "Nym", "Oberon", "Sarella", "Torrhen", "Ysand"],
+        },
+      ];
+
+      const lastNameSets = [
+        "Ashford",
+        "Brax",
+        "Cassel",
+        "Dondarrion",
+        "Fowler",
+        "Glover",
+        "Hornwood",
+        "Mallery",
+        "Mormont",
+        "Payne",
+        "Reed",
+        "Selmy",
+        "Stone",
+        "Tallhart",
+      ];
+
       const App = () => {
         const [screen, setScreen] = useState("landing");
         const [selectedServer, setSelectedServer] = useState(null);
         const [loadingProgress, setLoadingProgress] = useState(0);
-        const [characterName, setCharacterName] = useState("");
+        const [characterFirstName, setCharacterFirstName] = useState("");
+        const [characterLastName, setCharacterLastName] = useState("");
+        const [activeNameSet, setActiveNameSet] = useState(firstNameSets[0]);
         const [characterHouse, setCharacterHouse] = useState("Traveler");
-        const [characterRole, setCharacterRole] = useState("Wandering Traveler");
+        const [characterRole] = useState("Wandering Traveler");
         const [characterGender, setCharacterGender] = useState(null);
         const [skinTone, setSkinTone] = useState(skinTones[1]);
         const [goldCoins, setGoldCoins] = useState(120);
@@ -174,21 +212,42 @@
           let progress = 0;
           if (characterGender) progress += 34;
           if (characterGender && skinTone) progress += 33;
-          if (characterName.trim()) progress += 33;
+          if (characterFirstName.trim() && characterLastName.trim()) progress += 33;
           return Math.min(progress, 100);
-        }, [characterGender, skinTone, characterName]);
+        }, [characterGender, skinTone, characterFirstName, characterLastName]);
 
         const genderImage = characterGender
           ? characterGender === "Female"
             ? "https://i.imgur.com/5dSdv1p.png"
             : "https://i.imgur.com/MQiTPfC.png"
           : null;
+        const fullName =
+          characterFirstName && characterLastName
+            ? `${characterFirstName} ${characterLastName}`
+            : "Unnamed Traveler";
 
         const handleGenderSelect = (gender) => {
           setCharacterGender(gender);
           requestAnimationFrame(() => {
             detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
           });
+        };
+
+        const handleNameSetChange = (label) => {
+          const nextSet = firstNameSets.find((set) => set.label === label);
+          if (nextSet) {
+            setActiveNameSet(nextSet);
+          }
+        };
+
+        const handleRollName = () => {
+          const firstNames = activeNameSet.names;
+          const firstName =
+            firstNames[Math.floor(Math.random() * firstNames.length)];
+          const lastName =
+            lastNameSets[Math.floor(Math.random() * lastNameSets.length)];
+          setCharacterFirstName(firstName);
+          setCharacterLastName(lastName);
         };
 
         const handleAllocatePoint = (key) => {
@@ -229,15 +288,17 @@
                 </p>
               </header>
 
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => setScreen("servers")}
-                  className="w-full max-w-md rounded-2xl bg-amber-400 px-6 py-4 text-base font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-xl shadow-amber-500/40 transition hover:scale-[1.02] hover:bg-amber-300"
-                >
-                  Play Now
-                </button>
-              </div>
+              {!selectedServer && (
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setScreen("servers")}
+                    className="w-full max-w-md rounded-2xl bg-amber-400 px-6 py-4 text-base font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-xl shadow-amber-500/40 transition hover:scale-[1.02] hover:bg-amber-300"
+                  >
+                    Play Now
+                  </button>
+                </div>
+              )}
 
               {screen === "landing" && (
                 <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
@@ -456,7 +517,7 @@
                                 <img
                                   src={genderImage}
                                   alt={`${characterGender} base model`}
-                                  className="h-56 w-auto object-contain"
+                                  className="h-64 w-auto translate-y-2 scale-110 object-contain"
                                   style={{ filter: skinTone.filter }}
                                 />
                               ) : (
@@ -501,31 +562,52 @@
                               </div>
                             </div>
 
-                            <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                              First name
-                              <input
-                                type="text"
-                                value={characterName}
-                                onChange={(event) => setCharacterName(event.target.value)}
-                                placeholder="Arya"
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                              />
-                            </label>
-
-                            <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                              Role
-                              <select
-                                value={characterRole}
-                                onChange={(event) => setCharacterRole(event.target.value)}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                              >
-                                <option>Wandering Traveler</option>
-                                <option>Hedge Knight</option>
-                                <option>Maester Apprentice</option>
-                                <option>Silent Sister</option>
-                                <option>Merchant Scout</option>
-                              </select>
-                            </label>
+                            <div className="space-y-3">
+                              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                                Name set
+                              </p>
+                              <div className="flex flex-wrap gap-3">
+                                {firstNameSets.map((set) => (
+                                  <button
+                                    key={set.label}
+                                    type="button"
+                                    onClick={() => handleNameSetChange(set.label)}
+                                    className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                      activeNameSet.label === set.label
+                                        ? "border-amber-300 text-amber-100"
+                                        : "border-slate-700 text-slate-300 hover:border-amber-300/70"
+                                    }`}
+                                  >
+                                    {set.label}
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                  <div>
+                                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                      Rolled name
+                                    </p>
+                                    <p className="mt-2 text-lg font-semibold text-amber-100">
+                                      {characterFirstName || "First"} {characterLastName || "Last"}
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={handleRollName}
+                                    className="rounded-xl border border-amber-300/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                                  >
+                                    Roll Name
+                                  </button>
+                                </div>
+                                <div className="mt-4 rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-xs text-slate-400">
+                                  Custom names are locked behind a premium pass.
+                                  <span className="ml-2 rounded-full border border-amber-300/40 px-2 py-0.5 text-[10px] uppercase tracking-[0.3em] text-amber-200">
+                                    Premium
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
 
                             <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
                               Household
@@ -551,9 +633,7 @@
                     <div className="flex flex-col justify-between gap-6 rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
                       <div className="space-y-3">
                         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Starting Status</p>
-                        <p className="text-base text-amber-100">
-                          {characterName || "Unnamed Traveler"}
-                        </p>
+                        <p className="text-base text-amber-100">{fullName}</p>
                         <p className="text-xs text-slate-400">
                           {characterGender || "Gender pending"}
                         </p>
@@ -619,9 +699,7 @@
                   <div className="mt-10 grid gap-4 text-left text-sm text-slate-300 sm:grid-cols-2">
                     <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
                       <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Character</p>
-                      <p className="mt-2 text-base text-amber-100">
-                        {characterName || "Unnamed Traveler"}
-                      </p>
+                      <p className="mt-2 text-base text-amber-100">{fullName}</p>
                       <p className="text-xs text-slate-400">{characterRole}</p>
                       <p className="text-xs text-slate-400">{householdLabel}</p>
                     </div>
@@ -685,11 +763,27 @@
                     <div className="space-y-4">
                       <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
                         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Character Status</p>
-                        <p className="mt-2 text-base text-amber-100">
-                          {characterName || "Unnamed Traveler"}
-                        </p>
-                        <p className="text-xs text-slate-400">{characterRole}</p>
-                        <p className="text-xs text-slate-400">{householdLabel}</p>
+                        <div className="mt-4 flex items-center gap-4">
+                          <div className="h-20 w-16 overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/70">
+                            {genderImage ? (
+                              <img
+                                src={genderImage}
+                                alt="Character portrait"
+                                className="h-full w-full scale-125 object-cover"
+                                style={{ filter: skinTone.filter }}
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                --
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-base text-amber-100">{fullName}</p>
+                            <p className="text-xs text-slate-400">{characterRole}</p>
+                            <p className="text-xs text-slate-400">{householdLabel}</p>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
