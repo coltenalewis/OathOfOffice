@@ -3,53 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>An Iron Reign</title>
+    <title>Into The Dark</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       body {
-        font-family: "Cinzel", "Trajan Pro", "Garamond", "Times New Roman", serif;
+        font-family: "Share Tech Mono", "Fira Mono", "JetBrains Mono", monospace;
       }
 
-      .ember-glow {
-        background: radial-gradient(circle at center, rgba(250, 204, 21, 0.5), transparent 60%);
-        filter: blur(0.5rem);
-        animation: emberPulse 2.8s ease-in-out infinite;
+      .scanlines::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0.04) 1px,
+          rgba(0, 0, 0, 0.08) 1px,
+          rgba(0, 0, 0, 0.08) 3px
+        );
+        mix-blend-mode: screen;
+        pointer-events: none;
       }
 
-      .mist-layer {
-        background: linear-gradient(120deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.55));
-        animation: mistDrift 18s ease-in-out infinite alternate;
+      .terminal-flicker {
+        animation: flicker 3s infinite;
       }
 
-      .loading-ring {
-        border: 2px solid rgba(148, 163, 184, 0.4);
-        border-top-color: rgba(248, 113, 113, 0.9);
-        animation: spin 1.2s linear infinite;
+      .glow-pulse {
+        animation: glowPulse 2.4s ease-in-out infinite;
       }
 
-      .stat-glow {
-        box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
-      }
-
-      .shop-overlay {
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease;
-      }
-
-      .shop-overlay.is-open {
-        opacity: 1;
-        visibility: visible;
+      .boot-cursor {
+        display: inline-block;
+        width: 10px;
+        height: 18px;
+        background: #22d3ee;
+        margin-left: 6px;
+        animation: cursorBlink 1s steps(2, start) infinite;
       }
 
       .panel-overlay {
         opacity: 0;
-        transform: translateY(10px);
-        transition: opacity 0.25s ease, transform 0.25s ease;
+        transform: translateY(12px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
         pointer-events: none;
       }
 
@@ -59,39 +58,41 @@
         pointer-events: auto;
       }
 
-      @keyframes emberPulse {
+      @keyframes flicker {
+        0%,
+        19%,
+        21%,
+        23%,
+        80%,
+        100% {
+          opacity: 1;
+        }
+        20%,
+        22%,
+        24%,
+        81% {
+          opacity: 0.75;
+        }
+      }
+
+      @keyframes glowPulse {
         0%,
         100% {
-          opacity: 0.4;
-          transform: scale(0.9);
+          box-shadow: 0 0 12px rgba(34, 211, 238, 0.2);
         }
         50% {
-          opacity: 0.85;
-          transform: scale(1.15);
+          box-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
         }
       }
 
-      @keyframes mistDrift {
-        0% {
-          transform: translateX(-3%);
+      @keyframes cursorBlink {
+        0%,
+        50% {
+          opacity: 1;
         }
+        51%,
         100% {
-          transform: translateX(3%);
-        }
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      @keyframes shimmer {
-        0% {
-          background-position: 0% 50%;
-        }
-        100% {
-          background-position: 100% 50%;
+          opacity: 0;
         }
       }
     </style>
@@ -100,906 +101,347 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useEffect, useMemo, useRef, useState } = React;
+      const { useEffect, useMemo, useState } = React;
 
       const servers = [
         {
           id: 1,
-          name: "Test Realm — Winterfell",
-          status: "Stable",
-          players: "42/120",
-          region: "The North",
-          tag: "Roleplay",
+          name: "Obsidian Relay",
+          location: "Frankfurt",
+          status: "Secure",
+          load: "14%",
         },
         {
           id: 2,
-          name: "Stormwatch — Dragonstone",
-          status: "High Traffic",
-          players: "96/120",
-          region: "Crownlands",
-          tag: "Hardcore",
+          name: "Midnight Spine",
+          location: "Singapore",
+          status: "Encrypted",
+          load: "61%",
         },
         {
           id: 3,
-          name: "Golden Spires — Oldtown",
-          status: "New",
-          players: "12/90",
-          region: "The Reach",
-          tag: "Narrative",
+          name: "Nocturne Gate",
+          location: "Toronto",
+          status: "Shielded",
+          load: "32%",
+        },
+        {
+          id: 4,
+          name: "Ghostline Hub",
+          location: "São Paulo",
+          status: "Hidden",
+          load: "48%",
         },
       ];
 
-      const baseStats = [
-        { key: "combat", label: "Combat", value: 5 },
-        { key: "intrigue", label: "Intrigue", value: 5 },
-        { key: "knowledge", label: "Knowledge", value: 5 },
-        { key: "stewardship", label: "Stewardship", value: 5 },
+      const profileIcons = [
+        { id: "mask", label: "Hollow Mask", glyph: "🎭" },
+        { id: "skull", label: "Skull Relay", glyph: "💀" },
+        { id: "circuit", label: "Circuit Eye", glyph: "🧠" },
+        { id: "lock", label: "Cipher Lock", glyph: "🔒" },
+        { id: "ghost", label: "Ghost Signal", glyph: "👻" },
+        { id: "owl", label: "Night Owl", glyph: "🦉" },
       ];
 
-      const skinTones = [
-        { name: "Pale", filter: "brightness(1.2) saturate(0.85)" },
-        { name: "Fair", filter: "brightness(1.05) saturate(0.95)" },
-        { name: "Tan", filter: "brightness(0.95) sepia(0.2) saturate(1.1)" },
-        { name: "Olive", filter: "brightness(0.85) sepia(0.35) saturate(1.15)" },
-        { name: "Brown", filter: "brightness(0.7) sepia(0.45) saturate(1.2)" },
-        { name: "Deep", filter: "brightness(0.55) sepia(0.55) saturate(1.25)" },
+      const cityOptions = [
+        { city: "New York", country: "USA", timeZone: "America/New_York" },
+        { city: "Los Angeles", country: "USA", timeZone: "America/Los_Angeles" },
+        { city: "Toronto", country: "Canada", timeZone: "America/Toronto" },
+        { city: "Mexico City", country: "Mexico", timeZone: "America/Mexico_City" },
+        { city: "São Paulo", country: "Brazil", timeZone: "America/Sao_Paulo" },
+        { city: "Buenos Aires", country: "Argentina", timeZone: "America/Argentina/Buenos_Aires" },
+        { city: "London", country: "United Kingdom", timeZone: "Europe/London" },
+        { city: "Paris", country: "France", timeZone: "Europe/Paris" },
+        { city: "Berlin", country: "Germany", timeZone: "Europe/Berlin" },
+        { city: "Madrid", country: "Spain", timeZone: "Europe/Madrid" },
+        { city: "Rome", country: "Italy", timeZone: "Europe/Rome" },
+        { city: "Stockholm", country: "Sweden", timeZone: "Europe/Stockholm" },
+        { city: "Warsaw", country: "Poland", timeZone: "Europe/Warsaw" },
+        { city: "Moscow", country: "Russia", timeZone: "Europe/Moscow" },
+        { city: "Istanbul", country: "Turkey", timeZone: "Europe/Istanbul" },
+        { city: "Dubai", country: "UAE", timeZone: "Asia/Dubai" },
+        { city: "Johannesburg", country: "South Africa", timeZone: "Africa/Johannesburg" },
+        { city: "Lagos", country: "Nigeria", timeZone: "Africa/Lagos" },
+        { city: "Nairobi", country: "Kenya", timeZone: "Africa/Nairobi" },
+        { city: "Mumbai", country: "India", timeZone: "Asia/Kolkata" },
+        { city: "Delhi", country: "India", timeZone: "Asia/Kolkata" },
+        { city: "Beijing", country: "China", timeZone: "Asia/Shanghai" },
+        { city: "Shanghai", country: "China", timeZone: "Asia/Shanghai" },
+        { city: "Seoul", country: "South Korea", timeZone: "Asia/Seoul" },
+        { city: "Tokyo", country: "Japan", timeZone: "Asia/Tokyo" },
+        { city: "Sydney", country: "Australia", timeZone: "Australia/Sydney" },
+        { city: "Melbourne", country: "Australia", timeZone: "Australia/Melbourne" },
+        { city: "Auckland", country: "New Zealand", timeZone: "Pacific/Auckland" },
       ];
 
-      const firstNameSets = [
-        {
-          label: "Northern",
-          names: {
-            female: ["Arya", "Lyanna", "Sansa", "Wylla", "Mira", "Alys"],
-            male: ["Bran", "Eddard", "Rickon", "Theon", "Jorah", "Benjen"],
-          },
-        },
-        {
-          label: "Riverlands",
-          names: {
-            female: ["Ellyn", "Marra", "Roslin", "Tansy", "Marya", "Betha"],
-            male: ["Hoster", "Walder", "Edmure", "Brynden", "Lyman", "Tytos"],
-          },
-        },
-        {
-          label: "Crownlands",
-          names: {
-            female: ["Alys", "Rhae", "Shiera", "Visenya", "Elaena", "Rhaella"],
-            male: ["Aemon", "Baelor", "Davos", "Maekar", "Vaemond", "Gwayne"],
-          },
-        },
-        {
-          label: "Dorne",
-          names: {
-            female: ["Arianne", "Nym", "Sarella", "Ysand", "Nymeria", "Aliandra"],
-            male: ["Edric", "Oberon", "Torrhen", "Quentyn", "Anders", "Qoren"],
-          },
-        },
+      const usernameSeeds = [
+        "Void",
+        "Cipher",
+        "Specter",
+        "Glitch",
+        "Ghost",
+        "Zero",
+        "Rogue",
+        "Null",
+        "Pulse",
+        "Signal",
       ];
 
-      const lastNameSets = [
-        {
-          label: "Northern",
-          names: ["Cassel", "Glover", "Hornwood", "Mormont", "Reed", "Tallhart"],
-        },
-        {
-          label: "Riverlands",
-          names: ["Brax", "Darry", "Mallister", "Piper", "Smallwood", "Vance"],
-        },
-        {
-          label: "Crownlands",
-          names: ["Celtigar", "Massey", "Rosby", "Staunton", "Wendwater", "Wyk"],
-        },
-        {
-          label: "Dorne",
-          names: ["Dayne", "Fowler", "Jordayne", "Santagar", "Uller", "Yronwood"],
-        },
+      const usernameSuffixes = ["Walker", "Shade", "Node", "Runner", "Wire", "Crow"];
+
+      const appModules = [
+        { id: "bank", label: "DarkVault Bank", status: "Secure" },
+        { id: "archives", label: "Shadow Archives", status: "Locked" },
+        { id: "market", label: "Ghost Market", status: "Offline" },
+        { id: "drops", label: "Dead Drops", status: "Standby" },
       ];
 
-      const travelLocations = [
-        {
-          name: "Winterfell",
-          type: "Keep",
-          rooms: ["Great Hall", "Godswood", "Training Yard"],
-        },
-        {
-          name: "King's Landing",
-          type: "Capital",
-          rooms: ["Red Keep", "Flea Bottom", "Small Council"],
-        },
-        {
-          name: "Dragonstone",
-          type: "Keep",
-          rooms: ["Dragonmont", "War Room", "Harbor"],
-        },
-        {
-          name: "Casterly Rock",
-          type: "Keep",
-          rooms: ["Lion's Gate", "Gold Vaults", "Sea Balcony"],
-        },
-        {
-          name: "Highgarden",
-          type: "Keep",
-          rooms: ["Rose Courtyard", "Greenhouse", "Banquet Hall"],
-        },
-        {
-          name: "Sunspear",
-          type: "Keep",
-          rooms: ["Water Gardens", "Sandstone Court", "Sun Court"],
-        },
-        {
-          name: "Riverrun",
-          type: "Keep",
-          rooms: ["River Gate", "War Council", "Courtyard"],
-        },
-        {
-          name: "The Eyrie",
-          type: "Keep",
-          rooms: ["Moon Door", "Sky Hall", "Falcon's Perch"],
-        },
-        {
-          name: "Pyke",
-          type: "Keep",
-          rooms: ["Great Keep", "Sea Towers", "Iron Harbor"],
-        },
-        {
-          name: "Oldtown",
-          type: "City",
-          rooms: ["Citadel", "Starry Sept", "Wharf"],
-        },
-        {
-          name: "Storm's End",
-          type: "Keep",
-          rooms: ["Storm Hall", "Battlements", "Sea Gate"],
-        },
-        {
-          name: "White Harbor",
-          type: "Village",
-          rooms: ["Fish Market", "Harborfront", "Wolf's Den"],
-        },
-        {
-          name: "Maidenpool",
-          type: "Village",
-          rooms: ["Pink Maid Inn", "Docks", "Market Square"],
-        },
-        {
-          name: "Mole's Town",
-          type: "Village",
-          rooms: ["Tavern", "Market Stalls", "Roadside"],
-        },
+      const loadingLines = [
+        "[boot] establishing encrypted tunnel...",
+        "[auth] negotiating shadow certificates...",
+        "[relay] proxy chain stabilized...",
+        "[sync] mirroring dark indices...",
+        "[access] access key verified...",
       ];
-
-      const directMessages = ["Raven Keeper", "House Steward", "Traveling Bard", "Silent Sister"];
-
-      const travelRoutes = {
-        Winterfell: [
-          { name: "White Harbor", days: 2 },
-          { name: "Mole's Town", days: 1 },
-        ],
-        "White Harbor": [
-          { name: "Winterfell", days: 2 },
-          { name: "Maidenpool", days: 3 },
-        ],
-        "Mole's Town": [
-          { name: "Winterfell", days: 1 },
-          { name: "The Eyrie", days: 4 },
-        ],
-        "The Eyrie": [
-          { name: "Mole's Town", days: 4 },
-          { name: "Riverrun", days: 3 },
-        ],
-        Riverrun: [
-          { name: "The Eyrie", days: 3 },
-          { name: "Maidenpool", days: 2 },
-          { name: "Casterly Rock", days: 4 },
-        ],
-        Maidenpool: [
-          { name: "White Harbor", days: 3 },
-          { name: "Riverrun", days: 2 },
-          { name: "King's Landing", days: 2 },
-        ],
-        "King's Landing": [
-          { name: "Maidenpool", days: 2 },
-          { name: "Dragonstone", days: 1 },
-          { name: "Storm's End", days: 3 },
-        ],
-        Dragonstone: [{ name: "King's Landing", days: 1 }],
-        "Storm's End": [
-          { name: "King's Landing", days: 3 },
-          { name: "Sunspear", days: 5 },
-        ],
-        Sunspear: [{ name: "Storm's End", days: 5 }],
-        "Casterly Rock": [
-          { name: "Riverrun", days: 4 },
-          { name: "Pyke", days: 4 },
-          { name: "Highgarden", days: 3 },
-        ],
-        Pyke: [{ name: "Casterly Rock", days: 4 }],
-        Highgarden: [
-          { name: "Casterly Rock", days: 3 },
-          { name: "Oldtown", days: 2 },
-        ],
-        Oldtown: [{ name: "Highgarden", days: 2 }],
-      };
-
-      const locationPeople = {
-        Winterfell: [
-          { name: "Syla the Steward", relationship: 62 },
-          { name: "Torren the Guard", relationship: 41 },
-          { name: "Mara the Cook", relationship: 55 },
-        ],
-        "King's Landing": [
-          { name: "Varys' Runner", relationship: 38 },
-          { name: "Harbormaster", relationship: 47 },
-          { name: "Gold Cloak", relationship: 29 },
-        ],
-        Dragonstone: [
-          { name: "Stone Mason", relationship: 52 },
-          { name: "Dockhand", relationship: 34 },
-        ],
-        "Casterly Rock": [
-          { name: "Lion Guard", relationship: 36 },
-          { name: "Treasury Clerk", relationship: 44 },
-        ],
-        Highgarden: [
-          { name: "Garden Knight", relationship: 57 },
-          { name: "Rose Herald", relationship: 49 },
-        ],
-        Sunspear: [
-          { name: "Sand Scout", relationship: 46 },
-          { name: "Water Gardener", relationship: 58 },
-        ],
-        Riverrun: [
-          { name: "River Guard", relationship: 51 },
-          { name: "Ferryman", relationship: 39 },
-        ],
-        "The Eyrie": [
-          { name: "Falcon Keeper", relationship: 43 },
-          { name: "Sky Squire", relationship: 35 },
-        ],
-        Pyke: [
-          { name: "Ironborn Raider", relationship: 28 },
-          { name: "Shipwright", relationship: 46 },
-        ],
-        Oldtown: [
-          { name: "Young Maester", relationship: 61 },
-          { name: "Sept Guard", relationship: 48 },
-        ],
-        "Storm's End": [
-          { name: "Storm Warden", relationship: 40 },
-          { name: "Wall Archer", relationship: 33 },
-        ],
-        "White Harbor": [
-          { name: "Fishmonger", relationship: 54 },
-          { name: "Harbor Pilot", relationship: 45 },
-        ],
-        Maidenpool: [
-          { name: "Pink Maid", relationship: 50 },
-          { name: "Dock Guard", relationship: 37 },
-        ],
-        "Mole's Town": [
-          { name: "Tavern Keeper", relationship: 59 },
-          { name: "Night Watch Recruit", relationship: 42 },
-        ],
-      };
-
-      const actionOptions = [
-        "⚔️ Sparring Match",
-        "🤝 Offer Alliance",
-        "💌 Send Raven",
-        "🎭 Attend Gathering",
-      ];
-
-      const locationActivities = {
-        Winterfell: ["Hunt in Wolfswood", "Train with guards", "Gather firewood"],
-        "White Harbor": ["Fish the bay", "Inspect ships", "Trade in the docks"],
-        Maidenpool: ["Visit the baths", "Fish the river", "Scout the roads"],
-        "Mole's Town": ["Forage supplies", "Listen for rumors", "Rest at the tavern"],
-        "The Eyrie": ["Falconry practice", "Patrol the sky cells", "Study maps"],
-        Riverrun: ["Fish the Trident", "Spar in the yard", "Meet riverfolk"],
-        "King's Landing": ["Work the markets", "Patrol Flea Bottom", "Seek court favor"],
-        Dragonstone: ["Inspect the docks", "Study old tomes", "Train on the cliffs"],
-        "Storm's End": ["Drill with guards", "Scout the coast", "Repair defenses"],
-        Sunspear: ["Train with spears", "Gather spices", "Visit the water gardens"],
-        "Casterly Rock": ["Audit ledgers", "Train with knights", "Survey mines"],
-        Pyke: ["Raid practice", "Inspect longships", "Collect tribute"],
-        Highgarden: ["Tend the gardens", "Practice jousting", "Meet courtiers"],
-        Oldtown: ["Visit the Citadel", "Browse the harbor", "Attend market day"],
-        Default: ["Fish the waters", "Hunt nearby", "Explore the surroundings"],
-      };
-
-      const locationBuildings = {
-        Winterfell: [
-          {
-            name: "Market Square",
-            utility: "Buy travel rations, furs, and basic supplies.",
-          },
-          {
-            name: "Blacksmith",
-            utility: "Commission weapons, armor repairs, and tools.",
-          },
-          {
-            name: "Brothel",
-            utility: "Relax to lower stress and raise morale.",
-          },
-        ],
-        "White Harbor": [
-          {
-            name: "Harbor Market",
-            utility: "Purchase fish, trade goods, and ship supplies.",
-          },
-          {
-            name: "Shipwright",
-            utility: "Upgrade vessels and secure passage.",
-          },
-          {
-            name: "Dockside Inn",
-            utility: "Recover stamina with a warm bed.",
-          },
-        ],
-        Maidenpool: [
-          {
-            name: "Town Market",
-            utility: "Pick up fresh produce and news from travelers.",
-          },
-          {
-            name: "Bathhouse",
-            utility: "Soothe injuries and reduce stress.",
-          },
-          {
-            name: "Weaponsmith",
-            utility: "Craft spears and light armor.",
-          },
-        ],
-        "King's Landing": [
-          {
-            name: "Grand Market",
-            utility: "Buy rare goods and barter for influence.",
-          },
-          {
-            name: "Blacksmith Row",
-            utility: "Purchase blades and commission custom gear.",
-          },
-          {
-            name: "Silk House",
-            utility: "Relieve stress and gather whispers.",
-          },
-        ],
-        "Casterly Rock": [
-          {
-            name: "Golden Market",
-            utility: "Acquire premium supplies and trade ledgers.",
-          },
-          {
-            name: "Lionforge",
-            utility: "Secure heavy armor and elite weapons.",
-          },
-          {
-            name: "Noble House",
-            utility: "Reduce stress and improve standing.",
-          },
-        ],
-        Default: [
-          {
-            name: "Market",
-            utility: "Buy items and resupply.",
-          },
-          {
-            name: "Blacksmith",
-            utility: "Repair and upgrade weapons.",
-          },
-          {
-            name: "Brothel",
-            utility: "Lower stress and raise morale.",
-          },
-        ],
-      };
-
-      const supabaseUrl =
-        window.SUPABASE_URL || window.__ENV__?.SUPABASE_URL || window.ENV?.SUPABASE_URL;
-      const supabaseKey =
-        window.SUPABASE_PUBLISHABLE_KEY ||
-        window.__ENV__?.SUPABASE_PUBLISHABLE_KEY ||
-        window.ENV?.SUPABASE_PUBLISHABLE_KEY;
-      const supabaseClient =
-        window.supabase && supabaseUrl && supabaseKey
-          ? window.supabase.createClient(supabaseUrl, supabaseKey)
-          : null;
 
       const App = () => {
         const [screen, setScreen] = useState("landing");
-        const [nextScreen, setNextScreen] = useState("game");
-        const [selectedServer, setSelectedServer] = useState(null);
+        const [nextScreen, setNextScreen] = useState("servers");
         const [loadingProgress, setLoadingProgress] = useState(0);
-        const [characterFirstName, setCharacterFirstName] = useState("");
-        const [characterLastName, setCharacterLastName] = useState("");
-        const [activeNameSet, setActiveNameSet] = useState(firstNameSets[0]);
-        const [characterHouse, setCharacterHouse] = useState("Traveler");
-        const [characterRole] = useState("Wandering Traveler");
-        const [characterGender, setCharacterGender] = useState(null);
-        const [skinTone, setSkinTone] = useState(skinTones[1]);
-        const [hasPremium, setHasPremium] = useState(false);
-        const [goldCoins, setGoldCoins] = useState(120);
-        const [stats, setStats] = useState(baseStats);
-        const [pointsAvailable, setPointsAvailable] = useState(6);
-        const detailsRef = useRef(null);
-        const [showShop, setShowShop] = useState(false);
-        const [authUser, setAuthUser] = useState(null);
-        const [currentLocation, setCurrentLocation] = useState(travelLocations[0]);
-        const [activeRoom, setActiveRoom] = useState(travelLocations[0].rooms[0]);
-        const [gameMenu, setGameMenu] = useState(null);
-        const [selectedDestination, setSelectedDestination] = useState(null);
-        const [chatMessages, setChatMessages] = useState({});
-        const [chatInput, setChatInput] = useState("");
-        const [characterStep, setCharacterStep] = useState(1);
-        const [selectedPerson, setSelectedPerson] = useState(null);
-        const [dayCount, setDayCount] = useState(1);
-        const [daySeconds, setDaySeconds] = useState(0);
-        const [travelPlan, setTravelPlan] = useState(null);
+        const [loadingLineIndex, setLoadingLineIndex] = useState(0);
+        const [selectedServer, setSelectedServer] = useState(null);
+        const [isPremium, setIsPremium] = useState(false);
+        const [profileIcon, setProfileIcon] = useState(profileIcons[0]);
+        const [username, setUsername] = useState("");
+        const [customUsername, setCustomUsername] = useState("");
+        const [selectedCity, setSelectedCity] = useState(cityOptions[0]);
+        const [profileStep, setProfileStep] = useState(1);
+        const [systemTime, setSystemTime] = useState(new Date());
+        const [appLoading, setAppLoading] = useState(false);
+        const [activeApp, setActiveApp] = useState(null);
+        const [bankAccount, setBankAccount] = useState(null);
+        const [depositAmount, setDepositAmount] = useState("500");
+        const [accountAlias, setAccountAlias] = useState("Main Vault");
+        const [bootTimestamp] = useState(Date.now());
+
+        useEffect(() => {
+          setUsername(
+            `${usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)]}${
+              usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)]
+            }${Math.floor(Math.random() * 900 + 100)}`
+          );
+        }, []);
+
+        useEffect(() => {
+          const interval = setInterval(() => {
+            setSystemTime(new Date());
+          }, 1000);
+          return () => clearInterval(interval);
+        }, []);
 
         useEffect(() => {
           if (screen !== "loading") return;
           setLoadingProgress(0);
+          setLoadingLineIndex(0);
           const interval = setInterval(() => {
             setLoadingProgress((prev) => {
-              const nextValue = Math.min(prev + Math.floor(Math.random() * 12 + 6), 100);
+              const nextValue = Math.min(prev + Math.floor(Math.random() * 14 + 6), 100);
               if (nextValue >= 100) {
                 clearInterval(interval);
                 setTimeout(() => setScreen(nextScreen), 500);
               }
               return nextValue;
             });
-          }, 350);
+            setLoadingLineIndex((prev) => Math.min(prev + 1, loadingLines.length - 1));
+          }, 450);
 
           return () => clearInterval(interval);
         }, [screen, nextScreen]);
 
         useEffect(() => {
-          if (!supabaseClient) return;
-          supabaseClient.auth.getUser().then(({ data }) => {
-            setAuthUser(data?.user ?? null);
+          if (!appLoading) return;
+          const timer = setTimeout(() => {
+            setAppLoading(false);
+          }, 650);
+          return () => clearTimeout(timer);
+        }, [appLoading]);
+
+        const localTimeLabel = useMemo(() => {
+          return new Intl.DateTimeFormat("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            timeZone: selectedCity.timeZone,
+          }).format(systemTime);
+        }, [selectedCity, systemTime]);
+
+        const systemTimeLabel = useMemo(() => {
+          return systemTime.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
           });
-          const { data: authListener } = supabaseClient.auth.onAuthStateChange(
-            (_event, session) => {
-              setAuthUser(session?.user ?? null);
-            }
-          );
+        }, [systemTime]);
 
-          return () => {
-            authListener?.subscription?.unsubscribe();
-          };
-        }, []);
+        const inGameDay = useMemo(() => {
+          const elapsed = Date.now() - bootTimestamp;
+          const dayLength = 2 * 60 * 60 * 1000;
+          return Math.floor(elapsed / dayLength) + 1;
+        }, [bootTimestamp, systemTime]);
 
-        useEffect(() => {
-          setSelectedPerson(null);
-        }, [currentLocation]);
+        const inGameProgress = useMemo(() => {
+          const elapsed = Date.now() - bootTimestamp;
+          const dayLength = 2 * 60 * 60 * 1000;
+          return ((elapsed % dayLength) / dayLength) * 100;
+        }, [bootTimestamp, systemTime]);
 
-        useEffect(() => {
-          const interval = setInterval(() => {
-            setDaySeconds((prev) => {
-              const next = (prev + 1) % 10;
-              if (next === 0) {
-                setDayCount((count) => count + 1);
-              }
-              return next;
-            });
-          }, 1000);
-          return () => clearInterval(interval);
-        }, []);
+        const handleRollUsername = () => {
+          const seed = usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)];
+          const suffix = usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)];
+          const digits = Math.floor(Math.random() * 900 + 100);
+          setUsername(`${seed}${suffix}${digits}`);
+        };
 
-        useEffect(() => {
-          if (!travelPlan) return;
-          const interval = setInterval(() => {
-            setTravelPlan((prev) => {
-              if (!prev) return prev;
-              const totalSeconds = prev.days * 10;
-              const nextSeconds = prev.secondsElapsed + 1;
-              if (nextSeconds >= totalSeconds) {
-                const destination = travelLocations.find(
-                  (location) => location.name === prev.destination
-                );
-                if (destination) {
-                  setCurrentLocation(destination);
-                  setActiveRoom(destination.rooms[0]);
-                }
-                setSelectedDestination(null);
-                return null;
-              }
-              return { ...prev, secondsElapsed: nextSeconds };
-            });
-          }, 1000);
-          return () => clearInterval(interval);
-        }, [travelPlan]);
-
-        const immersionLines = useMemo(
-          () => [
-            "Swearing fealty to the realm...",
-            "Saddling your warhorse...",
-            "Summoning ravens across Westeros...",
-            "Sharpening steel and sealing vows...",
-          ],
-          []
-        );
-
-        const progressMessage = useMemo(() => {
-          const index = Math.floor((loadingProgress / 100) * immersionLines.length);
-          return immersionLines[Math.min(index, immersionLines.length - 1)];
-        }, [loadingProgress, immersionLines]);
-
-        const householdLabel =
-          characterHouse === "Traveler" ? "Traveler" : `House ${characterHouse}`;
-        const dayProgress = useMemo(() => (daySeconds / 10) * 100, [daySeconds]);
-        const timeLabel = useMemo(() => {
-          const hour = Math.floor((daySeconds / 10) * 24);
-          return `${String(hour).padStart(2, "0")}:00`;
-        }, [daySeconds]);
-        const travelProgress = useMemo(() => {
-          if (!travelPlan) return 0;
-          return Math.min((travelPlan.secondsElapsed / (travelPlan.days * 10)) * 100, 100);
-        }, [travelPlan]);
-
-        const totalStatValue = stats.reduce((sum, stat) => sum + stat.value, 0);
-        const characterProgress = useMemo(() => {
+        const profileProgress = useMemo(() => {
           let progress = 0;
-          if (characterGender) progress += 34;
-          if (characterGender && skinTone) progress += 33;
-          if (characterFirstName.trim() && characterLastName.trim()) progress += 33;
+          if (profileIcon) progress += 34;
+          if ((isPremium && customUsername.trim()) || username.trim()) progress += 33;
+          if (selectedCity) progress += 33;
           return Math.min(progress, 100);
-        }, [characterGender, skinTone, characterFirstName, characterLastName]);
-        const isCharacterComplete = characterProgress === 100;
+        }, [profileIcon, username, customUsername, selectedCity, isPremium]);
 
-        const genderImage = characterGender
-          ? characterGender === "Female"
-            ? "https://i.imgur.com/5dSdv1p.png"
-            : "https://i.imgur.com/MQiTPfC.png"
-          : null;
-        const fullName =
-          characterFirstName && characterLastName
-            ? `${characterFirstName} ${characterLastName}`
-            : "Unnamed Traveler";
+        const profileComplete = profileProgress === 100;
+        const displayUsername = isPremium && customUsername.trim() ? customUsername : username;
 
-        const handleGenderSelect = (gender) => {
-          setCharacterGender(gender);
-          requestAnimationFrame(() => {
-            detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        const handleOpenApp = (appId) => {
+          setActiveApp(appId);
+          setAppLoading(true);
+        };
+
+        const handleCreateBankAccount = () => {
+          if (bankAccount) return;
+          const amount = Number.parseFloat(depositAmount) || 0;
+          setBankAccount({
+            alias: accountAlias || "Primary Vault",
+            balance: amount,
+            id: `DV-${Math.floor(Math.random() * 900000 + 100000)}`,
           });
-        };
-
-        const handleNameSetChange = (label) => {
-          const nextSet = firstNameSets.find((set) => set.label === label);
-          if (nextSet) {
-            setActiveNameSet(nextSet);
-          }
-        };
-
-        const handleRollName = () => {
-          const genderKey = characterGender === "Female" ? "female" : "male";
-          const firstNames =
-            activeNameSet.names?.[genderKey] || activeNameSet.names?.male || [];
-          const lastNames =
-            lastNameSets.find((set) => set.label === activeNameSet.label)?.names ||
-            lastNameSets[0].names;
-          const firstName = firstNames.length
-            ? firstNames[Math.floor(Math.random() * firstNames.length)]
-            : "Traveler";
-          const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-          setCharacterFirstName(firstName);
-          setCharacterLastName(lastName);
-        };
-
-        const handleAllocatePoint = (key) => {
-          if (pointsAvailable <= 0) return;
-          setStats((prev) =>
-            prev.map((stat) =>
-              stat.key === key ? { ...stat, value: stat.value + 1 } : stat
-            )
-          );
-          setPointsAvailable((prev) => Math.max(prev - 1, 0));
-        };
-
-        const handleResetStats = () => {
-          setStats(baseStats);
-          setPointsAvailable(6);
-        };
-
-        const availableDestinations = travelRoutes[currentLocation.name] || [];
-
-        const handleConfirmTravel = () => {
-          if (!selectedDestination || travelPlan) return;
-          setTravelPlan({
-            destination: selectedDestination.name,
-            days: selectedDestination.days,
-            secondsElapsed: 0,
-          });
-          setSelectedDestination(null);
-        };
-
-        const roomKey = `${currentLocation.name}::${activeRoom}`;
-        const roomMessages = chatMessages[roomKey] || [
-          { id: 1, sender: "System", text: `Welcome to ${activeRoom}.` },
-        ];
-
-        const handleSendMessage = () => {
-          const trimmed = chatInput.trim();
-          if (!trimmed) return;
-          setChatMessages((prev) => ({
-            ...prev,
-            [roomKey]: [
-              ...(prev[roomKey] || roomMessages),
-              { id: Date.now(), sender: fullName, text: trimmed },
-            ],
-          }));
-          setChatInput("");
-        };
-
-        const handleChatKeyDown = (event) => {
-          if (event.key !== "Enter") return;
-          event.preventDefault();
-          handleSendMessage();
-        };
-
-        const handleDiscordLogin = async () => {
-          if (!supabaseClient) {
-            return;
-          }
-          await supabaseClient.auth.signInWithOAuth({
-            provider: "discord",
-            options: { redirectTo: window.location.href },
-          });
-        };
-
-        const handleLogout = async () => {
-          if (!supabaseClient) return;
-          await supabaseClient.auth.signOut();
         };
 
         return (
-          <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-            <div className="absolute inset-0 mist-layer opacity-80" />
-            <div className="absolute inset-0">
-              <div className="absolute -left-10 top-20 h-64 w-64 rounded-full ember-glow" />
-              <div className="absolute right-10 top-24 h-72 w-72 rounded-full ember-glow" />
-              <div className="absolute bottom-10 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full ember-glow" />
-            </div>
+          <main className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-slate-100">
+            <div className="absolute inset-0 scanlines opacity-60" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(14,116,144,0.25),_transparent_55%)]" />
 
-            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-10 px-5 py-10 sm:px-6">
-              <nav className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-700/60 bg-slate-900/60 px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 overflow-hidden rounded-full border border-amber-300/40 bg-slate-950/70">
-                    <img
-                      src="https://i.imgur.com/8Pi0tUO.png"
-                      alt="An Iron Reign logo"
-                      className="h-full w-full object-cover"
-                      onError={(event) => {
-                        event.currentTarget.style.display = "none";
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.4em] text-slate-400">An Iron Reign</p>
-                    <p className="text-sm text-amber-100">Realm Access</p>
-                  </div>
+            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10">
+              <header className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/60">
+                    Into The Dark
+                  </p>
+                  <h1 className="text-2xl font-semibold text-cyan-100">Dark Web Simulation</h1>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
-                  <button
-                    type="button"
-                    onClick={() => setShowShop(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-300/60 text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                    aria-label="Open shop"
-                  >
-                    🛒
-                  </button>
-                  {authUser ? (
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="rounded-xl border border-amber-300/60 px-4 py-2 font-semibold text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                    >
-                      Sign Out
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleDiscordLogin}
-                      className="rounded-xl border border-amber-300/60 px-4 py-2 font-semibold text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                    >
-                      Discord Login
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setScreen("servers")}
-                    className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
-                  >
-                    Realms
-                  </button>
-                </div>
-              </nav>
-
-              <div
-                className={`shop-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-8 ${
-                  showShop ? "is-open" : ""
-                }`}
-                aria-hidden={!showShop}
-              >
-                <section className="w-full max-w-4xl rounded-3xl border border-amber-300/30 bg-slate-950/95 p-6 shadow-2xl shadow-black/60">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Realm Shop</p>
-                      <h2 className="mt-2 text-2xl font-semibold text-amber-100">
-                        Support the reign
-                      </h2>
-                      <p className="mt-2 text-sm text-slate-300">
-                        Templates for premium one-time items and subscriptions. Test unlocking below.
-                      </p>
+                {screen === "dashboard" && (
+                  <div className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.3em]">
+                    <div className="rounded-full border border-cyan-400/40 px-3 py-1 text-cyan-200">
+                      {selectedServer?.name}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowShop(false)}
-                      className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
-                    >
-                      Close
-                    </button>
-                  </div>
-
-                  <div className="mt-6 grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-5">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                        One-time purchases
-                      </p>
-                      <div className="mt-4 space-y-3 text-sm text-slate-300">
-                        <div className="flex items-center justify-between rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
-                          <span>Founder Sigil Pack</span>
-                          <span className="text-amber-200">120 coins</span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
-                          <span>Banner Cosmetics</span>
-                          <span className="text-amber-200">80 coins</span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
-                          <span>Royal Mount Skin</span>
-                          <span className="text-amber-200">150 coins</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-amber-300/40 bg-slate-900/70 p-5">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                        Subscriptions
-                      </p>
-                      <div className="mt-4 space-y-3 text-sm text-slate-300">
-                        <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
-                          <p className="text-amber-100">Realm Pass</p>
-                          <p className="text-xs text-slate-400">
-                            Unlock custom names, exclusive halls, and weekly bonuses.
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setHasPremium(true)}
-                          className="w-full rounded-xl bg-amber-400 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-900 transition hover:bg-amber-300"
-                        >
-                          Test Subscription Unlock
-                        </button>
-                        {hasPremium && (
-                          <p className="text-xs uppercase tracking-[0.3em] text-amber-200">
-                            Premium active
-                          </p>
-                        )}
-                      </div>
+                    <div className="rounded-full border border-slate-700 px-3 py-1 text-slate-300">
+                      {selectedCity.city}, {selectedCity.country}
                     </div>
                   </div>
-                </section>
-              </div>
-
-              <header className="space-y-4 text-center">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-amber-300/40 bg-slate-950/70">
-                  <img
-                    src="https://i.imgur.com/8Pi0tUO.png"
-                    alt="An Iron Reign logo"
-                    className="h-14 w-14 object-contain"
-                    onError={(event) => {
-                      event.currentTarget.style.display = "none";
-                    }}
-                  />
-                </div>
-                <p className="text-xs font-semibold uppercase tracking-[0.5em] text-amber-200/70">
-                  Welcome to An Iron Reign
-                </p>
-                <p className="mx-auto max-w-xl text-sm text-slate-300">
-                  A medieval fantasy RP experience inspired by Westeros.
-                </p>
+                )}
               </header>
 
-              {!selectedServer && (
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setScreen("servers")}
-                    className="w-full max-w-md rounded-2xl bg-amber-400 px-6 py-4 text-base font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-xl shadow-amber-500/40 transition hover:scale-[1.02] hover:bg-amber-300"
-                  >
-                    Play Now
-                  </button>
-                </div>
-              )}
-
               {screen === "landing" && (
-                <section className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40">
-                  <h2 className="text-2xl font-semibold text-amber-100">A living realm awaits</h2>
-                  <p className="mt-3 text-sm text-slate-300">
-                    Choose a realm, forge your traveler, and step into the stories of Westeros.
-                  </p>
-                  <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                    {["Choose a Realm", "Create a Character", "Enter the Realm"].map((step) => (
-                      <div
-                        key={step}
-                        className="rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-4 text-xs uppercase tracking-[0.3em] text-slate-300"
-                      >
-                        {step}
-                      </div>
-                    ))}
+                <section className="relative overflow-hidden rounded-3xl border border-cyan-500/40 bg-black/80 p-10 shadow-2xl shadow-cyan-500/20">
+                  <div className="terminal-flicker">
+                    <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/60">
+                      darknet gateway
+                    </p>
+                    <h2 className="mt-4 text-3xl font-semibold text-cyan-100">
+                      Terminal access granted
+                    </h2>
+                    <p className="mt-3 max-w-xl text-sm text-cyan-100/70">
+                      Initialize your clandestine identity. Navigate encrypted networks, build accounts,
+                      and operate from the shadows.
+                    </p>
+                  </div>
+                  <div className="mt-8 rounded-2xl border border-cyan-400/20 bg-slate-950/70 p-5 text-xs text-cyan-200/80">
+                    <p>root@shadowgrid:~$ access --portal dark.gateway</p>
+                    <p className="mt-2">status: READY_FOR_SESSION</p>
+                    <p className="mt-2">signal strength: 98%</p>
+                    <div className="mt-3 flex items-center">
+                      <span>awaiting command</span>
+                      <span className="boot-cursor" />
+                    </div>
+                  </div>
+                  <div className="mt-8">
+                    <button
+                      type="button"
+                      onClick={() => setScreen("servers")}
+                      className="glow-pulse w-full rounded-2xl border border-cyan-400/60 bg-cyan-500/20 px-6 py-4 text-sm font-semibold uppercase tracking-[0.4em] text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/30"
+                    >
+                      Start Enterprise
+                    </button>
                   </div>
                 </section>
               )}
 
               {screen === "servers" && (
-                <section className="rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40">
-                  <div className="flex flex-wrap items-center justify-between gap-6">
+                <section className="rounded-3xl border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-cyan-500/10">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                        Server Browser
+                      <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/60">
+                        server browser
                       </p>
-                      <h2 className="text-2xl font-semibold text-amber-100">Choose your realm</h2>
+                      <h2 className="mt-2 text-2xl font-semibold text-cyan-100">Select a relay</h2>
                       <p className="text-sm text-slate-300">
-                        Select a test server to begin your roleplay journey.
+                        Choose an enterprise node to begin your dark web session.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setScreen("landing")}
-                      className="rounded-xl border border-slate-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
+                      className="rounded-full border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-cyan-300 hover:text-cyan-200"
                     >
                       Back
                     </button>
                   </div>
-
-                  <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
                     {servers.map((server) => (
                       <button
                         key={server.id}
                         type="button"
                         onClick={() => {
                           setSelectedServer(server);
-                          setNextScreen("character");
+                          setNextScreen("profile");
                           setScreen("loading");
                         }}
-                        className="group flex w-full flex-col gap-5 rounded-2xl border border-slate-700/80 bg-gradient-to-br from-slate-950/80 via-slate-950/60 to-slate-900/60 p-5 text-left transition hover:-translate-y-1 hover:border-amber-300/70 hover:shadow-lg hover:shadow-amber-500/20"
+                        className="group flex w-full flex-col gap-4 rounded-2xl border border-slate-700/70 bg-black/70 p-5 text-left transition hover:-translate-y-1 hover:border-cyan-300/70 hover:shadow-lg hover:shadow-cyan-500/20"
                       >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="text-lg font-semibold text-amber-100 group-hover:text-amber-200">
+                            <h3 className="text-lg font-semibold text-cyan-100 group-hover:text-cyan-200">
                               {server.name}
                             </h3>
-                            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-                              {server.region}
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                              {server.location}
                             </p>
                           </div>
-                          <span className="rounded-full border border-amber-300/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-amber-200">
-                            {server.tag}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-slate-300">
-                          <span className="rounded-full bg-slate-800/80 px-3 py-1">
+                          <span className="rounded-full border border-cyan-400/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-cyan-200">
                             {server.status}
                           </span>
-                          <span className="rounded-full bg-slate-800/80 px-3 py-1">
-                            {server.players} online
-                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Load</span>
+                          <span>{server.load}</span>
                         </div>
                         <div className="h-2 w-full rounded-full bg-slate-800">
-                          <div className="h-2 w-3/4 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-rose-400" />
+                          <div className="h-2 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400" style={{ width: server.load }} />
                         </div>
-                        <span className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-300">
-                          Join Test Server →
+                        <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">
+                          Connect →
                         </span>
                       </button>
                     ))}
@@ -1007,798 +449,459 @@
                 </section>
               )}
 
-              {screen === "character" && (
-                <section className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40 sm:p-10">
-                  <div className="flex flex-wrap items-center justify-between gap-6">
+              {screen === "loading" && (
+                <section className="rounded-3xl border border-cyan-500/30 bg-black/80 p-8 text-left shadow-2xl shadow-cyan-500/20">
+                  <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/70">boot sequence</p>
+                  <h2 className="mt-3 text-2xl font-semibold text-cyan-100">
+                    Establishing {selectedServer?.name || "relay"}
+                  </h2>
+                  <div className="mt-6 space-y-2 text-xs text-cyan-200/80">
+                    {loadingLines.slice(0, loadingLineIndex + 1).map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                      <span>Loading</span>
+                      <span>{loadingProgress}%</span>
+                    </div>
+                    <div className="mt-3 h-3 w-full rounded-full bg-slate-800">
+                      <div
+                        className="h-3 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400 transition-all"
+                        style={{ width: `${loadingProgress}%` }}
+                      />
+                    </div>
+                    <p className="mt-3 text-xs text-cyan-200/70">
+                      Keep this channel open until handshake completes.
+                    </p>
+                  </div>
+                  {loadingProgress >= 100 && (
+                    <div className="mt-6 text-xs uppercase tracking-[0.3em] text-cyan-300">
+                      Access granted.
+                    </div>
+                  )}
+                  {loadingProgress >= 100 && (
+                    <button
+                      type="button"
+                      onClick={() => setScreen("profile")}
+                      className="mt-6 w-full rounded-2xl border border-cyan-400/50 bg-cyan-500/20 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/30"
+                    >
+                      Proceed to Profile
+                    </button>
+                  )}
+                </section>
+              )}
+
+              {screen === "profile" && (
+                <section className="rounded-3xl border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-cyan-500/10">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                        Character Creation
+                      <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/70">
+                        identity forge
                       </p>
-                      <h2 className="mt-2 text-3xl font-semibold text-amber-100">
-                        Shape your traveler
-                      </h2>
-                      <p className="mt-3 text-sm text-slate-300">
-                        Start with a gender, then build your look and identity. You can remain a Traveler
-                        and find your household later.
+                      <h2 className="mt-2 text-2xl font-semibold text-cyan-100">Build your profile</h2>
+                      <p className="text-sm text-slate-300">
+                        Choose a profile signature, claim a handle, and select your operating city.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setScreen("servers")}
-                      className="rounded-xl border border-slate-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
+                      className="rounded-full border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-cyan-300 hover:text-cyan-200"
                     >
                       Back
                     </button>
                   </div>
 
-                  <div className="mt-6 rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
+                  <div className="mt-6 rounded-2xl border border-slate-700/70 bg-black/60 px-4 py-3">
                     <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                      <span>Progress</span>
-                      <span>{characterProgress}%</span>
+                      <span>Profile completion</span>
+                      <span>{profileProgress}%</span>
                     </div>
                     <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
                       <div
-                        className="h-2 rounded-full bg-[length:200%_200%] bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200 transition-all"
-                        style={{
-                          width: `${characterProgress}%`,
-                          animation: "shimmer 2s linear infinite",
-                        }}
+                        className="h-2 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400 transition-all"
+                        style={{ width: `${profileProgress}%` }}
                       />
                     </div>
                   </div>
 
                   <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                     <div className="space-y-6">
-                      {characterStep === 1 && (
-                        <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
+                      {profileStep === 1 && (
+                        <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                              Step 1 · Choose gender
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Step 1 · Profile icon
                             </p>
                             <button
                               type="button"
-                              onClick={() => setCharacterStep(2)}
+                              onClick={() => setProfileStep(2)}
                               className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
                             >
                               Next →
                             </button>
                           </div>
-                          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                            {["Male", "Female"].map((gender) => (
+                          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                            {profileIcons.map((icon) => (
                               <button
-                                key={gender}
+                                key={icon.id}
                                 type="button"
-                                onClick={() => handleGenderSelect(gender)}
-                                className={`rounded-2xl border px-4 py-4 text-sm font-semibold uppercase tracking-[0.3em] transition ${
-                                  characterGender === gender
-                                    ? "border-amber-300 bg-amber-300/10 text-amber-100"
-                                    : "border-slate-700 bg-slate-950/60 text-slate-300 hover:border-amber-300/70"
+                                onClick={() => setProfileIcon(icon)}
+                                className={`rounded-2xl border px-4 py-4 text-left text-sm transition ${
+                                  profileIcon?.id === icon.id
+                                    ? "border-cyan-300 bg-cyan-500/10 text-cyan-100"
+                                    : "border-slate-700/70 text-slate-300 hover:border-cyan-400/70"
                                 }`}
                               >
-                                {gender}
+                                <div className="text-2xl">{icon.glyph}</div>
+                                <p className="mt-2 text-xs uppercase tracking-[0.3em] text-slate-400">
+                                  {icon.label}
+                                </p>
                               </button>
                             ))}
                           </div>
                         </div>
                       )}
 
-                      {characterStep === 2 && (
-                        <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
+                      {profileStep === 2 && (
+                        <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                              Step 2 · Appearance
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Step 2 · Handle
                             </p>
-                            <button
-                              type="button"
-                              onClick={() => setCharacterStep(3)}
-                              className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
-                            >
-                              Next →
-                            </button>
-                          </div>
-                          <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-                            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
-                              <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                                <span>Base model</span>
-                                <span>{characterGender || "Select gender"}</span>
-                              </div>
-                              <div className="mt-4 flex justify-center">
-                                {genderImage ? (
-                                  <img
-                                    src={genderImage}
-                                    alt={`${characterGender} base model`}
-                                    className="h-96 w-auto translate-y-4 scale-125 object-contain"
-                                    style={{ filter: skinTone.filter }}
-                                  />
-                                ) : (
-                                  <div className="flex h-56 w-full items-center justify-center rounded-2xl border border-dashed border-slate-700/70 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                    Awaiting selection
-                                  </div>
-                                )}
-                              </div>
-                              <p className="mt-4 text-center text-xs text-slate-400">
-                                Skin tone preview updates instantly.
-                              </p>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setProfileStep(1)}
+                                className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                              >
+                                ← Back
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setProfileStep(3)}
+                                className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                              >
+                                Next →
+                              </button>
                             </div>
+                          </div>
 
-                            <div className="space-y-4">
-                              <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                                  Skin tone
+                          <div className="mt-4 space-y-4">
+                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                    Generated handle
+                                  </p>
+                                  <p className="mt-2 text-lg font-semibold text-cyan-100">
+                                    {username || "--"}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handleRollUsername}
+                                  className="rounded-xl border border-cyan-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200 transition hover:border-cyan-200 hover:text-cyan-100"
+                                >
+                                  Roll Handle
+                                </button>
+                              </div>
+                            </div>
+                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                  Custom handle
                                 </p>
-                                <div
-                                  className={`mt-3 flex flex-wrap gap-3 ${
-                                    characterGender ? "" : "pointer-events-none opacity-50"
+                                <button
+                                  type="button"
+                                  onClick={() => setIsPremium((prev) => !prev)}
+                                  className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.3em] transition ${
+                                    isPremium
+                                      ? "border-cyan-300 text-cyan-200"
+                                      : "border-slate-700 text-slate-400"
                                   }`}
                                 >
-                                  {skinTones.map((tone) => (
-                                    <button
-                                      key={tone.name}
-                                      type="button"
-                                      onClick={() => setSkinTone(tone)}
-                                      className={`flex items-center gap-3 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                        skinTone.name === tone.name
-                                          ? "border-amber-300 text-amber-100"
-                                          : "border-slate-700 text-slate-300 hover:border-amber-300/70"
-                                      }`}
-                                    >
-                                      <span
-                                        className="h-5 w-5 rounded-full border border-slate-700/70"
-                                        style={{ filter: tone.filter, background: "#f1e8dc" }}
-                                      />
-                                      {tone.name}
-                                    </button>
-                                  ))}
-                                </div>
+                                  {isPremium ? "Premium Enabled" : "Unlock Premium"}
+                                </button>
                               </div>
+                              {isPremium ? (
+                                <input
+                                  type="text"
+                                  value={customUsername}
+                                  onChange={(event) => setCustomUsername(event.target.value)}
+                                  placeholder="Enter custom handle"
+                                  className="mt-3 w-full rounded-xl border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
+                                />
+                              ) : (
+                                <div className="mt-3 rounded-xl border border-dashed border-slate-700/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                  Premium required for custom handle
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
                       )}
 
-                      {characterStep === 3 && (
-                        <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                            Step 3 · Identity
-                          </p>
-                          <div className="mt-4 space-y-4">
-                            <div className="space-y-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                                Name set
-                              </p>
-                              <div className="flex flex-wrap gap-3">
-                                {firstNameSets.map((set) => (
-                                  <button
-                                    key={set.label}
-                                    type="button"
-                                    onClick={() => handleNameSetChange(set.label)}
-                                    className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                      activeNameSet.label === set.label
-                                        ? "border-amber-300 text-amber-100"
-                                        : "border-slate-700 text-slate-300 hover:border-amber-300/70"
-                                    }`}
-                                  >
-                                    {set.label}
-                                  </button>
-                                ))}
-                              </div>
-                              <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                  <div>
-                                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                      Rolled name
-                                    </p>
-                                    <p className="mt-2 text-lg font-semibold text-amber-100">
-                                      {characterFirstName || "First"} {characterLastName || "Last"}
-                                    </p>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={handleRollName}
-                                    className="rounded-xl border border-amber-300/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                                  >
-                                    Roll Name
-                                  </button>
-                                </div>
-                                <p className="mt-3 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                  {activeNameSet.label} name set
-                                </p>
-                                <div className="mt-4 rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-xs text-slate-400">
-                                  Custom names are locked behind a premium pass.
-                                  <span className="ml-2 rounded-full border border-amber-300/40 px-2 py-0.5 text-[10px] uppercase tracking-[0.3em] text-amber-200">
-                                    Premium
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                Custom name
-                              </p>
-                              {hasPremium ? (
-                                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                  <input
-                                    type="text"
-                                    value={characterFirstName}
-                                    onChange={(event) => setCharacterFirstName(event.target.value)}
-                                    placeholder="First"
-                                    className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                                  />
-                                  <input
-                                    type="text"
-                                    value={characterLastName}
-                                    onChange={(event) => setCharacterLastName(event.target.value)}
-                                    placeholder="Last"
-                                    className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="mt-3 rounded-xl border border-dashed border-slate-700/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                  Unlock with Realm Pass
-                                </div>
-                              )}
-                            </div>
-
-                            <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                              Household
-                              <select
-                                value={characterHouse}
-                                onChange={(event) => setCharacterHouse(event.target.value)}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                      {profileStep === 3 && (
+                        <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Step 3 · Operating city
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setProfileStep(2)}
+                              className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                            >
+                              ← Back
+                            </button>
+                          </div>
+                          <div className="mt-4 grid max-h-64 gap-3 overflow-y-auto pr-2 sm:grid-cols-2">
+                            {cityOptions.map((city) => (
+                              <button
+                                key={`${city.city}-${city.country}`}
+                                type="button"
+                                onClick={() => setSelectedCity(city)}
+                                className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                                  selectedCity.city === city.city
+                                    ? "border-cyan-300 bg-cyan-500/10 text-cyan-100"
+                                    : "border-slate-700/70 text-slate-300 hover:border-cyan-400/70"
+                                }`}
                               >
-                                <option>Traveler</option>
-                                <option>Stark</option>
-                                <option>Lannister</option>
-                                <option>Targaryen</option>
-                                <option>Tyrell</option>
-                                <option>Martell</option>
-                                <option>Greyjoy</option>
-                              </select>
-                            </label>
+                                <p className="text-sm font-semibold">{city.city}</p>
+                                <p className="text-xs text-slate-400">{city.country}</p>
+                              </button>
+                            ))}
                           </div>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex flex-col justify-between gap-6 rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
+                    <div className="flex flex-col justify-between gap-6 rounded-2xl border border-slate-700/70 bg-black/60 p-6">
                       <div className="space-y-3">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Starting Status</p>
-                        <p className="text-base text-amber-100">{fullName}</p>
-                        <p className="text-xs text-slate-400">
-                          {characterGender || "Gender pending"}
-                        </p>
-                        <p className="text-xs text-slate-400">{characterRole}</p>
-                        <p className="text-xs text-slate-400">{householdLabel}</p>
-                        <div className="mt-4 space-y-2 text-sm text-slate-300">
-                          <p>• Neutral reputation across all regions.</p>
-                          <p>• Basic gear: cloak, dagger, travel rations.</p>
-                          <p>• Free to pledge loyalty after arrival.</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Profile summary</p>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/40 bg-slate-950/70 text-2xl">
+                            {profileIcon?.glyph}
+                          </div>
+                          <div>
+                            <p className="text-base font-semibold text-cyan-100">
+                              {displayUsername || "Handle pending"}
+                            </p>
+                            <p className="text-xs text-slate-400">{selectedCity.city}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Selected Realm</p>
-                        <p className="mt-2 text-base text-amber-100">
-                          {selectedServer?.name || "Test Realm"}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          Region: {selectedServer?.region || "Westeros"}
-                        </p>
+                        <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4 text-xs text-slate-300">
+                          <p>• Identity concealment enabled.</p>
+                          <p>• Default wallet seeded in USD.</p>
+                          <p>• Access limited to Tier-1 apps.</p>
+                        </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => {
-                          if (!isCharacterComplete) return;
-                          setNextScreen("game");
-                          setScreen("loading");
+                          if (!profileComplete) return;
+                          setScreen("dashboard");
                         }}
-                        disabled={!isCharacterComplete}
-                        className={`w-full rounded-xl px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] shadow-lg shadow-amber-500/40 transition ${
-                          isCharacterComplete
-                            ? "bg-amber-400 text-slate-900 hover:bg-amber-300"
+                        disabled={!profileComplete}
+                        className={`w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                          profileComplete
+                            ? "bg-cyan-500/30 text-cyan-100 hover:bg-cyan-400/40"
                             : "cursor-not-allowed bg-slate-800 text-slate-500"
                         }`}
                       >
-                        Create Character
+                        Enter The Dark
                       </button>
                     </div>
                   </div>
                 </section>
               )}
 
-              {screen === "loading" && (
-                <section className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40 sm:p-10">
-                  <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                    Entering the realm
-                  </p>
-                  <h2 className="mt-3 text-3xl font-semibold text-amber-100">
-                    {selectedServer?.name || "Preparing the realm"}
-                  </h2>
-                  <p className="mt-4 text-sm text-slate-300">{progressMessage}</p>
-
-                  <div className="mt-8 flex flex-col items-center justify-center gap-6 sm:flex-row">
-                    <div className="loading-ring h-16 w-16 rounded-full" />
-                    <div className="w-full">
-                      <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                        <span>Loading</span>
-                        <span>{loadingProgress}%</span>
-                      </div>
-                      <div className="mt-3 h-3 w-full rounded-full bg-slate-800">
-                        <div
-                          className="h-3 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200 transition-all"
-                          style={{ width: `${loadingProgress}%` }}
-                        />
-                      </div>
-                      <div
-                        className="mt-4 h-2 rounded-full bg-[length:200%_200%] bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900"
-                        style={{ animation: "shimmer 2s linear infinite" }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-10 grid gap-4 text-left text-sm text-slate-300 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Character</p>
-                      <p className="mt-2 text-base text-amber-100">{fullName}</p>
-                      <p className="text-xs text-slate-400">{characterRole}</p>
-                      <p className="text-xs text-slate-400">{householdLabel}</p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Realm Weather</p>
-                      <p className="mt-2 text-base text-amber-100">Cold winds, low visibility</p>
-                      <p className="text-xs text-slate-400">Adjusting to region: {selectedServer?.region}</p>
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              {screen === "game" && (
-                <section className="mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-900/70 shadow-2xl shadow-black/40">
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/60 bg-slate-950/70 px-6 py-5">
+              {screen === "dashboard" && (
+                <section className="rounded-3xl border border-slate-700/60 bg-slate-950/80 p-6 shadow-2xl shadow-cyan-500/10">
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/60 pb-4">
                     <div className="flex items-center gap-4">
-                      <div className="h-16 w-16 overflow-hidden rounded-full border border-amber-300/50 bg-slate-900/80">
-                        {genderImage ? (
-                          <img
-                            src={genderImage}
-                            alt="Character portrait"
-                            className="h-full w-full translate-y-4 scale-[1.25] object-cover object-top"
-                            style={{ filter: skinTone.filter }}
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                            --
-                          </div>
-                        )}
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/40 bg-slate-950/70 text-2xl">
+                        {profileIcon?.glyph}
                       </div>
                       <div>
-                        <p className="text-lg font-semibold text-amber-100">{fullName}</p>
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                          {characterRole} · {householdLabel}
+                        <p className="text-lg font-semibold text-cyan-100">
+                          {displayUsername || "Anonymous"}
                         </p>
-                        <p className="text-xs text-slate-400">Location: {currentLocation.name}</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                          {selectedCity.city} · {selectedCity.country}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="rounded-xl border border-amber-300/30 bg-slate-950/80 px-4 py-2">
-                        <span className="text-xs uppercase tracking-[0.3em] text-amber-200">Gold</span>
-                        <p className="text-lg font-semibold text-amber-100">{goldCoins}</p>
+                    <div className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.3em]">
+                      <div className="rounded-xl border border-slate-700 bg-black/60 px-3 py-2">
+                        <p className="text-[10px] text-slate-400">System</p>
+                        <p className="text-cyan-100">{systemTimeLabel}</p>
                       </div>
-                      <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-2">
-                        <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400">
-                          Day {dayCount}
-                        </span>
-                        <p className="text-sm font-semibold text-amber-100">{timeLabel}</p>
-                        <div className="mt-2 h-1.5 w-28 rounded-full bg-slate-800">
+                      <div className="rounded-xl border border-cyan-400/40 bg-black/60 px-3 py-2">
+                        <p className="text-[10px] text-slate-400">City Time</p>
+                        <p className="text-cyan-100">{localTimeLabel}</p>
+                      </div>
+                      <div className="rounded-xl border border-slate-700 bg-black/60 px-3 py-2">
+                        <p className="text-[10px] text-slate-400">Cycle Day</p>
+                        <p className="text-cyan-100">{inGameDay}</p>
+                        <div className="mt-2 h-1.5 w-24 rounded-full bg-slate-800">
                           <div
-                            className="h-1.5 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all"
-                            style={{ width: `${dayProgress}%` }}
+                            className="h-1.5 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400"
+                            style={{ width: `${inGameProgress}%` }}
                           />
                         </div>
                       </div>
-                      <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300">
-                        {selectedServer?.name || "Realm"}
-                      </div>
                     </div>
                   </div>
 
-                  <div className="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">📜 Life Events</p>
-                        <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300">
-                          Year 1
-                        </span>
-                      </div>
-                      <div className="mt-4 max-h-56 space-y-4 overflow-y-auto pr-2 text-sm text-slate-300">
-                        <p>• You arrive in {currentLocation.name} seeking a place to belong.</p>
-                        <p>• Ravens whisper of unrest beyond the walls.</p>
-                        <p>• A traveler offers work in exchange for loyalty.</p>
-                        <p>• Your renown grows among the villagers nearby.</p>
-                        <p>• A merchant caravan requests your protection.</p>
-                        <p>• Rumors speak of a dragon sighting on the horizon.</p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">🧭 Menus</p>
-                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                        {[
-                          { id: "travel", label: "🏰 Travel" },
-                          { id: "chat", label: "💬 Chats" },
-                          { id: "actions", label: "🪵 Actions" },
-                          { id: "people", label: "🧑‍🤝‍🧑 People" },
-                          { id: "buildings", label: "🏛️ Buildings" },
-                          { id: "stats", label: "⚔️ Stats" },
-                        ].map((menu) => (
+                  <div className="mt-6 grid gap-6 lg:grid-cols-[0.65fr_1fr]">
+                    <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
+                      <p className="text-xs uppercase tracking-[0.3em] text-cyan-400/70">Applications</p>
+                      <div className="mt-4 space-y-3">
+                        {appModules.map((app) => (
                           <button
-                            key={menu.id}
+                            key={app.id}
                             type="button"
-                            onClick={() => setGameMenu(menu.id)}
-                            className="rounded-2xl border border-slate-700/70 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300/70 hover:text-amber-200"
+                            onClick={() => handleOpenApp(app.id)}
+                            className="flex w-full items-center justify-between rounded-2xl border border-slate-700/70 bg-slate-950/70 px-4 py-3 text-left text-sm text-slate-200 transition hover:border-cyan-400/70"
                           >
-                            {menu.label}
+                            <span>{app.label}</span>
+                            <span className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                              {app.status}
+                            </span>
                           </button>
                         ))}
                       </div>
-                      <p className="mt-4 text-xs text-slate-400">
-                        Select a menu to open a focused panel. Life events stay visible on the left.
-                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
+                      <p className="text-xs uppercase tracking-[0.3em] text-cyan-400/70">System feed</p>
+                      <div className="mt-4 space-y-3 text-sm text-slate-300">
+                        <p>• DarkVault routing table synced.</p>
+                        <p>• Shadow Archives encryption key pending.</p>
+                        <p>• Ghost Market indexers asleep.</p>
+                        <p>• Dead Drop courier scheduled for 02:00.</p>
+                      </div>
                     </div>
                   </div>
 
                   <div
-                    className={`panel-overlay fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-slate-950/80 px-4 py-8 ${
-                      gameMenu ? "is-open" : ""
+                    className={`panel-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-8 ${
+                      activeApp ? "is-open" : ""
                     }`}
                   >
-                    {gameMenu && (
-                      <div className="w-full max-w-3xl rounded-3xl border border-amber-300/30 bg-slate-950/95 p-5 shadow-2xl shadow-black/60">
-                        <div className="flex items-center justify-between gap-3">
+                    {activeApp && (
+                      <div className="w-full max-w-3xl rounded-3xl border border-cyan-400/30 bg-slate-950 p-6 shadow-2xl shadow-cyan-500/20">
+                        <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                              {gameMenu === "travel" && "🏰 Travel Planner"}
-                              {gameMenu === "chat" && "💬 Chat Rooms"}
-                              {gameMenu === "actions" && "🪵 Local Actions"}
-                              {gameMenu === "people" && "🧑‍🤝‍🧑 People"}
-                              {gameMenu === "buildings" && "🏛️ Buildings"}
-                              {gameMenu === "stats" && "⚔️ Royal Attributes"}
+                            <p className="text-xs uppercase tracking-[0.3em] text-cyan-400/70">
+                              {activeApp === "bank" && "DarkVault Bank"}
+                              {activeApp === "archives" && "Shadow Archives"}
+                              {activeApp === "market" && "Ghost Market"}
+                              {activeApp === "drops" && "Dead Drops"}
                             </p>
                             <p className="text-sm text-slate-300">
-                              {gameMenu === "travel" && "Pick your next destination and confirm the route."}
-                              {gameMenu === "chat" && "Open a room and send messages."}
-                              {gameMenu === "actions" && "Choose activities based on your location."}
-                              {gameMenu === "people" && "Select a resident to view interaction options."}
-                              {gameMenu === "buildings" && "Visit locations to unlock special utilities."}
-                              {gameMenu === "stats" && "Assign points to your abilities."}
+                              {activeApp === "bank" && "Manage your encrypted vault accounts."}
+                              {activeApp === "archives" && "Classified intel archive (locked)."}
+                              {activeApp === "market" && "Black market listings (offline)."}
+                              {activeApp === "drops" && "Courier relay scheduling (standby)."}
                             </p>
                           </div>
                           <button
                             type="button"
-                            onClick={() => setGameMenu(null)}
+                            onClick={() => setActiveApp(null)}
                             className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300"
                           >
-                            Close ✕
+                            Close
                           </button>
                         </div>
 
-                        {gameMenu === "travel" && (
-                          <div className="mt-4 space-y-4">
-                            {travelPlan && (
-                              <div className="rounded-2xl border border-amber-300/40 bg-amber-300/10 p-4 text-sm text-amber-100">
-                                <p className="text-xs uppercase tracking-[0.3em] text-amber-200">
-                                  Traveling to {travelPlan.destination}
-                                </p>
-                                <p className="mt-2 text-xs text-amber-100/80">
-                                  Day{" "}
-                                  {Math.min(
-                                    Math.floor(travelPlan.secondsElapsed / 10) + 1,
-                                    travelPlan.days
-                                  )}{" "}
-                                  of {travelPlan.days}
-                                </p>
-                                <div className="mt-3 h-2 w-full rounded-full bg-amber-200/20">
-                                  <div
-                                    className="h-2 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all"
-                                    style={{ width: `${travelProgress}%` }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                              Available routes from {currentLocation.name}
-                            </p>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              {availableDestinations.map((dest) => (
-                                <button
-                                  key={dest.name}
-                                  type="button"
-                                  onClick={() => setSelectedDestination(dest)}
-                                  disabled={!!travelPlan}
-                                  className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                                    selectedDestination?.name === dest.name
-                                      ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
-                                      : travelPlan
-                                        ? "cursor-not-allowed border-slate-800 text-slate-600"
-                                        : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <span>{dest.name}</span>
-                                    <span className="text-xs text-slate-400">{dest.days} days</span>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                Locked routes
-                              </p>
-                              <p className="mt-2 text-xs text-slate-500">
-                                You must travel through connected villages before reaching distant keeps.
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={handleConfirmTravel}
-                              disabled={!selectedDestination || !!travelPlan}
-                              className={`w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                !selectedDestination || travelPlan
-                                  ? "cursor-not-allowed bg-slate-800 text-slate-500"
-                                  : "bg-amber-400 text-slate-900 hover:bg-amber-300"
-                              }`}
-                            >
-                              Confirm Travel
-                            </button>
-                          </div>
-                        )}
-
-                        {gameMenu === "chat" && (
-                          <div className="mt-4 grid gap-4 lg:grid-cols-[0.6fr_1fr]">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                                Public rooms · {currentLocation.name}
-                              </p>
-                              <div className="mt-3 space-y-2">
-                                {currentLocation.rooms.map((room) => (
-                                  <button
-                                    key={room}
-                                    type="button"
-                                    onClick={() => setActiveRoom(room)}
-                                    className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
-                                      activeRoom === room
-                                        ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
-                                        : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
-                                    }`}
-                                  >
-                                    {room}
-                                  </button>
-                                ))}
-                              </div>
-                              <p className="mt-4 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                Direct messages
-                              </p>
-                              <div className="mt-3 space-y-2">
-                                {directMessages.map((contact) => (
-                                  <button
-                                    key={contact}
-                                    type="button"
-                                    className="w-full rounded-xl border border-slate-700/70 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-amber-300/70"
-                                  >
-                                    {contact}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                {activeRoom} Chat
-                              </p>
-                              <div className="mt-3 h-56 space-y-3 overflow-y-auto pr-2 text-sm">
-                                {roomMessages.map((message) => (
-                                  <div
-                                    key={message.id}
-                                    className={`max-w-[80%] rounded-2xl px-3 py-2 ${
-                                      message.sender === fullName
-                                        ? "ml-auto bg-amber-300/20 text-amber-100"
-                                        : "bg-slate-900/70 text-slate-200"
-                                    }`}
-                                  >
-                                    <p className="text-xs text-slate-400">{message.sender}</p>
-                                    <p>{message.text}</p>
-                                  </div>
-                                ))}
-                              </div>
-                              <div className="mt-3 flex gap-2">
-                                <input
-                                  type="text"
-                                  value={chatInput}
-                                  onChange={(event) => setChatInput(event.target.value)}
-                                  onKeyDown={handleChatKeyDown}
-                                  placeholder="Send a message..."
-                                  className="flex-1 rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={handleSendMessage}
-                                  className="rounded-xl bg-amber-400 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-900"
-                                >
-                                  Send
-                                </button>
-                              </div>
+                        {appLoading && (
+                          <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-black/80 p-4 text-xs text-cyan-200/80">
+                            <p>loading modules...</p>
+                            <div className="mt-3 h-2 w-full rounded-full bg-slate-800">
+                              <div className="h-2 w-2/3 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400" />
                             </div>
                           </div>
                         )}
 
-                        {gameMenu === "actions" && (
-                          <div className="mt-4 space-y-4">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                              Activities near {currentLocation.name}
-                            </p>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              {(locationActivities[currentLocation.name] ||
-                                locationActivities.Default ||
-                                []
-                              ).map((activity) => (
-                                <button
-                                  key={activity}
-                                  type="button"
-                                  className="rounded-2xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 text-left text-sm text-slate-200 transition hover:border-amber-300/70"
-                                >
-                                  {activity}
-                                </button>
-                              ))}
-                            </div>
-                            <p className="text-xs text-slate-500">
-                              Activities update based on the location you are currently in.
-                            </p>
-                          </div>
-                        )}
-
-                        {gameMenu === "people" && (
-                          <div className="mt-4 grid gap-4 lg:grid-cols-[0.6fr_1fr]">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                                People in {currentLocation.name}
-                              </p>
-                              <div className="mt-3 space-y-3">
-                                {(locationPeople[currentLocation.name] || []).map((person) => (
-                                  <button
-                                    key={person.name}
-                                    type="button"
-                                    onClick={() => setSelectedPerson(person)}
-                                    className={`w-full rounded-2xl border bg-slate-900/70 p-4 text-left text-sm transition ${
-                                      selectedPerson?.name === person.name
-                                        ? "border-amber-300/70 text-amber-100"
-                                        : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
-                                    }`}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span>{person.name}</span>
-                                      <span className="text-xs text-slate-500">
-                                        {person.relationship}% rapport
-                                      </span>
-                                    </div>
-                                    <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
-                                      <div
-                                        className="h-2 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200"
-                                        style={{ width: `${person.relationship}%` }}
-                                      />
-                                    </div>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                        {!appLoading && activeApp === "bank" && (
+                          <div className="mt-6 space-y-4">
+                            <div className="rounded-2xl border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                {selectedPerson
-                                  ? `Actions for ${selectedPerson.name}`
-                                  : "Choose someone to interact"}
+                                Vault status
                               </p>
-                              {selectedPerson ? (
+                              {bankAccount ? (
                                 <div className="mt-3 space-y-2">
-                                  {actionOptions.map((action) => (
-                                    <button
-                                      key={action}
-                                      type="button"
-                                      className="w-full rounded-xl border border-slate-700/70 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-amber-300/70"
-                                    >
-                                      {action}
-                                    </button>
-                                  ))}
+                                  <p className="text-lg font-semibold text-cyan-100">
+                                    {bankAccount.alias}
+                                  </p>
+                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                    Account ID: {bankAccount.id}
+                                  </p>
+                                  <p className="text-sm text-slate-300">
+                                    Balance: ${bankAccount.balance.toFixed(2)} USD
+                                  </p>
                                 </div>
                               ) : (
-                                <p className="mt-3 text-sm text-slate-500">
-                                  Select a person on the left to reveal available actions.
+                                <p className="mt-3 text-sm text-slate-400">
+                                  No vault created. Initialize your first account below.
                                 </p>
                               )}
                             </div>
-                          </div>
-                        )}
 
-                        {gameMenu === "buildings" && (
-                          <div className="mt-4 space-y-4">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                              Buildings in {currentLocation.name}
-                            </p>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              {(locationBuildings[currentLocation.name] ||
-                                locationBuildings.Default ||
-                                []
-                              ).map((building) => (
-                                <div
-                                  key={building.name}
-                                  className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm text-slate-300"
-                                >
-                                  <p className="text-sm font-semibold text-amber-100">
-                                    {building.name}
-                                  </p>
-                                  <p className="mt-2 text-xs text-slate-400">{building.utility}</p>
-                                  <button
-                                    type="button"
-                                    className="mt-3 w-full rounded-xl border border-amber-300/50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-300 hover:text-amber-100"
-                                  >
-                                    Visit
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {gameMenu === "stats" && (
-                          <div className="mt-4 space-y-3">
-                            <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.3em] text-slate-400">
-                              <span>⚔️ Royal Attributes</span>
-                              <span className="text-slate-300">{pointsAvailable} points</span>
-                            </div>
-                            {stats.map((stat) => (
-                              <div
-                                key={stat.key}
-                                className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2"
-                              >
-                                <div>
-                                  <p className="text-sm text-amber-100">{stat.label}</p>
-                                  <p className="text-xs text-slate-400">Level {stat.value}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="h-2 w-24 rounded-full bg-slate-800">
-                                    <div
-                                      className="h-2 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all"
-                                      style={{ width: `${Math.min(stat.value * 8, 100)}%` }}
-                                    />
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleAllocatePoint(stat.key)}
-                                    disabled={pointsAvailable <= 0}
-                                    className={`stat-glow h-8 w-8 rounded-full border text-sm font-semibold transition ${
-                                      pointsAvailable <= 0
-                                        ? "cursor-not-allowed border-slate-700 text-slate-600"
-                                        : "border-amber-300/70 text-amber-200 hover:scale-105"
-                                    }`}
-                                  >
-                                    +
-                                  </button>
-                                </div>
+                            <div className="rounded-2xl border border-slate-700/70 bg-black/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                Create account
+                              </p>
+                              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                <input
+                                  type="text"
+                                  value={accountAlias}
+                                  onChange={(event) => setAccountAlias(event.target.value)}
+                                  placeholder="Account alias"
+                                  disabled={!!bankAccount}
+                                  className="w-full rounded-xl border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-500"
+                                />
+                                <input
+                                  type="number"
+                                  value={depositAmount}
+                                  onChange={(event) => setDepositAmount(event.target.value)}
+                                  placeholder="Initial deposit"
+                                  disabled={!!bankAccount}
+                                  className="w-full rounded-xl border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-500"
+                                />
                               </div>
-                            ))}
-                            <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
-                              <span>Total: {totalStatValue} pts</span>
                               <button
                                 type="button"
-                                onClick={handleResetStats}
-                                className="rounded-full border border-slate-700 px-3 py-1 uppercase tracking-[0.3em] transition hover:border-amber-300 hover:text-amber-200"
+                                onClick={handleCreateBankAccount}
+                                disabled={!!bankAccount}
+                                className={`mt-4 w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                  bankAccount
+                                    ? "cursor-not-allowed bg-slate-800 text-slate-500"
+                                    : "bg-cyan-500/30 text-cyan-100 hover:bg-cyan-400/40"
+                                }`}
                               >
-                                Reset
+                                {bankAccount ? "Account Active" : "Create Vault"}
                               </button>
                             </div>
+                          </div>
+                        )}
+
+                        {!appLoading && activeApp !== "bank" && (
+                          <div className="mt-6 rounded-2xl border border-slate-700/70 bg-black/70 p-6 text-sm text-slate-300">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Status</p>
+                            <p className="mt-2">
+                              This module is not available yet. Maintain access level or wait for the next
+                              network update.
+                            </p>
                           </div>
                         )}
                       </div>
                     )}
                   </div>
-
                 </section>
               )}
             </div>
