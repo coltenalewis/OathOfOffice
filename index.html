@@ -170,8 +170,12 @@
         },
       ];
 
-      const supabaseUrl = window.SUPABASE_URL;
-      const supabaseKey = window.SUPABASE_PUBLISHABLE_KEY;
+      const supabaseUrl =
+        window.SUPABASE_URL || window.__ENV__?.SUPABASE_URL || window.ENV?.SUPABASE_URL;
+      const supabaseKey =
+        window.SUPABASE_PUBLISHABLE_KEY ||
+        window.__ENV__?.SUPABASE_PUBLISHABLE_KEY ||
+        window.ENV?.SUPABASE_PUBLISHABLE_KEY;
       const supabaseClient =
         window.supabase && supabaseUrl && supabaseKey
           ? window.supabase.createClient(supabaseUrl, supabaseKey)
@@ -195,6 +199,7 @@
         const detailsRef = useRef(null);
         const [showShop, setShowShop] = useState(false);
         const [authUser, setAuthUser] = useState(null);
+        const [supabaseWarning, setSupabaseWarning] = useState(false);
 
         useEffect(() => {
           if (screen !== "loading") return;
@@ -309,7 +314,7 @@
 
         const handleDiscordLogin = async () => {
           if (!supabaseClient) {
-            alert("Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY first.");
+            setSupabaseWarning(true);
             return;
           }
           await supabaseClient.auth.signInWithOAuth({
@@ -351,6 +356,16 @@
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
+                  {!supabaseClient && (
+                    <span className="rounded-full border border-rose-400/60 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-rose-200">
+                      Supabase keys not detected
+                    </span>
+                  )}
+                  {supabaseWarning && !supabaseClient && (
+                    <span className="rounded-full border border-amber-300/60 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-amber-200">
+                      Verify Netlify env injection
+                    </span>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowShop(true)}
