@@ -105,8 +105,7 @@
         const [selectedServer, setSelectedServer] = useState(null);
         const [loadingProgress, setLoadingProgress] = useState(0);
         const [characterName, setCharacterName] = useState("");
-        const [characterHouse, setCharacterHouse] = useState("Stark");
-        const [characterRole, setCharacterRole] = useState("Warden's Scout");
+        const [characterHouse, setCharacterHouse] = useState("Traveler");
 
         useEffect(() => {
           if (screen !== "loading") return;
@@ -140,6 +139,9 @@
           return immersionLines[Math.min(index, immersionLines.length - 1)];
         }, [loadingProgress, immersionLines]);
 
+        const householdLabel =
+          characterHouse === "Traveler" ? "Traveler" : `House ${characterHouse}`;
+
         return (
           <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
             <div className="absolute inset-0 mist-layer opacity-80" />
@@ -168,72 +170,37 @@
                   <div className="space-y-6 rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40">
                     <div className="space-y-2">
                       <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                        Character Creation
+                        Realm Overview
                       </p>
-                      <h2 className="text-2xl font-semibold text-amber-100">
-                        Shape your lineage
-                      </h2>
+                      <h2 className="text-2xl font-semibold text-amber-100">A living Westeros</h2>
                       <p className="text-sm text-slate-300">
-                        Pick a name, a house, and a starting calling before you ride into the realm.
+                        Step into a shared narrative where your choices shape the realm. Pick a server first,
+                        then craft your traveler&apos;s identity.
                       </p>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                        Name
-                        <input
-                          type="text"
-                          value={characterName}
-                          onChange={(event) => setCharacterName(event.target.value)}
-                          placeholder="Asha of Riverrun"
-                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                        />
-                      </label>
-                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                        House
-                        <select
-                          value={characterHouse}
-                          onChange={(event) => setCharacterHouse(event.target.value)}
-                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                        >
-                          <option>Stark</option>
-                          <option>Lannister</option>
-                          <option>Targaryen</option>
-                          <option>Tyrell</option>
-                          <option>Martell</option>
-                          <option>Greyjoy</option>
-                        </select>
-                      </label>
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">The North</p>
+                        <p className="mt-2 text-sm text-slate-300">
+                          Brave the cold to earn loyalty from ancient houses.
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">The Crownlands</p>
+                        <p className="mt-2 text-sm text-slate-300">
+                          Intrigue and politics rule the halls of power.
+                        </p>
+                      </div>
                     </div>
 
-                    <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                      Role
-                      <select
-                        value={characterRole}
-                        onChange={(event) => setCharacterRole(event.target.value)}
-                        className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                      >
-                        <option>Warden's Scout</option>
-                        <option>Master of Whispers</option>
-                        <option>Kingsguard Aspirant</option>
-                        <option>Wandering Maester</option>
-                        <option>Shipwright of the Iron Isles</option>
-                      </select>
-                    </label>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Reputation</p>
-                        <div className="mt-3 h-2 w-full rounded-full bg-slate-800">
-                          <div className="h-2 w-3/5 rounded-full bg-amber-400/70" />
-                        </div>
-                      </div>
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Resolve</p>
-                        <div className="mt-3 h-2 w-full rounded-full bg-slate-800">
-                          <div className="h-2 w-4/5 rounded-full bg-rose-400/70" />
-                        </div>
-                      </div>
+                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">How it works</p>
+                      <ul className="mt-3 space-y-2 text-sm text-slate-300">
+                        <li>1. Choose a realm in the server browser.</li>
+                        <li>2. Create a character with a first name and household.</li>
+                        <li>3. Enter the realm and begin your roleplay journey.</li>
+                      </ul>
                     </div>
                   </div>
 
@@ -302,7 +269,7 @@
                         type="button"
                         onClick={() => {
                           setSelectedServer(server);
-                          setScreen("loading");
+                          setScreen("character");
                         }}
                         className="group flex w-full flex-col gap-4 rounded-2xl border border-slate-700/80 bg-slate-950/60 p-5 text-left transition hover:-translate-y-1 hover:border-amber-300/70 hover:shadow-lg hover:shadow-amber-500/20"
                       >
@@ -332,6 +299,96 @@
                         </span>
                       </button>
                     ))}
+                  </div>
+                </section>
+              )}
+
+              {screen === "character" && (
+                <section className="mx-auto w-full max-w-4xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-10 shadow-2xl shadow-black/40">
+                  <div className="flex flex-wrap items-center justify-between gap-6">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Character Creation
+                      </p>
+                      <h2 className="mt-2 text-3xl font-semibold text-amber-100">
+                        Name your traveler
+                      </h2>
+                      <p className="mt-3 text-sm text-slate-300">
+                        After choosing a server, define your first name and decide if you wish to join a
+                        household. You can remain a Traveler and find your role in the realm later.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setScreen("servers")}
+                      className="rounded-xl border border-slate-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
+                    >
+                      Back
+                    </button>
+                  </div>
+
+                  <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                    <div className="space-y-5">
+                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                        First name
+                        <input
+                          type="text"
+                          value={characterName}
+                          onChange={(event) => setCharacterName(event.target.value)}
+                          placeholder="Arya"
+                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                        />
+                      </label>
+
+                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                        Household
+                        <select
+                          value={characterHouse}
+                          onChange={(event) => setCharacterHouse(event.target.value)}
+                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                        >
+                          <option>Traveler</option>
+                          <option>Stark</option>
+                          <option>Lannister</option>
+                          <option>Targaryen</option>
+                          <option>Tyrell</option>
+                          <option>Martell</option>
+                          <option>Greyjoy</option>
+                        </select>
+                      </label>
+
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Selected Realm</p>
+                        <p className="mt-2 text-base text-amber-100">
+                          {selectedServer?.name || "Test Realm"}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          Region: {selectedServer?.region || "Westeros"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col justify-between gap-6 rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
+                      <div className="space-y-3">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Starting Status</p>
+                        <p className="text-base text-amber-100">
+                          {characterName || "Unnamed Traveler"}
+                        </p>
+                        <p className="text-xs text-slate-400">{householdLabel}</p>
+                        <div className="mt-4 space-y-2 text-sm text-slate-300">
+                          <p>• Neutral reputation across all regions.</p>
+                          <p>• Basic gear: cloak, dagger, travel rations.</p>
+                          <p>• Free to pledge loyalty after arrival.</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setScreen("loading")}
+                        className="w-full rounded-xl bg-amber-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-lg shadow-amber-500/40 transition hover:bg-amber-300"
+                      >
+                        Create Character
+                      </button>
+                    </div>
                   </div>
                 </section>
               )}
@@ -372,9 +429,7 @@
                       <p className="mt-2 text-base text-amber-100">
                         {characterName || "Unnamed Traveler"}
                       </p>
-                      <p className="text-xs text-slate-400">
-                        House {characterHouse} · {characterRole}
-                      </p>
+                      <p className="text-xs text-slate-400">{householdLabel}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
                       <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Realm Weather</p>
@@ -409,31 +464,54 @@
                     </button>
                   </div>
 
-                  <div className="mt-8 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
+                  <div className="mt-8 grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
                     <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
-                      <h3 className="text-lg font-semibold text-amber-100">Live Roleplay Feed</h3>
-                      <ul className="mt-4 space-y-3 text-sm text-slate-300">
-                        <li>Ravens report movement near the Neck.</li>
-                        <li>A new decree has been issued in King&apos;s Landing.</li>
-                        <li>Merchants gather at the Riverlands trade post.</li>
-                        <li>Night&apos;s Watch scouts request reinforcements.</li>
-                      </ul>
+                      <h3 className="text-lg font-semibold text-amber-100">Life Ledger</h3>
+                      <div className="mt-4 grid gap-4 text-sm text-slate-300">
+                        <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-4">
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Age 17</p>
+                          <p className="mt-2 text-base text-amber-100">A new season dawns</p>
+                          <p className="text-xs text-slate-400">
+                            You arrive in {selectedServer?.region || "Westeros"} with only a satchel of supplies.
+                          </p>
+                        </div>
+                        <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-4">
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Age 18</p>
+                          <p className="mt-2 text-base text-amber-100">Whispers of opportunity</p>
+                          <p className="text-xs text-slate-400">
+                            A steward offers work in exchange for loyalty to a noble cause.
+                          </p>
+                        </div>
+                      </div>
                     </div>
+
                     <div className="space-y-4">
                       <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
                         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Character Status</p>
                         <p className="mt-2 text-base text-amber-100">
                           {characterName || "Unnamed Traveler"}
                         </p>
-                        <p className="text-xs text-slate-400">
-                          House {characterHouse} · {characterRole}
-                        </p>
+                        <p className="text-xs text-slate-400">{householdLabel}</p>
+                        <div className="mt-4 grid gap-3 text-sm text-slate-300">
+                          <p>Honor: 64%</p>
+                          <p>Fortune: 38%</p>
+                          <p>Renown: 52%</p>
+                        </div>
                       </div>
+
                       <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Next Step</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Next Choice</p>
                         <p className="mt-2 text-sm text-slate-300">
-                          Awaiting full world sync. Prepare your opening roleplay entry in the realm chat.
+                          Choose how your story begins. These decisions will shape your standing in the realm.
                         </p>
+                        <div className="mt-4 space-y-3">
+                          <button className="w-full rounded-xl border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100">
+                            Seek a household vow
+                          </button>
+                          <button className="w-full rounded-xl border border-slate-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200">
+                            Remain a traveler
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
