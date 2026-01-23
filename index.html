@@ -113,40 +113,43 @@
         { id: 4, name: "Ghostline Hub", location: "São Paulo", status: "Hidden", load: "48%" },
       ];
 
-     const profileIcons = [
-  "🎭","💀","🧠","🔒","👁️","🦉",
-  "🕷️","🦂","🧬","🧿","⚗️","🧲",
-  "📡","🛰️","🧪","🗝️","🕯️","🩸"
+      // More icons + rounder cards (applied in JSX)
+      const profileIcons = [
+        "🎭","💀","🧠","🔒","👁️","🦉",
+        "🕷️","🦂","🧬","🧿","⚗️","🧲",
+        "📡","🛰️","🧪","🗝️","🕯️","🩸"
       ];
 
+      // Real-life city options + timezones
       const cityOptions = [
-  { city: "New York", country: "United States", timeZone: "America/New_York" },
-  { city: "Chicago", country: "United States", timeZone: "America/Chicago" },
-  { city: "Los Angeles", country: "United States", timeZone: "America/Los_Angeles" },
-  { city: "London", country: "United Kingdom", timeZone: "Europe/London" },
-  { city: "Berlin", country: "Germany", timeZone: "Europe/Berlin" },
-  { city: "Tokyo", country: "Japan", timeZone: "Asia/Tokyo" },
-  { city: "Singapore", country: "Singapore", timeZone: "Asia/Singapore" },
-  { city: "Toronto", country: "Canada", timeZone: "America/Toronto" },
-];
+        { city: "New York", country: "United States", timeZone: "America/New_York" },
+        { city: "Chicago", country: "United States", timeZone: "America/Chicago" },
+        { city: "Los Angeles", country: "United States", timeZone: "America/Los_Angeles" },
+        { city: "London", country: "United Kingdom", timeZone: "Europe/London" },
+        { city: "Berlin", country: "Germany", timeZone: "Europe/Berlin" },
+        { city: "Tokyo", country: "Japan", timeZone: "Asia/Tokyo" },
+        { city: "Singapore", country: "Singapore", timeZone: "Asia/Singapore" },
+        { city: "Toronto", country: "Canada", timeZone: "America/Toronto" },
+      ];
 
       const usernameSeeds = ["Void", "Cipher", "Specter", "Glitch", "Ghost", "Zero", "Rogue", "Null", "Pulse", "Signal"];
       const usernameSuffixes = ["Walker", "Shade", "Node", "Runner", "Wire", "Crow"];
 
+      // Side menu: Drug accordion + top-level apps
       const appModules = [
-  { id: "drug", label: "Drug 🧪", status: "Online", group: true },
-  { id: "network", label: "Network 🕸️", status: "Live" },
-  { id: "map", label: "Map 🗺️", status: "Live" },
-  { id: "messages", label: "Messages 🔐", status: "Live" },
-  { id: "finances", label: "Finances 💳", status: "Secure" },
-  { id: "facilities", label: "Facilities / Real Estate 🏗️", status: "Locked" },
-];
+        { id: "network", label: "Network 🕸️", status: "Live" },
+        { id: "map", label: "Map 🗺️", status: "Live" },
+        { id: "messages", label: "Messages 🔐", status: "Live" },
+        { id: "finances", label: "Finances 💳", status: "Secure" },
+        { id: "facilities", label: "Facilities / Real Estate 🏗️", status: "Locked" },
+      ];
 
       const drugSubModules = [
-  { id: "supply", label: "Supply 🧪", status: "Online" },
-  { id: "contracts", label: "Contracts 📑", status: "Live" },
-  { id: "transit", label: "Transit 🚚", status: "Live" },
-];
+        { id: "supply", label: "Supply 🧪", status: "Online" },
+        { id: "contracts", label: "Contracts 📑", status: "Live" },
+        { id: "transit", label: "Transit 🚚", status: "Live" },
+      ];
+
       const loadingLines = [
         "[boot] establishing encrypted tunnel...",
         "[auth] negotiating shadow certificates...",
@@ -155,85 +158,107 @@
         "[access] access key verified...",
       ];
 
-     const brokers = [
-  {
-    id: "broker-onyx",
-    name: "Broker Onyx",
-    city: "New York",
-    personality: { fearTolerance: 0.4, patience: 0.6, pride: 0.7, aggressionResponse: 0.5, riskAppetite: 0.6 },
-  },
-  {
-    id: "broker-veil",
-    name: "Broker Veil",
-    city: "Chicago",
-    personality: { fearTolerance: 0.7, patience: 0.5, pride: 0.4, aggressionResponse: 0.6, riskAppetite: 0.7 },
-  },
-  {
-    id: "broker-kite",
-    name: "Broker Kite",
-    city: "Los Angeles",
-    personality: { fearTolerance: 0.3, patience: 0.8, pride: 0.5, aggressionResponse: 0.4, riskAppetite: 0.5 },
-  },
-];
+      // Brokers updated to real cities
+      const brokers = [
+        {
+          id: "broker-onyx",
+          name: "Broker Onyx",
+          city: "New York",
+          personality: { fearTolerance: 0.4, patience: 0.6, pride: 0.7, aggressionResponse: 0.5, riskAppetite: 0.6 },
+        },
+        {
+          id: "broker-veil",
+          name: "Broker Veil",
+          city: "Chicago",
+          personality: { fearTolerance: 0.7, patience: 0.5, pride: 0.4, aggressionResponse: 0.6, riskAppetite: 0.7 },
+        },
+        {
+          id: "broker-kite",
+          name: "Broker Kite",
+          city: "Los Angeles",
+          personality: { fearTolerance: 0.3, patience: 0.8, pride: 0.5, aggressionResponse: 0.4, riskAppetite: 0.5 },
+        },
+      ];
 
-
+      // Real cities for supply markets (keys must match select values)
       const cities = {
-  "New York": {
-    name: "New York",
-    basePrice: [140, 190],
-    reliability: "Stable",
-    transitRisk: "Medium",
-    transitHours: 10,
-    culture: "Direct",
-  },
-  Chicago: {
-    name: "Chicago",
-    basePrice: [130, 175],
-    reliability: "Moderate",
-    transitRisk: "Low",
-    transitHours: 8,
-    culture: "Formal",
-  },
-  "Los Angeles": {
-    name: "Los Angeles",
-    basePrice: [120, 170],
-    reliability: "Volatile",
-    transitRisk: "High",
-    transitHours: 14,
-    culture: "Guarded",
-  },
-  London: {
-    name: "London",
-    basePrice: [150, 205],
-    reliability: "Stable",
-    transitRisk: "Medium",
-    transitHours: 12,
-    culture: "Reserved",
-  },
-  Berlin: {
-    name: "Berlin",
-    basePrice: [135, 185],
-    reliability: "Stable",
-    transitRisk: "Low",
-    transitHours: 11,
-    culture: "Methodical",
-  },
-  Tokyo: {
-    name: "Tokyo",
-    basePrice: [160, 220],
-    reliability: "Stable",
-    transitRisk: "Medium",
-    transitHours: 16,
-    culture: "Polite",
-  },
-};
+        "New York": {
+          name: "New York",
+          basePrice: [140, 190],
+          reliability: "Stable",
+          transitRisk: "Medium",
+          transitHours: 10,
+          culture: "Direct",
+        },
+        "Chicago": {
+          name: "Chicago",
+          basePrice: [130, 175],
+          reliability: "Moderate",
+          transitRisk: "Low",
+          transitHours: 8,
+          culture: "Formal",
+        },
+        "Los Angeles": {
+          name: "Los Angeles",
+          basePrice: [120, 170],
+          reliability: "Volatile",
+          transitRisk: "High",
+          transitHours: 14,
+          culture: "Guarded",
+        },
+        "London": {
+          name: "London",
+          basePrice: [150, 205],
+          reliability: "Stable",
+          transitRisk: "Medium",
+          transitHours: 12,
+          culture: "Reserved",
+        },
+        "Berlin": {
+          name: "Berlin",
+          basePrice: [135, 185],
+          reliability: "Stable",
+          transitRisk: "Low",
+          transitHours: 11,
+          culture: "Methodical",
+        },
+        "Tokyo": {
+          name: "Tokyo",
+          basePrice: [160, 220],
+          reliability: "Stable",
+          transitRisk: "Medium",
+          transitHours: 16,
+          culture: "Polite",
+        },
+      };
 
+      // Finances: debit + credit + cash stash
+      const debitAccountsTemplate = [
+        { id: "debit-main", label: "Checking (Main)", bank: "Chase", balance: 850, feePct: 0.01, delayMinutes: 0 },
+        { id: "debit-savings", label: "Savings", bank: "Bank of America", balance: 1200, feePct: 0.005, delayMinutes: 10 },
+      ];
 
-      const accountsTemplate = [
-        { id: "wallet", label: "Wallet 💵", balance: 250, feePct: 0.01, delayMinutes: 0 },
-        { id: "offshore", label: "Offshore 🏦", balance: 800, feePct: 0.03, delayMinutes: 30 },
-        { id: "stash", label: "Stash 📦", balance: 400, feePct: 0.02, delayMinutes: 15 },
-        { id: "business", label: "Business 🧾", balance: 600, feePct: 0.015, delayMinutes: 10 },
+      const creditAccountsTemplate = [
+        {
+          id: "credit-1",
+          bank: "Capital One",
+          label: "Quicksilver",
+          apr: 0.2499,
+          limit: 500,
+          balance: 0,
+          paymentsThisMonth: 0,
+          lastLimitIncreaseMonth: 0,
+        },
+        {
+          id: "credit-2",
+          bank: "Discover",
+          label: "It Card",
+          apr: 0.2199,
+          limit: 800,
+          balance: 120,
+          paymentsThisMonth: 1,
+          lastLimitIncreaseMonth: 0,
+        },
       ];
 
       const verdantTierOptions = [
@@ -254,17 +279,39 @@
         const [loadingProgress, setLoadingProgress] = useState(0);
         const [loadingLineIndex, setLoadingLineIndex] = useState(0);
         const [selectedServer, setSelectedServer] = useState(null);
+
         const [hasSubscription, setHasSubscription] = useState(false);
         const [hasCustomNamePass, setHasCustomNamePass] = useState(false);
         const [showShop, setShowShop] = useState(false);
+
         const [profileIcon, setProfileIcon] = useState(profileIcons[0]);
         const [username, setUsername] = useState("");
         const [customUsername, setCustomUsername] = useState("");
+
         const [selectedCity, setSelectedCity] = useState(cityOptions[0]);
         const [profileStep, setProfileStep] = useState(1);
+
         const [systemTime, setSystemTime] = useState(new Date());
+
+        // Active app defaults to supply (now under Drug accordion)
         const [activeApp, setActiveApp] = useState("supply");
-        const [accounts, setAccounts] = useState(accountsTemplate);
+        const [drugMenuOpen, setDrugMenuOpen] = useState(true);
+
+        // Finances state
+        const [debitAccounts, setDebitAccounts] = useState(debitAccountsTemplate);
+        const [creditAccounts, setCreditAccounts] = useState(creditAccountsTemplate);
+        const [cashOnHand, setCashOnHand] = useState(150);
+        const [cashStash, setCashStash] = useState(400); // not spendable
+
+        // Supply state
+        const cityKeys = useMemo(() => Object.keys(cities), []);
+        const [supplyDraft, setSupplyDraft] = useState(() => ({
+          city: cityKeys[0] || "New York",
+          tier: verdantTierOptions[0].tier,
+          quantity: 30,
+          accountId: debitAccountsTemplate[0].id,
+        }));
+
         const [inventory, setInventory] = useState({ Standard: 0, Premium: 0 });
         const [heat, setHeat] = useState(8);
         const [reputation, setReputation] = useState(35);
@@ -274,11 +321,7 @@
         const [messages, setMessages] = useState({});
         const [messageInput, setMessageInput] = useState("");
         const [messageCounts, setMessageCounts] = useState({});
-        const [bankAccount, setBankAccount] = useState(null);
-        const [accountAlias, setAccountAlias] = useState("Main Vault");
-        const [creditLine, setCreditLine] = useState(null);
         const [bootTimestamp] = useState(Date.now());
-        const [drugMenuOpen, setDrugMenuOpen] = useState(true);
         const eventLogRef = useRef([]);
 
         useEffect(() => {
@@ -290,9 +333,7 @@
         }, []);
 
         useEffect(() => {
-          const interval = setInterval(() => {
-            setSystemTime(new Date());
-          }, 1000);
+          const interval = setInterval(() => setSystemTime(new Date()), 1000);
           return () => clearInterval(interval);
         }, []);
 
@@ -300,6 +341,7 @@
           if (screen !== "loading") return;
           setLoadingProgress(0);
           setLoadingLineIndex(0);
+
           const interval = setInterval(() => {
             setLoadingProgress((prev) => {
               const nextValue = Math.min(prev + Math.floor(Math.random() * 14 + 6), 100);
@@ -315,12 +357,6 @@
           return () => clearInterval(interval);
         }, [screen, nextScreen]);
 
-        useEffect(() => {
-          if (contracts.length === 0) {
-            setContracts(generateContracts());
-          }
-        }, [contracts.length]);
-
         const msPerGameMinute = (5 * 60 * 1000) / (24 * 60);
         const gameElapsedMs = Date.now() - bootTimestamp;
         const gameMinutes = Math.floor(gameElapsedMs / msPerGameMinute);
@@ -328,6 +364,7 @@
         const gameHour = Math.floor((gameMinutes % 1440) / 60);
         const gameMinute = gameMinutes % 60;
         const gameProgress = ((gameMinutes % 1440) / 1440) * 100;
+
         const gamePhase = useMemo(() => {
           if (gameHour < 6) return "Night Watch";
           if (gameHour < 12) return "Dawn Patrol";
@@ -352,8 +389,8 @@
           });
         }, [systemTime]);
 
-        const displayUsername =
-          hasCustomNamePass && customUsername.trim() ? customUsername : username;
+        const displayUsername = hasCustomNamePass && customUsername.trim() ? customUsername : username;
+
         const profileProgress = useMemo(() => {
           let progress = 0;
           if (profileIcon) progress += 34;
@@ -364,17 +401,42 @@
 
         const profileComplete = profileProgress === 100;
 
+        // "Total Cash" box: debit total + credit available (liquidity)
         const totalCash = useMemo(() => {
-          const accountTotal = accounts.reduce((sum, account) => sum + account.balance, 0);
-          const creditAvailable = creditLine?.available || 0;
-          return accountTotal + creditAvailable;
-        }, [accounts, creditLine]);
+          const debitTotal = debitAccounts.reduce((sum, a) => sum + a.balance, 0);
+          const creditAvailable = creditAccounts.reduce((sum, c) => sum + Math.max(c.limit - c.balance, 0), 0);
+          return debitTotal + creditAvailable;
+        }, [debitAccounts, creditAccounts]);
 
         const addLog = (entry) => {
-          eventLogRef.current = [
-            { id: Date.now(), text: entry },
-            ...eventLogRef.current,
-          ].slice(0, 8);
+          eventLogRef.current = [{ id: Date.now(), text: entry }, ...eventLogRef.current].slice(0, 8);
+        };
+
+        // Contracts generation
+        useEffect(() => {
+          if (contracts.length === 0) setContracts(generateContracts());
+        }, [contracts.length]);
+
+        const generateContracts = () => {
+          return brokers.map((broker, index) => {
+            const tier = index % 2 === 0 ? "Standard" : "Premium";
+            const base = tier === "Premium" ? 190 : 130;
+            const windowHours = Math.floor(Math.random() * 18 + 6);
+            const durationMs = windowHours * 60 * msPerGameMinute;
+            return {
+              id: `contract-${broker.id}-${Date.now()}`,
+              brokerId: broker.id,
+              title: `${broker.name} · ${broker.city}`,
+              tier,
+              quantityRange: [20, 80],
+              priceBand: [base, base + 40],
+              risk: index % 2 === 0 ? "Medium" : "High",
+              createdAt: Date.now(),
+              durationMs,
+              remainingMs: durationMs,
+              status: "Open",
+            };
+          });
         };
 
         const updateShipments = useCallback(() => {
@@ -428,13 +490,9 @@
 
           setInventory((prev) => {
             const newInventory = { ...prev };
-            if (outcome === "Delivered") {
-              newInventory[shipment.tier] += shipment.quantity;
-            } else if (outcome === "Delayed") {
-              newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.8);
-            } else if (outcome === "Partial Loss") {
-              newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.5);
-            }
+            if (outcome === "Delivered") newInventory[shipment.tier] += shipment.quantity;
+            else if (outcome === "Delayed") newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.8);
+            else if (outcome === "Partial Loss") newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.5);
             return newInventory;
           });
 
@@ -443,50 +501,64 @@
           return outcome;
         };
 
-        const generateContracts = () => {
-          return brokers.map((broker, index) => {
-            const tier = index % 2 === 0 ? "Standard" : "Premium";
-            const base = tier === "Premium" ? 190 : 130;
-            const windowHours = Math.floor(Math.random() * 18 + 6);
-            const durationMs = windowHours * 60 * msPerGameMinute;
-            return {
-              id: `contract-${broker.id}-${Date.now()}`,
-              brokerId: broker.id,
-              title: `${broker.name} · ${broker.city}`,
-              tier,
-              quantityRange: [20, 80],
-              priceBand: [base, base + 40],
-              risk: index % 2 === 0 ? "Medium" : "High",
-              createdAt: Date.now(),
-              durationMs,
-              remainingMs: durationMs,
-              status: "Open",
-            };
-          });
-        };
+        // Supply cost preview
+        const draftCityData = cities[supplyDraft.city] || Object.values(cities)[0];
+        const payingDebit = debitAccounts.find((a) => a.id === supplyDraft.accountId);
+
+        const draftUnit = useMemo(() => {
+          if (!draftCityData) return 0;
+          return supplyDraft.tier === "Premium" ? draftCityData.basePrice[1] : draftCityData.basePrice[0];
+        }, [draftCityData, supplyDraft.tier]);
+
+        const draftQty = useMemo(() => {
+          const q = Number(supplyDraft.quantity);
+          if (!Number.isFinite(q)) return 0;
+          return Math.max(0, q);
+        }, [supplyDraft.quantity]);
+
+        const draftSubtotal = draftUnit * draftQty;
+        const draftFee = payingDebit ? draftSubtotal * payingDebit.feePct : 0;
+        const draftTotal = draftSubtotal + draftFee;
+
+        const canAfford = payingDebit ? payingDebit.balance >= draftTotal : false;
+        const postBalance = payingDebit ? payingDebit.balance - draftTotal : 0;
 
         const handlePlaceOrder = (event) => {
           event.preventDefault();
-          const form = new FormData(event.target);
-          const city = form.get("city");
-          const tier = form.get("tier");
-          const quantity = Number(form.get("quantity"));
-          const accountId = form.get("account");
-          const cityData = cities[city];
-          const basePrice = tier === "Premium" ? cityData.basePrice[1] : cityData.basePrice[0];
-          const totalCost = basePrice * quantity;
 
-          setAccounts((prev) =>
-            prev.map((account) => {
-              if (account.id !== accountId) return account;
-              const fee = totalCost * account.feePct;
-              const newBalance = Math.max(account.balance - totalCost - fee, 0);
-              return { ...account, balance: newBalance };
-            })
-          );
+          const city = supplyDraft.city;
+          const tier = supplyDraft.tier;
+          const quantity = Number(supplyDraft.quantity);
+          const accountId = supplyDraft.accountId;
+
+          const cityData = cities[city];
+          if (!cityData) {
+            addLog("City market not found.");
+            return;
+          }
+
+          const unit = tier === "Premium" ? cityData.basePrice[1] : cityData.basePrice[0];
+          const subtotal = unit * quantity;
+
+          const debit = debitAccounts.find((a) => a.id === accountId);
+          if (!debit) {
+            addLog("Payment account not found.");
+            return;
+          }
+
+          const fee = subtotal * debit.feePct;
+          const total = subtotal + fee;
+
+          if (debit.balance < total) {
+            addLog("Purchase blocked: insufficient funds in selected debit account.");
+            return;
+          }
+
+          setDebitAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, balance: a.balance - total } : a)));
 
           const transitMinutes = cityData.transitHours * 60;
           const durationMs = transitMinutes * msPerGameMinute;
+
           setShipments((prev) => [
             {
               id: `S-${Math.floor(Math.random() * 9000 + 1000)}`,
@@ -500,6 +572,7 @@
             },
             ...prev,
           ]);
+
           addLog(`Supply order placed: ${quantity} units (${tier}) from ${city}.`);
         };
 
@@ -511,21 +584,21 @@
           }
           const accepted = Math.random() > 0.35;
           const status = accepted ? "Accepted" : "Counter";
+
           setContracts((prev) =>
-            prev.map((item) =>
-              item.id === contract.id ? { ...item, status, offer: { quantity, price } } : item
-            )
+            prev.map((item) => (item.id === contract.id ? { ...item, status, offer: { quantity, price } } : item))
           );
+
           if (accepted) {
             const revenue = quantity * price;
             setInventory((prev) => ({ ...prev, [contract.tier]: prev[contract.tier] - quantity }));
-            setAccounts((prev) =>
+
+            setDebitAccounts((prev) =>
               prev.map((account) =>
-                account.id === payoutAccountId
-                  ? { ...account, balance: account.balance + revenue }
-                  : account
+                account.id === payoutAccountId ? { ...account, balance: account.balance + revenue } : account
               )
             );
+
             setReputation((prev) => Math.min(prev + 4, 100));
             setHeat((prev) => Math.min(prev + 3, 100));
             addLog(`Contract fulfilled: ${contract.title} for $${revenue}.`);
@@ -538,9 +611,7 @@
           const lower = text.toLowerCase();
           let tone = "neutral";
           Object.entries(toneKeywords).forEach(([key, words]) => {
-            if (words.some((word) => lower.includes(word))) {
-              tone = key;
-            }
+            if (words.some((word) => lower.includes(word))) tone = key;
           });
           return tone;
         };
@@ -553,9 +624,11 @@
             addLog(`Negotiation window closed for ${selectedBroker.name}.`);
             return;
           }
+
           const tone = analyzeTone(trimmed);
           const broker = selectedBroker;
           const reply = getScriptedReply(broker, tone);
+
           setMessages((prev) => {
             const existing = prev[broker.id] || [];
             return {
@@ -567,16 +640,16 @@
               ],
             };
           });
-          setMessageCounts((prev) => ({
-            ...prev,
-            [broker.id]: (prev[broker.id] || 0) + 1,
-          }));
+
+          setMessageCounts((prev) => ({ ...prev, [broker.id]: (prev[broker.id] || 0) + 1 }));
+
           if (tone === "threatening") {
             setHeat((prev) => Math.min(prev + 6, 100));
             setReputation((prev) => Math.max(prev - 4, 0));
           } else if (tone === "pushy") {
             setHeat((prev) => Math.min(prev + 2, 100));
           }
+
           setMessageInput("");
         };
 
@@ -591,31 +664,6 @@
           return base[tone] || base.neutral;
         };
 
-        const generateCardNumber = () => {
-          const chunks = Array.from({ length: 3 }, () =>
-            Math.floor(Math.random() * 9000 + 1000)
-          );
-          return `7777-${chunks.join("-")}`;
-        };
-
-        const handleCreateBankAccount = () => {
-          if (bankAccount) return;
-          setBankAccount({
-            alias: accountAlias || "Primary Vault",
-            balance: 0,
-            id: `DV-${Math.floor(Math.random() * 900000 + 100000)}`,
-          });
-        };
-
-        const handleRequestCreditLine = () => {
-          if (creditLine) return;
-          setCreditLine({
-            limit: 500,
-            available: 500,
-            cardNumber: generateCardNumber(),
-          });
-        };
-
         const activeMessages = messages[selectedBroker.id] || [];
 
         return (
@@ -626,12 +674,8 @@
             <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10">
               <header className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl font-semibold tracking-[0.2em] text-emerald-100">
-                    Into The Dark
-                  </h1>
-                  <p className="text-xs uppercase tracking-[0.6em] text-slate-400">
-                    Dark Web Simulation
-                  </p>
+                  <h1 className="text-3xl font-semibold tracking-[0.2em] text-emerald-100">Into The Dark</h1>
+                  <p className="text-xs uppercase tracking-[0.6em] text-slate-400">Dark Web Simulation</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <button
@@ -668,12 +712,8 @@
                   <div className="w-full max-w-2xl rounded-lg border border-emerald-400/30 bg-slate-950 p-6 shadow-2xl shadow-emerald-500/20">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-400/70">
-                          Black Ops Store
-                        </p>
-                        <p className="text-sm text-slate-300">
-                          Test entitlements for subscription and custom handle access.
-                        </p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-400/70">Black Ops Store</p>
+                        <p className="text-sm text-slate-300">Test entitlements for subscription and custom handle access.</p>
                       </div>
                       <button
                         type="button"
@@ -685,12 +725,8 @@
                     </div>
                     <div className="mt-6 grid gap-4 sm:grid-cols-2">
                       <div className="rounded-md border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                          Test Subscription
-                        </p>
-                        <p className="mt-2 text-sm text-slate-300">
-                          Unlock premium status for experimental features.
-                        </p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Test Subscription</p>
+                        <p className="mt-2 text-sm text-slate-300">Unlock premium status for experimental features.</p>
                         <button
                           type="button"
                           onClick={() => setHasSubscription(true)}
@@ -699,18 +735,13 @@
                           Activate Test Subscription
                         </button>
                         {hasSubscription && (
-                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-emerald-200">
-                            Active
-                          </p>
+                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-emerald-200">Active</p>
                         )}
                       </div>
+
                       <div className="rounded-md border border-amber-400/40 bg-black/70 p-4 text-sm text-slate-300">
-                        <p className="text-xs uppercase tracking-[0.3em] text-amber-300">
-                          Custom Handle Pass
-                        </p>
-                        <p className="mt-2 text-sm text-slate-300">
-                          Permanent access to custom handles. $5 test pass.
-                        </p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-amber-300">Custom Handle Pass</p>
+                        <p className="mt-2 text-sm text-slate-300">Permanent access to custom handles. $5 test pass.</p>
                         <button
                           type="button"
                           onClick={() => setHasCustomNamePass(true)}
@@ -719,9 +750,7 @@
                           Purchase $5 Pass
                         </button>
                         {hasCustomNamePass && (
-                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-amber-200">
-                            Active
-                          </p>
+                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-amber-200">Active</p>
                         )}
                       </div>
                     </div>
@@ -732,15 +761,10 @@
               {screen === "landing" && (
                 <section className="relative overflow-hidden rounded-lg border border-emerald-500/30 bg-black/80 p-10 shadow-2xl shadow-emerald-500/10">
                   <div className="terminal-flicker">
-                    <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">
-                      darknet gateway
-                    </p>
-                    <h2 className="mt-4 text-3xl font-semibold text-emerald-100">
-                      Terminal access granted
-                    </h2>
+                    <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">darknet gateway</p>
+                    <h2 className="mt-4 text-3xl font-semibold text-emerald-100">Terminal access granted</h2>
                     <p className="mt-3 max-w-xl text-sm text-slate-300">
-                      Initialize your contraband network. Time is compressed and every decision leaves
-                      a trace.
+                      Initialize your contraband network. Time is compressed and every decision leaves a trace.
                     </p>
                   </div>
                   <div className="mt-8 rounded-md border border-emerald-400/20 bg-slate-950/70 p-5 text-xs text-emerald-200/80">
@@ -768,13 +792,9 @@
                 <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">
-                        server browser
-                      </p>
+                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">server browser</p>
                       <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Select a relay</h2>
-                      <p className="text-sm text-slate-300">
-                        Choose an enterprise node to begin your session.
-                      </p>
+                      <p className="text-sm text-slate-300">Choose an enterprise node to begin your session.</p>
                     </div>
                     <button
                       type="button"
@@ -798,16 +818,10 @@
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="text-lg font-semibold text-emerald-100 group-hover:text-emerald-200">
-                              {server.name}
-                            </h3>
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                              {server.location}
-                            </p>
+                            <h3 className="text-lg font-semibold text-emerald-100 group-hover:text-emerald-200">{server.name}</h3>
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{server.location}</p>
                           </div>
-                          <span className="rounded-md border border-emerald-400/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-emerald-200">
-                            {server.status}
-                          </span>
+                          <span className="rounded-md border border-emerald-400/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-emerald-200">{server.status}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs text-slate-400">
                           <span>Load</span>
@@ -819,9 +833,7 @@
                             style={{ width: server.load }}
                           />
                         </div>
-                        <span className="text-xs uppercase tracking-[0.4em] text-emerald-300">
-                          Connect →
-                        </span>
+                        <span className="text-xs uppercase tracking-[0.4em] text-emerald-300">Connect →</span>
                       </button>
                     ))}
                   </div>
@@ -850,23 +862,19 @@
                         style={{ width: `${loadingProgress}%` }}
                       />
                     </div>
-                    <p className="mt-3 text-xs text-emerald-200/70">
-                      Keep this channel open until handshake completes.
-                    </p>
+                    <p className="mt-3 text-xs text-emerald-200/70">Keep this channel open until handshake completes.</p>
                   </div>
                   {loadingProgress >= 100 && (
-                    <div className="mt-6 text-xs uppercase tracking-[0.3em] text-emerald-300">
-                      Access granted.
-                    </div>
-                  )}
-                  {loadingProgress >= 100 && (
-                    <button
-                      type="button"
-                      onClick={() => setScreen("profile")}
-                      className="mt-6 w-full rounded-md border border-emerald-400/50 bg-emerald-500/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:border-emerald-300 hover:bg-emerald-400/20"
-                    >
-                      Proceed to Profile
-                    </button>
+                    <>
+                      <div className="mt-6 text-xs uppercase tracking-[0.3em] text-emerald-300">Access granted.</div>
+                      <button
+                        type="button"
+                        onClick={() => setScreen("profile")}
+                        className="mt-6 w-full rounded-md border border-emerald-400/50 bg-emerald-500/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:border-emerald-300 hover:bg-emerald-400/20"
+                      >
+                        Proceed to Profile
+                      </button>
+                    </>
                   )}
                 </section>
               )}
@@ -875,13 +883,9 @@
                 <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">
-                        identity forge
-                      </p>
+                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">identity forge</p>
                       <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Build your profile</h2>
-                      <p className="text-sm text-slate-300">
-                        Select a signature icon, claim a handle, and choose a city.
-                      </p>
+                      <p className="text-sm text-slate-300">Select a signature icon, claim a handle, and choose a city.</p>
                     </div>
                     <button
                       type="button"
@@ -910,9 +914,7 @@
                       {profileStep === 1 && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                              Step 1 · Profile icon
-                            </p>
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 1 · Profile icon</p>
                             <button
                               type="button"
                               onClick={() => setProfileStep(2)}
@@ -921,6 +923,7 @@
                               Next →
                             </button>
                           </div>
+
                           <div className="mt-4 grid gap-3 sm:grid-cols-3">
                             {profileIcons.map((icon, index) => (
                               <button
@@ -933,9 +936,7 @@
                                     : "border-slate-700/70 text-slate-300 hover:border-emerald-400/70"
                                 }`}
                               >
-                                <div className="flex h-12 w-12 items-center justify-center text-2xl">
-                                  {icon}
-                                </div>
+                                <div className="flex h-12 w-12 items-center justify-center text-2xl">{icon}</div>
                               </button>
                             ))}
                           </div>
@@ -945,9 +946,7 @@
                       {profileStep === 2 && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                              Step 2 · Handle
-                            </p>
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 2 · Handle</p>
                             <div className="flex gap-2">
                               <button
                                 type="button"
@@ -970,20 +969,14 @@
                             <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                    Generated handle
-                                  </p>
-                                  <p className="mt-2 text-lg font-semibold text-emerald-100">
-                                    {username || "--"}
-                                  </p>
+                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Generated handle</p>
+                                  <p className="mt-2 text-lg font-semibold text-emerald-100">{username || "--"}</p>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const seed =
-                                      usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)];
-                                    const suffix =
-                                      usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)];
+                                    const seed = usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)];
+                                    const suffix = usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)];
                                     const digits = Math.floor(Math.random() * 900 + 100);
                                     setUsername(`${seed}${suffix}${digits}`);
                                   }}
@@ -993,21 +986,23 @@
                                 </button>
                               </div>
                             </div>
+
                             <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
                               <div className="flex items-center justify-between gap-3">
-                                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                  Custom handle
-                                </p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Custom handle</p>
+
                                 <span
-                                  className={`rounded-md border px-3 py-1 text-[10px] uppercase tracking-[0.3em] ${
+                                  onClick={() => !hasCustomNamePass && setShowShop(true)}
+                                  className={`cursor-pointer rounded-md border px-3 py-1 text-[10px] uppercase tracking-[0.3em] ${
                                     hasCustomNamePass
                                       ? "border-amber-300 text-amber-200"
-                                      : "border-slate-700 text-slate-400"
+                                      : "border-slate-700 text-slate-400 hover:border-amber-300/60 hover:text-amber-200"
                                   }`}
                                 >
                                   {hasCustomNamePass ? "Pass Active" : "Locked"}
                                 </span>
                               </div>
+
                               {hasCustomNamePass ? (
                                 <input
                                   type="text"
@@ -1018,12 +1013,12 @@
                                 />
                               ) : (
                                 <button
-  type="button"
-  onClick={() => setShowShop(true)}
-  className="mt-3 w-full rounded-md border border-dashed border-amber-400/40 bg-black/40 px-4 py-3 text-left text-xs uppercase tracking-[0.3em] text-amber-200/80 transition hover:border-amber-300/70"
->
-  Custom handle locked · click to open shop
-</button>
+                                  type="button"
+                                  onClick={() => setShowShop(true)}
+                                  className="mt-3 w-full rounded-md border border-dashed border-amber-400/40 bg-black/40 px-4 py-3 text-left text-xs uppercase tracking-[0.3em] text-amber-200/80 transition hover:border-amber-300/70"
+                                >
+                                  Custom handle locked · click to open shop
+                                </button>
                               )}
                             </div>
                           </div>
@@ -1033,9 +1028,7 @@
                       {profileStep === 3 && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                              Step 3 · Operating city
-                            </p>
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 3 · Operating city</p>
                             <button
                               type="button"
                               onClick={() => setProfileStep(2)}
@@ -1044,6 +1037,7 @@
                               ← Back
                             </button>
                           </div>
+
                           <div className="mt-4 grid max-h-64 gap-3 overflow-y-auto pr-2 sm:grid-cols-2">
                             {cityOptions.map((city) => (
                               <button
@@ -1073,24 +1067,21 @@
                             {profileIcon}
                           </div>
                           <div>
-                            <p className="text-base font-semibold text-emerald-100">
-                              {displayUsername || "Handle pending"}
-                            </p>
+                            <p className="text-base font-semibold text-emerald-100">{displayUsername || "Handle pending"}</p>
                             <p className="text-xs text-slate-400">{selectedCity.city}</p>
                           </div>
                         </div>
                         <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4 text-xs text-slate-300">
                           <p>• Identity concealment enabled.</p>
-                          <p>• Default wallet seeded in USD.</p>
+                          <p>• Debit accounts seeded in USD.</p>
                           <p>• Access limited to Tier-1 apps.</p>
                         </div>
                       </div>
+
                       {profileComplete && profileStep === 3 && (
                         <button
                           type="button"
-                          onClick={() => {
-                            setScreen("dashboard");
-                          }}
+                          onClick={() => setScreen("dashboard")}
                           className="w-full rounded-md bg-emerald-500/20 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:bg-emerald-400/30"
                         >
                           Enter The Dark
@@ -1110,15 +1101,50 @@
                           {profileIcon}
                         </div>
                         <div>
-                          <p className="text-base font-semibold text-emerald-100">
-                            {displayUsername || "Anonymous"}
-                          </p>
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                            Level 1 Operator
-                          </p>
+                          <p className="text-base font-semibold text-emerald-100">{displayUsername || "Anonymous"}</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Level 1 Operator</p>
                         </div>
                       </div>
+
+                      {/* FULL REPLACEMENT: Drug accordion + remaining apps */}
                       <div className="mt-4 space-y-2 text-xs uppercase tracking-[0.3em] text-slate-400">
+                        <button
+                          type="button"
+                          onClick={() => setDrugMenuOpen((v) => !v)}
+                          className={`w-full rounded-md border px-3 py-2 text-left transition ${
+                            ["supply", "contracts", "transit"].includes(activeApp)
+                              ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                              : "border-slate-800 bg-black/60 text-slate-300 hover:border-emerald-400/70"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>Drug 🧪</span>
+                            <span className="text-[10px] text-slate-500">{drugMenuOpen ? "Hide" : "Expand"}</span>
+                          </div>
+                        </button>
+
+                        {drugMenuOpen && (
+                          <div className="ml-2 space-y-2 border-l border-slate-800 pl-3">
+                            {drugSubModules.map((app) => (
+                              <button
+                                key={app.id}
+                                type="button"
+                                onClick={() => setActiveApp(app.id)}
+                                className={`w-full rounded-md border px-3 py-2 text-left transition ${
+                                  activeApp === app.id
+                                    ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                    : "border-slate-800 bg-black/60 text-slate-300 hover:border-emerald-400/70"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span>{app.label}</span>
+                                  <span className="text-[10px] text-slate-500">{app.status}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
                         {appModules.map((app) => (
                           <button
                             key={app.id}
@@ -1137,11 +1163,10 @@
                           </button>
                         ))}
                       </div>
+
                       <div className="mt-6 rounded-md border border-emerald-400/30 bg-black/70 p-3 text-xs">
                         <p className="uppercase tracking-[0.3em] text-emerald-300">Total Cash</p>
-                        <p className="mt-2 text-lg font-semibold text-emerald-100">
-                          ${totalCash.toFixed(2)} USD
-                        </p>
+                        <p className="mt-2 text-lg font-semibold text-emerald-100">${totalCash.toFixed(2)} USD</p>
                       </div>
                     </aside>
 
@@ -1162,12 +1187,9 @@
                           <div className="rounded-md border border-slate-700 bg-black/60 px-3 py-2">
                             <p className="text-[10px] text-slate-400">In-Game</p>
                             <p className="text-emerald-100">
-                              Day {gameDay} · {String(gameHour).padStart(2, "0")}:
-                              {String(gameMinute).padStart(2, "0")}
+                              Day {gameDay} · {String(gameHour).padStart(2, "0")}:{String(gameMinute).padStart(2, "0")}
                             </p>
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                              Phase: {gamePhase}
-                            </p>
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">Phase: {gamePhase}</p>
                             <div className="mt-2 h-1.5 w-24 rounded-md bg-slate-800">
                               <div
                                 className="h-1.5 rounded-md bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400"
@@ -1178,21 +1200,21 @@
                         </div>
                       </div>
 
+                      {/* SUPPLY (improved cost preview + requires sufficient debit funds) */}
                       {activeApp === "supply" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
-                              Supply Node Orders
-                            </p>
-                            <span className="text-xs text-slate-500">
-                              Verdant 🌿 · USD only
-                            </span>
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Supply Node Orders</p>
+                            <span className="text-xs text-slate-500">Verdant 🌿 · USD only</span>
                           </div>
+
                           <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={handlePlaceOrder}>
                             <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               City
                               <select
                                 name="city"
+                                value={supplyDraft.city}
+                                onChange={(e) => setSupplyDraft((p) => ({ ...p, city: e.target.value }))}
                                 className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
                               >
                                 {Object.values(cities).map((city) => (
@@ -1202,10 +1224,13 @@
                                 ))}
                               </select>
                             </label>
+
                             <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               Tier
                               <select
                                 name="tier"
+                                value={supplyDraft.tier}
+                                onChange={(e) => setSupplyDraft((p) => ({ ...p, tier: e.target.value }))}
                                 className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
                               >
                                 {verdantTierOptions.map((tier) => (
@@ -1215,36 +1240,85 @@
                                 ))}
                               </select>
                             </label>
+
                             <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               Quantity
                               <input
                                 name="quantity"
                                 type="number"
                                 min="10"
-                                defaultValue="30"
+                                value={supplyDraft.quantity}
+                                onChange={(e) => setSupplyDraft((p) => ({ ...p, quantity: Number(e.target.value) }))}
                                 className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
                               />
                             </label>
+
                             <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                              Pay Account
+                              Pay (Debit)
                               <select
                                 name="account"
+                                value={supplyDraft.accountId}
+                                onChange={(e) => setSupplyDraft((p) => ({ ...p, accountId: e.target.value }))}
                                 className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
                               >
-                                {accounts.map((account) => (
+                                {debitAccounts.map((account) => (
                                   <option key={account.id} value={account.id}>
-                                    {account.label} (${account.balance.toFixed(0)})
+                                    {account.bank} · {account.label} (${account.balance.toFixed(0)})
                                   </option>
                                 ))}
                               </select>
                             </label>
+
                             <button
                               type="submit"
-                              className="sm:col-span-2 rounded-md border border-emerald-400/60 bg-emerald-500/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:border-emerald-300"
+                              disabled={!canAfford}
+                              className={`sm:col-span-2 rounded-md border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                canAfford
+                                  ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-100 hover:border-emerald-300"
+                                  : "cursor-not-allowed border-slate-800 bg-slate-900/40 text-slate-500"
+                              }`}
                             >
                               Place Wholesale Order
                             </button>
                           </form>
+
+                          <div className="mt-4 rounded-md border border-slate-800 bg-slate-950/70 p-4 text-xs text-slate-300">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cost preview</p>
+                            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                              <div className="flex items-center justify-between">
+                                <span>Unit price</span>
+                                <span>${draftUnit.toFixed(2)}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span>Quantity</span>
+                                <span>{draftQty}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span>Fee</span>
+                                <span>${draftFee.toFixed(2)}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-emerald-100">
+                                <span>Total</span>
+                                <span>${draftTotal.toFixed(2)}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span>Account balance</span>
+                                <span>${(payingDebit?.balance ?? 0).toFixed(2)}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span>After purchase</span>
+                                <span className={canAfford ? "text-emerald-200" : "text-rose-200"}>
+                                  ${postBalance.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                            {!canAfford && (
+                              <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-rose-200">
+                                Insufficient funds in selected debit account.
+                              </p>
+                            )}
+                          </div>
+
                           <div className="mt-4 grid gap-3 sm:grid-cols-2 text-xs text-slate-400">
                             {Object.values(cities).map((city) => (
                               <div key={city.name} className="rounded-md border border-slate-800 bg-black/70 p-3">
@@ -1258,14 +1332,14 @@
                         </div>
                       )}
 
+                      {/* CONTRACTS (payout to debit accounts) */}
                       {activeApp === "contracts" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
-                              Contract Board
-                            </p>
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Contract Board</p>
                             <span className="text-xs text-slate-500">Rapid windows</span>
                           </div>
+
                           <div className="mt-4 space-y-3 text-sm text-slate-300">
                             {contracts.map((contract) => (
                               <div key={contract.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
@@ -1279,10 +1353,9 @@
                                       Price band ${contract.priceBand.join("-")} · Risk {contract.risk}
                                     </p>
                                   </div>
-                                  <div className="text-xs text-slate-400">
-                                    {Math.ceil(contract.remainingMs / 1000)}s
-                                  </div>
+                                  <div className="text-xs text-slate-400">{Math.ceil(contract.remainingMs / 1000)}s</div>
                                 </div>
+
                                 {contract.status === "Open" ? (
                                   <div className="mt-3 grid gap-2 sm:grid-cols-4">
                                     <input
@@ -1305,24 +1378,18 @@
                                       id={`${contract.id}-account`}
                                       className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
                                     >
-                                      {accounts.map((account) => (
+                                      {debitAccounts.map((account) => (
                                         <option key={account.id} value={account.id}>
-                                          {account.label}
+                                          {account.bank} · {account.label}
                                         </option>
                                       ))}
                                     </select>
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        const quantity = Number(
-                                          document.getElementById(`${contract.id}-qty`).value
-                                        );
-                                        const price = Number(
-                                          document.getElementById(`${contract.id}-price`).value
-                                        );
-                                        const payoutAccountId = document.getElementById(
-                                          `${contract.id}-account`
-                                        ).value;
+                                        const quantity = Number(document.getElementById(`${contract.id}-qty`).value);
+                                        const price = Number(document.getElementById(`${contract.id}-price`).value);
+                                        const payoutAccountId = document.getElementById(`${contract.id}-account`).value;
                                         handleSubmitOffer(contract, quantity, price, payoutAccountId);
                                       }}
                                       className="rounded-md border border-emerald-400/50 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200"
@@ -1339,29 +1406,41 @@
                         </div>
                       )}
 
+                      {/* TRANSIT (progress bars added) */}
                       {activeApp === "transit" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Transit</p>
                           <div className="mt-4 space-y-3 text-sm text-slate-300">
                             {shipments.length === 0 && <p>No shipments in transit.</p>}
-                            {shipments.map((shipment) => (
-                              <div key={shipment.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-emerald-100">{shipment.id}</p>
-                                  <span className="text-xs text-slate-400">{shipment.status}</span>
+                            {shipments.map((shipment) => {
+                              const elapsed = shipment.durationMs - shipment.remainingMs;
+                              const pct = shipment.durationMs > 0 ? Math.min((elapsed / shipment.durationMs) * 100, 100) : 0;
+
+                              return (
+                                <div key={shipment.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-emerald-100">{shipment.id}</p>
+                                    <span className="text-xs text-slate-400">{shipment.status}</span>
+                                  </div>
+                                  <p className="text-xs text-slate-400">
+                                    {shipment.city} · {shipment.quantity} units · {shipment.tier}
+                                  </p>
+                                  <p className="text-xs text-slate-400">ETA: {Math.ceil(shipment.remainingMs / 1000)}s</p>
+
+                                  <div className="mt-3 h-2 w-full rounded-md bg-slate-800">
+                                    <div
+                                      className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400 transition-all"
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
                                 </div>
-                                <p className="text-xs text-slate-400">
-                                  {shipment.city} · {shipment.quantity} units · {shipment.tier}
-                                </p>
-                                <p className="text-xs text-slate-400">
-                                  ETA: {Math.ceil(shipment.remainingMs / 1000)}s
-                                </p>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}
 
+                      {/* NETWORK (updated to debit/credit/cash) */}
                       {activeApp === "network" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Network</p>
@@ -1376,6 +1455,7 @@
                                 />
                               </div>
                             </div>
+
                             <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Exposure</p>
                               <p className="mt-2 text-lg text-rose-200">{heat}%</p>
@@ -1386,20 +1466,41 @@
                                 />
                               </div>
                             </div>
+
                             <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Accounts</p>
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Finances</p>
                               <div className="mt-2 space-y-2 text-xs">
-                                {accounts.map((account) => (
-                                  <div key={account.id} className="flex items-center justify-between">
-                                    <span>
-                                      {account.label} · Fee {(account.feePct * 100).toFixed(1)}% · Delay{" "}
-                                      {account.delayMinutes}m
-                                    </span>
-                                    <span>${account.balance.toFixed(2)}</span>
+                                <div className="flex items-center justify-between">
+                                  <span>Cash (on hand)</span>
+                                  <span>${cashOnHand.toFixed(2)}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-slate-500">
+                                  <span>Cash stash (locked)</span>
+                                  <span>${cashStash.toFixed(2)}</span>
+                                </div>
+
+                                <div className="mt-2 border-t border-slate-800 pt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                  Debit
+                                </div>
+                                {debitAccounts.map((a) => (
+                                  <div key={a.id} className="flex items-center justify-between">
+                                    <span>{a.bank} · {a.label}</span>
+                                    <span>${a.balance.toFixed(2)}</span>
+                                  </div>
+                                ))}
+
+                                <div className="mt-2 border-t border-slate-800 pt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                  Credit
+                                </div>
+                                {creditAccounts.map((c) => (
+                                  <div key={c.id} className="flex items-center justify-between">
+                                    <span>{c.bank} · {c.label}</span>
+                                    <span>${Math.max(c.limit - c.balance, 0).toFixed(2)} avail</span>
                                   </div>
                                 ))}
                               </div>
                             </div>
+
                             <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Inventory</p>
                               <div className="mt-2 space-y-2 text-xs">
@@ -1417,6 +1518,7 @@
                         </div>
                       )}
 
+                      {/* MAP */}
                       {activeApp === "map" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Map</p>
@@ -1433,6 +1535,7 @@
                         </div>
                       )}
 
+                      {/* MESSAGES */}
                       {activeApp === "messages" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
@@ -1441,6 +1544,7 @@
                               AI mode: {OPENAI_API_KEY === "PUT_YOUR_KEY_HERE" ? "Scripted" : "Live"}
                             </span>
                           </div>
+
                           <div className="mt-4 grid gap-4 lg:grid-cols-[0.35fr_1fr]">
                             <div className="space-y-2">
                               {brokers.map((broker) => (
@@ -1458,25 +1562,23 @@
                                 </button>
                               ))}
                             </div>
+
                             <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                                 Thread · {selectedBroker.name}
                               </p>
                               <div className="mt-3 h-52 space-y-3 overflow-y-auto text-xs text-slate-300">
                                 {activeMessages.length === 0 && (
-                                  <p className="text-slate-500">
-                                    Initiate negotiation. Tone matters.
-                                  </p>
+                                  <p className="text-slate-500">Initiate negotiation. Tone matters.</p>
                                 )}
                                 {activeMessages.map((message) => (
                                   <div key={message.id} className="rounded-md border border-slate-800 bg-black/60 p-2">
-                                    <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                                      {message.sender}
-                                    </p>
+                                    <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">{message.sender}</p>
                                     <p>{message.text}</p>
                                   </div>
                                 ))}
                               </div>
+
                               <div className="mt-3 flex gap-2">
                                 <input
                                   type="text"
@@ -1498,107 +1600,125 @@
                         </div>
                       )}
 
-                      {activeApp === "bank" && (
+                      {/* FINANCES (replaces DarkVault Bank/Vault) */}
+                      {activeApp === "finances" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
-                            DarkVault Bank
-                          </p>
-                          <div className="mt-4 space-y-4">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Finances</p>
+
+                          <div className="mt-4 grid gap-4 lg:grid-cols-2">
                             <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                Vault status
-                              </p>
-                              {bankAccount ? (
-                                <div className="mt-3 space-y-2">
-                                  <p className="text-lg font-semibold text-emerald-100">
-                                    {bankAccount.alias}
-                                  </p>
-                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                    Account ID: {bankAccount.id}
-                                  </p>
-                                  <p className="text-sm text-slate-300">
-                                    Balance: ${bankAccount.balance.toFixed(2)} USD
-                                  </p>
-                                </div>
-                              ) : (
-                                <p className="mt-3 text-sm text-slate-400">
-                                  No vault created. Submit a request to open your first account.
-                                </p>
-                              )}
-                            </div>
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                Request account
-                              </p>
-                              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                <input
-                                  type="text"
-                                  value={accountAlias}
-                                  onChange={(event) => setAccountAlias(event.target.value)}
-                                  placeholder="Account alias"
-                                  disabled={!!bankAccount}
-                                  className="w-full rounded-md border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-500"
-                                />
-                                <div className="flex items-center rounded-md border border-slate-800 bg-black/60 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                  Initial balance: $0.00
-                                </div>
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Debit accounts</p>
+
+                              <div className="mt-3 space-y-2 text-xs">
+                                {debitAccounts.map((a) => (
+                                  <div key={a.id} className="flex items-center justify-between">
+                                    <span>
+                                      {a.bank} · {a.label} · Fee {(a.feePct * 100).toFixed(1)}% · Delay {a.delayMinutes}m
+                                    </span>
+                                    <span className="text-emerald-100">${a.balance.toFixed(2)}</span>
+                                  </div>
+                                ))}
                               </div>
-                              <button
-                                type="button"
-                                onClick={handleCreateBankAccount}
-                                disabled={!!bankAccount}
-                                className={`mt-4 w-full rounded-md px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                  bankAccount
-                                    ? "cursor-not-allowed bg-slate-800 text-slate-500"
-                                    : "bg-emerald-500/20 text-emerald-100 hover:bg-emerald-400/30"
-                                }`}
-                              >
-                                {bankAccount ? "Account Active" : "Submit Request"}
-                              </button>
-                            </div>
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                Credit line request
-                              </p>
-                              {creditLine ? (
-                                <div className="mt-3 space-y-2">
-                                  <p className="text-sm text-slate-300">
-                                    Approved limit: ${creditLine.limit.toFixed(2)} USD
-                                  </p>
-                                  <p className="text-sm text-slate-300">
-                                    Available: ${creditLine.available.toFixed(2)} USD
-                                  </p>
-                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                    Card: {creditLine.cardNumber}
-                                  </p>
+
+                              <div className="mt-4 rounded-md border border-slate-800 bg-black/50 p-3 text-xs">
+                                <div className="flex items-center justify-between">
+                                  <span>Cash (on hand)</span>
+                                  <span className="text-emerald-100">${cashOnHand.toFixed(2)}</span>
                                 </div>
-                              ) : (
-                                <p className="mt-3 text-sm text-slate-400">
-                                  Apply for a $500 line of credit for immediate access.
+                                <div className="mt-2 flex items-center justify-between">
+                                  <span>Cash stash (locked)</span>
+                                  <span className="text-slate-400">${cashStash.toFixed(2)}</span>
+                                </div>
+                                <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                  Cash stash cannot be used for purchases. Reserved for later systems.
                                 </p>
-                              )}
-                              <button
-                                type="button"
-                                onClick={handleRequestCreditLine}
-                                disabled={!!creditLine}
-                                className={`mt-4 w-full rounded-md px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                  creditLine
-                                    ? "cursor-not-allowed bg-slate-800 text-slate-500"
-                                    : "bg-amber-500/20 text-amber-200 hover:bg-amber-400/30"
-                                }`}
-                              >
-                                {creditLine ? "Credit Active" : "Apply for Credit"}
-                              </button>
+                              </div>
+                            </div>
+
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Credit accounts</p>
+
+                              <div className="mt-3 space-y-3">
+                                {creditAccounts.map((c) => {
+                                  const available = Math.max(c.limit - c.balance, 0);
+                                  const aprPct = (c.apr * 100).toFixed(2);
+                                  return (
+                                    <div key={c.id} className="rounded-md border border-slate-800 bg-black/50 p-3">
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-emerald-100 font-semibold">{c.bank} · {c.label}</p>
+                                        <span className="text-xs text-slate-400">APR {aprPct}%</span>
+                                      </div>
+
+                                      <div className="mt-2 grid gap-2 sm:grid-cols-2 text-xs">
+                                        <div className="flex items-center justify-between">
+                                          <span>Limit</span>
+                                          <span>${c.limit.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                          <span>Balance</span>
+                                          <span>${c.balance.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                          <span>Available</span>
+                                          <span className="text-emerald-100">${available.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                          <span>Payments (this month)</span>
+                                          <span>{c.paymentsThisMonth}</span>
+                                        </div>
+                                      </div>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const currentMonth = Math.floor((gameDay - 1) / 30) + 1;
+
+                                          if (c.paymentsThisMonth < 1) {
+                                            addLog("Limit increase denied: no payment activity this month.");
+                                            return;
+                                          }
+                                          if (c.lastLimitIncreaseMonth === currentMonth) {
+                                            addLog("Limit increase already requested this month.");
+                                            return;
+                                          }
+
+                                          const approved = Math.random() > 0.35;
+
+                                          setCreditAccounts((prev) =>
+                                            prev.map((x) => {
+                                              if (x.id !== c.id) return x;
+                                              const bump = approved ? Math.floor(x.limit * 0.25) : 0;
+                                              return {
+                                                ...x,
+                                                limit: approved ? x.limit + bump : x.limit,
+                                                lastLimitIncreaseMonth: currentMonth,
+                                              };
+                                            })
+                                          );
+
+                                          addLog(
+                                            approved
+                                              ? `Credit limit increased for ${c.bank} (${c.label}).`
+                                              : `Limit increase denied by ${c.bank}.`
+                                          );
+                                        }}
+                                        className="mt-3 w-full rounded-md border border-amber-300/50 px-3 py-2 text-xs uppercase tracking-[0.3em] text-amber-200 hover:border-amber-200"
+                                      >
+                                        Request Limit Increase (Monthly)
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         </div>
                       )}
 
+                      {/* FACILITIES */}
                       {activeApp === "facilities" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5 text-sm text-slate-300">
-                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
-                            Facilities / Real Estate
-                          </p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Facilities / Real Estate</p>
                           <p className="mt-3 text-slate-400">
                             Locked. Expansion nodes will unlock after reputation tiers increase.
                           </p>
@@ -1608,9 +1728,7 @@
                       <div className="rounded-md border border-slate-800 bg-black/60 p-4 text-xs text-slate-400">
                         <p className="uppercase tracking-[0.3em] text-slate-500">Event Log</p>
                         <div className="mt-2 space-y-1">
-                          {eventLogRef.current.length === 0 && (
-                            <p>No events logged yet.</p>
-                          )}
+                          {eventLogRef.current.length === 0 && <p>No events logged yet.</p>}
                           {eventLogRef.current.map((entry) => (
                             <p key={entry.id}>• {entry.text}</p>
                           ))}
