@@ -113,31 +113,40 @@
         { id: 4, name: "Ghostline Hub", location: "São Paulo", status: "Hidden", load: "48%" },
       ];
 
-      const profileIcons = ["🎭", "💀", "🧠", "🔒", "👁️", "🦉"];
+     const profileIcons = [
+  "🎭","💀","🧠","🔒","👁️","🦉",
+  "🕷️","🦂","🧬","🧿","⚗️","🧲",
+  "📡","🛰️","🧪","🗝️","🕯️","🩸"
+      ];
 
       const cityOptions = [
-        { city: "Coastport", country: "Fictional", timeZone: "America/New_York" },
-        { city: "Ironvale", country: "Fictional", timeZone: "America/Chicago" },
-        { city: "Nightfall", country: "Fictional", timeZone: "America/Los_Angeles" },
-        { city: "Sable Ridge", country: "Fictional", timeZone: "Europe/London" },
-        { city: "Driftmark", country: "Fictional", timeZone: "Europe/Berlin" },
-        { city: "Ashlock", country: "Fictional", timeZone: "Asia/Tokyo" },
-      ];
+  { city: "New York", country: "United States", timeZone: "America/New_York" },
+  { city: "Chicago", country: "United States", timeZone: "America/Chicago" },
+  { city: "Los Angeles", country: "United States", timeZone: "America/Los_Angeles" },
+  { city: "London", country: "United Kingdom", timeZone: "Europe/London" },
+  { city: "Berlin", country: "Germany", timeZone: "Europe/Berlin" },
+  { city: "Tokyo", country: "Japan", timeZone: "Asia/Tokyo" },
+  { city: "Singapore", country: "Singapore", timeZone: "Asia/Singapore" },
+  { city: "Toronto", country: "Canada", timeZone: "America/Toronto" },
+];
 
       const usernameSeeds = ["Void", "Cipher", "Specter", "Glitch", "Ghost", "Zero", "Rogue", "Null", "Pulse", "Signal"];
       const usernameSuffixes = ["Walker", "Shade", "Node", "Runner", "Wire", "Crow"];
 
       const appModules = [
-        { id: "supply", label: "Supply 🧪", status: "Online" },
-        { id: "contracts", label: "Contracts 📑", status: "Live" },
-        { id: "transit", label: "Transit 🚚", status: "Live" },
-        { id: "network", label: "Network 🕸️", status: "Live" },
-        { id: "map", label: "Map 🗺️", status: "Live" },
-        { id: "messages", label: "Messages 🔐", status: "Live" },
-        { id: "bank", label: "DarkVault Bank 🏦", status: "Secure" },
-        { id: "facilities", label: "Facilities / Real Estate 🏗️", status: "Locked" },
-      ];
+  { id: "drug", label: "Drug 🧪", status: "Online", group: true },
+  { id: "network", label: "Network 🕸️", status: "Live" },
+  { id: "map", label: "Map 🗺️", status: "Live" },
+  { id: "messages", label: "Messages 🔐", status: "Live" },
+  { id: "finances", label: "Finances 💳", status: "Secure" },
+  { id: "facilities", label: "Facilities / Real Estate 🏗️", status: "Locked" },
+];
 
+      const drugSubModules = [
+  { id: "supply", label: "Supply 🧪", status: "Online" },
+  { id: "contracts", label: "Contracts 📑", status: "Live" },
+  { id: "transit", label: "Transit 🚚", status: "Live" },
+];
       const loadingLines = [
         "[boot] establishing encrypted tunnel...",
         "[auth] negotiating shadow certificates...",
@@ -146,71 +155,79 @@
         "[access] access key verified...",
       ];
 
-      const brokers = [
-        {
-          id: "broker-onyx",
-          name: "Broker Onyx",
-          city: "Coastport",
-          personality: {
-            fearTolerance: 0.4,
-            patience: 0.6,
-            pride: 0.7,
-            aggressionResponse: 0.5,
-            riskAppetite: 0.6,
-          },
-        },
-        {
-          id: "broker-veil",
-          name: "Broker Veil",
-          city: "Ironvale",
-          personality: {
-            fearTolerance: 0.7,
-            patience: 0.5,
-            pride: 0.4,
-            aggressionResponse: 0.6,
-            riskAppetite: 0.7,
-          },
-        },
-        {
-          id: "broker-kite",
-          name: "Broker Kite",
-          city: "Nightfall",
-          personality: {
-            fearTolerance: 0.3,
-            patience: 0.8,
-            pride: 0.5,
-            aggressionResponse: 0.4,
-            riskAppetite: 0.5,
-          },
-        },
-      ];
+     const brokers = [
+  {
+    id: "broker-onyx",
+    name: "Broker Onyx",
+    city: "New York",
+    personality: { fearTolerance: 0.4, patience: 0.6, pride: 0.7, aggressionResponse: 0.5, riskAppetite: 0.6 },
+  },
+  {
+    id: "broker-veil",
+    name: "Broker Veil",
+    city: "Chicago",
+    personality: { fearTolerance: 0.7, patience: 0.5, pride: 0.4, aggressionResponse: 0.6, riskAppetite: 0.7 },
+  },
+  {
+    id: "broker-kite",
+    name: "Broker Kite",
+    city: "Los Angeles",
+    personality: { fearTolerance: 0.3, patience: 0.8, pride: 0.5, aggressionResponse: 0.4, riskAppetite: 0.5 },
+  },
+];
+
 
       const cities = {
-        Coastport: {
-          name: "Coastport",
-          basePrice: [120, 160],
-          reliability: "Stable",
-          transitRisk: "Medium",
-          transitHours: 10,
-          culture: "Direct",
-        },
-        Ironvale: {
-          name: "Ironvale",
-          basePrice: [140, 180],
-          reliability: "Moderate",
-          transitRisk: "Low",
-          transitHours: 8,
-          culture: "Formal",
-        },
-        Nightfall: {
-          name: "Nightfall",
-          basePrice: [100, 150],
-          reliability: "Volatile",
-          transitRisk: "High",
-          transitHours: 14,
-          culture: "Guarded",
-        },
-      };
+  "New York": {
+    name: "New York",
+    basePrice: [140, 190],
+    reliability: "Stable",
+    transitRisk: "Medium",
+    transitHours: 10,
+    culture: "Direct",
+  },
+  Chicago: {
+    name: "Chicago",
+    basePrice: [130, 175],
+    reliability: "Moderate",
+    transitRisk: "Low",
+    transitHours: 8,
+    culture: "Formal",
+  },
+  "Los Angeles": {
+    name: "Los Angeles",
+    basePrice: [120, 170],
+    reliability: "Volatile",
+    transitRisk: "High",
+    transitHours: 14,
+    culture: "Guarded",
+  },
+  London: {
+    name: "London",
+    basePrice: [150, 205],
+    reliability: "Stable",
+    transitRisk: "Medium",
+    transitHours: 12,
+    culture: "Reserved",
+  },
+  Berlin: {
+    name: "Berlin",
+    basePrice: [135, 185],
+    reliability: "Stable",
+    transitRisk: "Low",
+    transitHours: 11,
+    culture: "Methodical",
+  },
+  Tokyo: {
+    name: "Tokyo",
+    basePrice: [160, 220],
+    reliability: "Stable",
+    transitRisk: "Medium",
+    transitHours: 16,
+    culture: "Polite",
+  },
+};
+
 
       const accountsTemplate = [
         { id: "wallet", label: "Wallet 💵", balance: 250, feePct: 0.01, delayMinutes: 0 },
@@ -261,6 +278,7 @@
         const [accountAlias, setAccountAlias] = useState("Main Vault");
         const [creditLine, setCreditLine] = useState(null);
         const [bootTimestamp] = useState(Date.now());
+        const [drugMenuOpen, setDrugMenuOpen] = useState(true);
         const eventLogRef = useRef([]);
 
         useEffect(() => {
@@ -909,7 +927,7 @@
                                 key={`${icon}-${index}`}
                                 type="button"
                                 onClick={() => setProfileIcon(icon)}
-                                className={`rounded-md border px-4 py-4 text-left text-sm transition ${
+                                className={`rounded-2xl border px-4 py-4 text-left text-sm transition ${
                                   profileIcon === icon
                                     ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
                                     : "border-slate-700/70 text-slate-300 hover:border-emerald-400/70"
@@ -999,9 +1017,13 @@
                                   className="mt-3 w-full rounded-md border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
                                 />
                               ) : (
-                                <div className="mt-3 rounded-md border border-dashed border-slate-700/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                  Custom handle pass required
-                                </div>
+                                <button
+  type="button"
+  onClick={() => setShowShop(true)}
+  className="mt-3 w-full rounded-md border border-dashed border-amber-400/40 bg-black/40 px-4 py-3 text-left text-xs uppercase tracking-[0.3em] text-amber-200/80 transition hover:border-amber-300/70"
+>
+  Custom handle locked · click to open shop
+</button>
                               )}
                             </div>
                           </div>
@@ -1047,7 +1069,7 @@
                       <div className="space-y-3">
                         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Profile summary</p>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-md border border-emerald-400/40 bg-slate-950/70 text-2xl">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/40 bg-slate-950/70 text-2xl">
                             {profileIcon}
                           </div>
                           <div>
@@ -1084,7 +1106,7 @@
                   <div className="grid gap-6 lg:grid-cols-[0.25fr_1fr]">
                     <aside className="rounded-md border border-slate-800/80 bg-black/70 p-4 text-sm text-slate-300">
                       <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-md border border-emerald-400/40 bg-slate-950/70 text-2xl">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/40 bg-slate-950/70 text-2xl">
                           {profileIcon}
                         </div>
                         <div>
