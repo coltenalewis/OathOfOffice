@@ -30,6 +30,10 @@
         animation: spin 1.2s linear infinite;
       }
 
+      .stat-glow {
+        box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
+      }
+
       @keyframes emberPulse {
         0%,
         100% {
@@ -100,12 +104,23 @@
         },
       ];
 
+      const baseStats = [
+        { key: "combat", label: "Combat", value: 5 },
+        { key: "intrigue", label: "Intrigue", value: 5 },
+        { key: "knowledge", label: "Knowledge", value: 5 },
+        { key: "stewardship", label: "Stewardship", value: 5 },
+      ];
+
       const App = () => {
         const [screen, setScreen] = useState("landing");
         const [selectedServer, setSelectedServer] = useState(null);
         const [loadingProgress, setLoadingProgress] = useState(0);
         const [characterName, setCharacterName] = useState("");
         const [characterHouse, setCharacterHouse] = useState("Traveler");
+        const [characterRole, setCharacterRole] = useState("Wandering Traveler");
+        const [goldCoins, setGoldCoins] = useState(120);
+        const [stats, setStats] = useState(baseStats);
+        const [pointsAvailable, setPointsAvailable] = useState(6);
 
         useEffect(() => {
           if (screen !== "loading") return;
@@ -142,6 +157,23 @@
         const householdLabel =
           characterHouse === "Traveler" ? "Traveler" : `House ${characterHouse}`;
 
+        const totalStatValue = stats.reduce((sum, stat) => sum + stat.value, 0);
+
+        const handleAllocatePoint = (key) => {
+          if (pointsAvailable <= 0) return;
+          setStats((prev) =>
+            prev.map((stat) =>
+              stat.key === key ? { ...stat, value: stat.value + 1 } : stat
+            )
+          );
+          setPointsAvailable((prev) => Math.max(prev - 1, 0));
+        };
+
+        const handleResetStats = () => {
+          setStats(baseStats);
+          setPointsAvailable(6);
+        };
+
         return (
           <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
             <div className="absolute inset-0 mist-layer opacity-80" />
@@ -151,7 +183,7 @@
               <div className="absolute bottom-10 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full ember-glow" />
             </div>
 
-            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-12 px-6 py-16">
+            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-10 px-5 py-10 sm:px-6">
               <header className="space-y-4 text-center">
                 <p className="text-xs font-semibold uppercase tracking-[0.5em] text-amber-200/70">
                   A Medieval Fantasy RP Experience
@@ -164,6 +196,16 @@
                   you please in a living world inspired by Game of Thrones.
                 </p>
               </header>
+
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setScreen("servers")}
+                  className="w-full max-w-md rounded-2xl bg-amber-400 px-6 py-4 text-base font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-xl shadow-amber-500/40 transition hover:scale-[1.02] hover:bg-amber-300"
+                >
+                  Play Now
+                </button>
+              </div>
 
               {screen === "landing" && (
                 <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
@@ -233,9 +275,9 @@
                     <button
                       type="button"
                       onClick={() => setScreen("servers")}
-                      className="w-full rounded-xl bg-amber-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-lg shadow-amber-500/40 transition hover:bg-amber-300"
+                      className="w-full rounded-xl border border-amber-300/60 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
                     >
-                      Play
+                      View Servers
                     </button>
                   </div>
                 </section>
@@ -304,7 +346,7 @@
               )}
 
               {screen === "character" && (
-                <section className="mx-auto w-full max-w-4xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-10 shadow-2xl shadow-black/40">
+                <section className="mx-auto w-full max-w-4xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40 sm:p-10">
                   <div className="flex flex-wrap items-center justify-between gap-6">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
@@ -314,8 +356,8 @@
                         Name your traveler
                       </h2>
                       <p className="mt-3 text-sm text-slate-300">
-                        After choosing a server, define your first name and decide if you wish to join a
-                        household. You can remain a Traveler and find your role in the realm later.
+                        After choosing a server, define your first name, role, and whether you wish to join a
+                        household. You can remain a Traveler and find your path later.
                       </p>
                     </div>
                     <button
@@ -338,6 +380,21 @@
                           placeholder="Arya"
                           className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
                         />
+                      </label>
+
+                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                        Role
+                        <select
+                          value={characterRole}
+                          onChange={(event) => setCharacterRole(event.target.value)}
+                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                        >
+                          <option>Wandering Traveler</option>
+                          <option>Hedge Knight</option>
+                          <option>Maester Apprentice</option>
+                          <option>Silent Sister</option>
+                          <option>Merchant Scout</option>
+                        </select>
                       </label>
 
                       <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
@@ -374,6 +431,7 @@
                         <p className="text-base text-amber-100">
                           {characterName || "Unnamed Traveler"}
                         </p>
+                        <p className="text-xs text-slate-400">{characterRole}</p>
                         <p className="text-xs text-slate-400">{householdLabel}</p>
                         <div className="mt-4 space-y-2 text-sm text-slate-300">
                           <p>• Neutral reputation across all regions.</p>
@@ -394,7 +452,7 @@
               )}
 
               {screen === "loading" && (
-                <section className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-10 text-center shadow-2xl shadow-black/40">
+                <section className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40 sm:p-10">
                   <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
                     Entering the realm
                   </p>
@@ -403,7 +461,7 @@
                   </h2>
                   <p className="mt-4 text-sm text-slate-300">{progressMessage}</p>
 
-                  <div className="mt-8 flex items-center justify-center gap-6">
+                  <div className="mt-8 flex flex-col items-center justify-center gap-6 sm:flex-row">
                     <div className="loading-ring h-16 w-16 rounded-full" />
                     <div className="w-full">
                       <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
@@ -429,6 +487,7 @@
                       <p className="mt-2 text-base text-amber-100">
                         {characterName || "Unnamed Traveler"}
                       </p>
+                      <p className="text-xs text-slate-400">{characterRole}</p>
                       <p className="text-xs text-slate-400">{householdLabel}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
@@ -441,8 +500,8 @@
               )}
 
               {screen === "game" && (
-                <section className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-10 shadow-2xl shadow-black/40">
-                  <div className="flex flex-wrap items-center justify-between gap-6">
+                <section className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-6 shadow-2xl shadow-black/40 sm:p-10">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
                         Temp Game Screen
@@ -455,29 +514,32 @@
                         staging area while the full RP world loads.
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setScreen("servers")}
-                      className="rounded-xl border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                    >
-                      Return to Servers
-                    </button>
+                    <div className="flex items-center gap-3 rounded-2xl border border-amber-300/30 bg-slate-950/70 px-4 py-2">
+                      <span className="text-xs uppercase tracking-[0.3em] text-amber-200">Gold</span>
+                      <span className="text-lg font-semibold text-amber-100">{goldCoins}</span>
+                      <span className="text-xs text-slate-400">coins</span>
+                    </div>
                   </div>
 
-                  <div className="mt-8 grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
+                  <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                     <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
-                      <h3 className="text-lg font-semibold text-amber-100">Life Ledger</h3>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h3 className="text-lg font-semibold text-amber-100">Life Ledger</h3>
+                        <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300">
+                          {selectedServer?.region || "Westeros"}
+                        </span>
+                      </div>
                       <div className="mt-4 grid gap-4 text-sm text-slate-300">
                         <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-4">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Age 17</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Opening Move</p>
                           <p className="mt-2 text-base text-amber-100">A new season dawns</p>
                           <p className="text-xs text-slate-400">
-                            You arrive in {selectedServer?.region || "Westeros"} with only a satchel of supplies.
+                            You arrive with only a satchel of supplies and a name to carve into history.
                           </p>
                         </div>
                         <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-4">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Age 18</p>
-                          <p className="mt-2 text-base text-amber-100">Whispers of opportunity</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Whispers</p>
+                          <p className="mt-2 text-base text-amber-100">Opportunity calls</p>
                           <p className="text-xs text-slate-400">
                             A steward offers work in exchange for loyalty to a noble cause.
                           </p>
@@ -491,29 +553,75 @@
                         <p className="mt-2 text-base text-amber-100">
                           {characterName || "Unnamed Traveler"}
                         </p>
+                        <p className="text-xs text-slate-400">{characterRole}</p>
                         <p className="text-xs text-slate-400">{householdLabel}</p>
-                        <div className="mt-4 grid gap-3 text-sm text-slate-300">
-                          <p>Honor: 64%</p>
-                          <p>Fortune: 38%</p>
-                          <p>Renown: 52%</p>
-                        </div>
                       </div>
 
                       <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Next Choice</p>
-                        <p className="mt-2 text-sm text-slate-300">
-                          Choose how your story begins. These decisions will shape your standing in the realm.
-                        </p>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Royal Attributes</p>
+                          <div className="flex items-center gap-2 text-xs text-slate-300">
+                            <span className="h-2 w-2 animate-pulse rounded-full bg-amber-300" />
+                            {pointsAvailable} points to assign
+                          </div>
+                        </div>
                         <div className="mt-4 space-y-3">
-                          <button className="w-full rounded-xl border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100">
-                            Seek a household vow
-                          </button>
-                          <button className="w-full rounded-xl border border-slate-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200">
-                            Remain a traveler
+                          {stats.map((stat) => (
+                            <div
+                              key={stat.key}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2"
+                            >
+                              <div>
+                                <p className="text-sm text-amber-100">{stat.label}</p>
+                                <p className="text-xs text-slate-400">Level {stat.value}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 w-24 rounded-full bg-slate-800">
+                                  <div
+                                    className="h-2 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all"
+                                    style={{ width: `${Math.min(stat.value * 8, 100)}%` }}
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleAllocatePoint(stat.key)}
+                                  disabled={pointsAvailable <= 0}
+                                  className={`stat-glow h-8 w-8 rounded-full border text-sm font-semibold transition ${
+                                    pointsAvailable <= 0
+                                      ? "cursor-not-allowed border-slate-700 text-slate-600"
+                                      : "border-amber-300/70 text-amber-200 hover:scale-105"
+                                  }`}
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+                          <span>Total: {totalStatValue} pts</span>
+                          <button
+                            type="button"
+                            onClick={handleResetStats}
+                            className="rounded-full border border-slate-700 px-3 py-1 uppercase tracking-[0.3em] transition hover:border-amber-300 hover:text-amber-200"
+                          >
+                            Reset
                           </button>
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {["Character", "Travel", "Message", "Inventory"].map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        className="rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
+                      >
+                        {item}
+                      </button>
+                    ))}
                   </div>
                 </section>
               )}
