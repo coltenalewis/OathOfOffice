@@ -1,0 +1,33 @@
+<svg width="640" height="480" viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="roof" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bfc7d4"/>
+      <stop offset="1" stop-color="#9aa3b2"/>
+    </linearGradient>
+    <linearGradient id="lawn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#88b95a"/>
+      <stop offset="1" stop-color="#6aa14a"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="480" fill="transparent"/>
+  <path d="M60 340L320 420L580 340L320 260L60 340Z" fill="url(#lawn)"/>
+  <path d="M150 210L320 120L490 210L320 300L150 210Z" fill="url(#roof)"/>
+  <path d="M180 220L320 150L460 220L320 285L180 220Z" fill="#dfe5ee"/>
+  <path d="M200 230L320 170L440 230L320 275L200 230Z" fill="#f4f6f9"/>
+  <path d="M200 230L200 300L440 300L440 230L320 275L200 230Z" fill="#f7f9fb" stroke="#c9d0db"/>
+  <rect x="240" y="250" width="160" height="50" fill="#e2e8f0" stroke="#b9c2cf"/>
+  <rect x="270" y="255" width="24" height="40" fill="#c7d2e3"/>
+  <rect x="308" y="255" width="24" height="40" fill="#c7d2e3"/>
+  <rect x="346" y="255" width="24" height="40" fill="#c7d2e3"/>
+  <rect x="384" y="255" width="24" height="40" fill="#c7d2e3"/>
+  <path d="M275 198L320 170L365 198L320 226L275 198Z" fill="#f0f4fa" stroke="#c9d0db"/>
+  <rect x="300" y="205" width="40" height="35" fill="#dbe3ef"/>
+  <rect x="310" y="210" width="20" height="25" fill="#c4d0e2"/>
+  <rect x="318" y="92" width="4" height="40" fill="#8b95a3"/>
+  <path d="M322 92L380 110L322 128" fill="#c0392b"/>
+  <path d="M322 92L322 128L260 115L322 92Z" fill="#1e3a8a"/>
+  <circle cx="280" cy="110" r="2" fill="#f8fafc"/>
+  <circle cx="290" cy="114" r="2" fill="#f8fafc"/>
+  <circle cx="300" cy="118" r="2" fill="#f8fafc"/>
+  <circle cx="310" cy="122" r="2" fill="#f8fafc"/>
+</svg>
