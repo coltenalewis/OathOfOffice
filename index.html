@@ -75,7 +75,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useEffect, useMemo, useState } = React;
+      const { useEffect, useMemo, useRef, useState } = React;
 
       const servers = [
         {
@@ -111,6 +111,15 @@
         { key: "stewardship", label: "Stewardship", value: 5 },
       ];
 
+      const skinTones = [
+        { name: "Pale", filter: "brightness(1.2) saturate(0.85)" },
+        { name: "Fair", filter: "brightness(1.05) saturate(0.95)" },
+        { name: "Tan", filter: "brightness(0.95) sepia(0.2) saturate(1.1)" },
+        { name: "Olive", filter: "brightness(0.85) sepia(0.35) saturate(1.15)" },
+        { name: "Brown", filter: "brightness(0.7) sepia(0.45) saturate(1.2)" },
+        { name: "Deep", filter: "brightness(0.55) sepia(0.55) saturate(1.25)" },
+      ];
+
       const App = () => {
         const [screen, setScreen] = useState("landing");
         const [selectedServer, setSelectedServer] = useState(null);
@@ -118,9 +127,12 @@
         const [characterName, setCharacterName] = useState("");
         const [characterHouse, setCharacterHouse] = useState("Traveler");
         const [characterRole, setCharacterRole] = useState("Wandering Traveler");
+        const [characterGender, setCharacterGender] = useState(null);
+        const [skinTone, setSkinTone] = useState(skinTones[1]);
         const [goldCoins, setGoldCoins] = useState(120);
         const [stats, setStats] = useState(baseStats);
         const [pointsAvailable, setPointsAvailable] = useState(6);
+        const detailsRef = useRef(null);
 
         useEffect(() => {
           if (screen !== "loading") return;
@@ -158,6 +170,26 @@
           characterHouse === "Traveler" ? "Traveler" : `House ${characterHouse}`;
 
         const totalStatValue = stats.reduce((sum, stat) => sum + stat.value, 0);
+        const characterProgress = useMemo(() => {
+          let progress = 0;
+          if (characterGender) progress += 34;
+          if (characterGender && skinTone) progress += 33;
+          if (characterName.trim()) progress += 33;
+          return Math.min(progress, 100);
+        }, [characterGender, skinTone, characterName]);
+
+        const genderImage = characterGender
+          ? characterGender === "Female"
+            ? "https://i.imgur.com/5dSdv1p.png"
+            : "https://i.imgur.com/MQiTPfC.png"
+          : null;
+
+        const handleGenderSelect = (gender) => {
+          setCharacterGender(gender);
+          requestAnimationFrame(() => {
+            detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+        };
 
         const handleAllocatePoint = (key) => {
           if (pointsAvailable <= 0) return;
@@ -346,18 +378,18 @@
               )}
 
               {screen === "character" && (
-                <section className="mx-auto w-full max-w-4xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40 sm:p-10">
+                <section className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40 sm:p-10">
                   <div className="flex flex-wrap items-center justify-between gap-6">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
                         Character Creation
                       </p>
                       <h2 className="mt-2 text-3xl font-semibold text-amber-100">
-                        Name your traveler
+                        Shape your traveler
                       </h2>
                       <p className="mt-3 text-sm text-slate-300">
-                        After choosing a server, define your first name, role, and whether you wish to join a
-                        household. You can remain a Traveler and find your path later.
+                        Start with a gender, then build your look and identity. You can remain a Traveler
+                        and find your household later.
                       </p>
                     </div>
                     <button
@@ -369,59 +401,150 @@
                     </button>
                   </div>
 
+                  <div className="mt-6 rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                      <span>Progress</span>
+                      <span>{characterProgress}%</span>
+                    </div>
+                    <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
+                      <div
+                        className="h-2 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200 transition-all"
+                        style={{ width: `${characterProgress}%` }}
+                      />
+                    </div>
+                  </div>
+
                   <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="space-y-5">
-                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                        First name
-                        <input
-                          type="text"
-                          value={characterName}
-                          onChange={(event) => setCharacterName(event.target.value)}
-                          placeholder="Arya"
-                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                        />
-                      </label>
-
-                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                        Role
-                        <select
-                          value={characterRole}
-                          onChange={(event) => setCharacterRole(event.target.value)}
-                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                        >
-                          <option>Wandering Traveler</option>
-                          <option>Hedge Knight</option>
-                          <option>Maester Apprentice</option>
-                          <option>Silent Sister</option>
-                          <option>Merchant Scout</option>
-                        </select>
-                      </label>
-
-                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                        Household
-                        <select
-                          value={characterHouse}
-                          onChange={(event) => setCharacterHouse(event.target.value)}
-                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                        >
-                          <option>Traveler</option>
-                          <option>Stark</option>
-                          <option>Lannister</option>
-                          <option>Targaryen</option>
-                          <option>Tyrell</option>
-                          <option>Martell</option>
-                          <option>Greyjoy</option>
-                        </select>
-                      </label>
-
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Selected Realm</p>
-                        <p className="mt-2 text-base text-amber-100">
-                          {selectedServer?.name || "Test Realm"}
+                    <div className="space-y-6">
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                          Step 1 · Choose gender
                         </p>
-                        <p className="text-xs text-slate-400">
-                          Region: {selectedServer?.region || "Westeros"}
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          {["Male", "Female"].map((gender) => (
+                            <button
+                              key={gender}
+                              type="button"
+                              onClick={() => handleGenderSelect(gender)}
+                              className={`rounded-2xl border px-4 py-4 text-sm font-semibold uppercase tracking-[0.3em] transition ${
+                                characterGender === gender
+                                  ? "border-amber-300 bg-amber-300/10 text-amber-100"
+                                  : "border-slate-700 bg-slate-950/60 text-slate-300 hover:border-amber-300/70"
+                              }`}
+                            >
+                              {gender}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div
+                        ref={detailsRef}
+                        className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5"
+                      >
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                          Step 2 · Appearance &amp; identity
                         </p>
+                        <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+                          <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+                            <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                              <span>Base model</span>
+                              <span>{characterGender || "Select gender"}</span>
+                            </div>
+                            <div className="mt-4 flex justify-center">
+                              {genderImage ? (
+                                <img
+                                  src={genderImage}
+                                  alt={`${characterGender} base model`}
+                                  className="h-56 w-auto object-contain"
+                                  style={{ filter: skinTone.filter }}
+                                />
+                              ) : (
+                                <div className="flex h-56 w-full items-center justify-center rounded-2xl border border-dashed border-slate-700/70 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                  Awaiting selection
+                                </div>
+                              )}
+                            </div>
+                            <p className="mt-4 text-center text-xs text-slate-400">
+                              Skin tone preview updates instantly.
+                            </p>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                                Skin tone
+                              </p>
+                              <div
+                                className={`mt-3 flex flex-wrap gap-3 ${
+                                  characterGender ? "" : "pointer-events-none opacity-50"
+                                }`}
+                              >
+                                {skinTones.map((tone) => (
+                                  <button
+                                    key={tone.name}
+                                    type="button"
+                                    onClick={() => setSkinTone(tone)}
+                                    className={`flex items-center gap-3 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                      skinTone.name === tone.name
+                                        ? "border-amber-300 text-amber-100"
+                                        : "border-slate-700 text-slate-300 hover:border-amber-300/70"
+                                    }`}
+                                  >
+                                    <span
+                                      className="h-5 w-5 rounded-full border border-slate-700/70"
+                                      style={{ filter: tone.filter, background: "#f1e8dc" }}
+                                    />
+                                    {tone.name}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                              First name
+                              <input
+                                type="text"
+                                value={characterName}
+                                onChange={(event) => setCharacterName(event.target.value)}
+                                placeholder="Arya"
+                                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                              />
+                            </label>
+
+                            <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                              Role
+                              <select
+                                value={characterRole}
+                                onChange={(event) => setCharacterRole(event.target.value)}
+                                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                              >
+                                <option>Wandering Traveler</option>
+                                <option>Hedge Knight</option>
+                                <option>Maester Apprentice</option>
+                                <option>Silent Sister</option>
+                                <option>Merchant Scout</option>
+                              </select>
+                            </label>
+
+                            <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                              Household
+                              <select
+                                value={characterHouse}
+                                onChange={(event) => setCharacterHouse(event.target.value)}
+                                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                              >
+                                <option>Traveler</option>
+                                <option>Stark</option>
+                                <option>Lannister</option>
+                                <option>Targaryen</option>
+                                <option>Tyrell</option>
+                                <option>Martell</option>
+                                <option>Greyjoy</option>
+                              </select>
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -431,6 +554,9 @@
                         <p className="text-base text-amber-100">
                           {characterName || "Unnamed Traveler"}
                         </p>
+                        <p className="text-xs text-slate-400">
+                          {characterGender || "Gender pending"}
+                        </p>
                         <p className="text-xs text-slate-400">{characterRole}</p>
                         <p className="text-xs text-slate-400">{householdLabel}</p>
                         <div className="mt-4 space-y-2 text-sm text-slate-300">
@@ -438,6 +564,15 @@
                           <p>• Basic gear: cloak, dagger, travel rations.</p>
                           <p>• Free to pledge loyalty after arrival.</p>
                         </div>
+                      </div>
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Selected Realm</p>
+                        <p className="mt-2 text-base text-amber-100">
+                          {selectedServer?.name || "Test Realm"}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          Region: {selectedServer?.region || "Westeros"}
+                        </p>
                       </div>
                       <button
                         type="button"
