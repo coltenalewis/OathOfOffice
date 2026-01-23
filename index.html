@@ -270,6 +270,7 @@
 
       const App = () => {
         const [screen, setScreen] = useState("landing");
+        const [nextScreen, setNextScreen] = useState("game");
         const [selectedServer, setSelectedServer] = useState(null);
         const [loadingProgress, setLoadingProgress] = useState(0);
         const [characterFirstName, setCharacterFirstName] = useState("");
@@ -288,6 +289,7 @@
         const [authUser, setAuthUser] = useState(null);
         const [currentLocation, setCurrentLocation] = useState(travelLocations[0]);
         const [activeRoom, setActiveRoom] = useState(travelLocations[0].rooms[0]);
+        const [gameTab, setGameTab] = useState("life");
 
         useEffect(() => {
           if (screen !== "loading") return;
@@ -297,14 +299,14 @@
               const nextValue = Math.min(prev + Math.floor(Math.random() * 12 + 6), 100);
               if (nextValue >= 100) {
                 clearInterval(interval);
-                setTimeout(() => setScreen("game"), 500);
+                setTimeout(() => setScreen(nextScreen), 500);
               }
               return nextValue;
             });
           }, 350);
 
           return () => clearInterval(interval);
-        }, [screen]);
+        }, [screen, nextScreen]);
 
         useEffect(() => {
           if (!supabaseClient) return;
@@ -635,7 +637,8 @@
                         type="button"
                         onClick={() => {
                           setSelectedServer(server);
-                          setScreen("character");
+                          setNextScreen("character");
+                          setScreen("loading");
                         }}
                         className="group flex w-full flex-col gap-5 rounded-2xl border border-slate-700/80 bg-gradient-to-br from-slate-950/80 via-slate-950/60 to-slate-900/60 p-5 text-left transition hover:-translate-y-1 hover:border-amber-300/70 hover:shadow-lg hover:shadow-amber-500/20"
                       >
@@ -703,8 +706,11 @@
                     </div>
                     <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
                       <div
-                        className="h-2 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200 transition-all"
-                        style={{ width: `${characterProgress}%` }}
+                        className="h-2 rounded-full bg-[length:200%_200%] bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200 transition-all"
+                        style={{
+                          width: `${characterProgress}%`,
+                          animation: "shimmer 2s linear infinite",
+                        }}
                       />
                     </div>
                   </div>
@@ -921,7 +927,10 @@
                       </div>
                       <button
                         type="button"
-                        onClick={() => setScreen("loading")}
+                        onClick={() => {
+                          setNextScreen("game");
+                          setScreen("loading");
+                        }}
                         className="w-full rounded-xl bg-amber-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-lg shadow-amber-500/40 transition hover:bg-amber-300"
                       >
                         Create Character
@@ -981,14 +990,14 @@
                 <section className="mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-900/70 shadow-2xl shadow-black/40">
                   <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/60 bg-slate-950/70 px-6 py-5">
                     <div className="flex items-center gap-4">
-                      <div className="h-16 w-14 overflow-hidden rounded-full border border-amber-300/50 bg-slate-900/80">
-                        {genderImage ? (
-                          <img
-                            src={genderImage}
-                            alt="Character portrait"
-                            className="h-full w-full -translate-y-1 scale-[1.6] object-cover object-top"
-                            style={{ filter: skinTone.filter }}
-                          />
+                        <div className="h-16 w-16 overflow-hidden rounded-full border border-amber-300/50 bg-slate-900/80">
+                          {genderImage ? (
+                            <img
+                              src={genderImage}
+                              alt="Character portrait"
+                              className="h-full w-full translate-y-3 scale-[1.45] object-cover object-top"
+                              style={{ filter: skinTone.filter }}
+                            />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.3em] text-slate-500">
                             --
@@ -1015,109 +1024,136 @@
                   </div>
 
                   <div className="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="space-y-4">
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Life Events</p>
-                          <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300">
-                            Year 1
-                          </span>
-                        </div>
-                        <div className="mt-4 space-y-4 text-sm text-slate-300">
-                          <p>• You arrive in {currentLocation.name} seeking a place to belong.</p>
-                          <p>• Ravens whisper of unrest beyond the walls.</p>
-                          <p>• A traveler offers work in exchange for loyalty.</p>
-                          <p>• Your renown grows among the villagers nearby.</p>
-                        </div>
+                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">📜 Life Events</p>
+                        <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300">
+                          Year 1
+                        </span>
                       </div>
-
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                            Travel &amp; Keeps
-                          </p>
-                          <span className="text-xs text-slate-500">Major keeps &amp; villages</span>
-                        </div>
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          {travelLocations.map((location) => (
-                            <button
-                              key={location.name}
-                              type="button"
-                              onClick={() => {
-                                setCurrentLocation(location);
-                                setActiveRoom(location.rooms[0]);
-                              }}
-                              className={`rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.3em] transition ${
-                                currentLocation.name === location.name
-                                  ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
-                                  : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
-                              }`}
-                            >
-                              <p className="text-sm font-semibold normal-case">{location.name}</p>
-                              <p className="text-[10px] text-slate-400">{location.type}</p>
-                            </button>
-                          ))}
-                        </div>
+                      <div className="mt-4 max-h-56 space-y-4 overflow-y-auto pr-2 text-sm text-slate-300">
+                        <p>• You arrive in {currentLocation.name} seeking a place to belong.</p>
+                        <p>• Ravens whisper of unrest beyond the walls.</p>
+                        <p>• A traveler offers work in exchange for loyalty.</p>
+                        <p>• Your renown grows among the villagers nearby.</p>
+                        <p>• A merchant caravan requests your protection.</p>
+                        <p>• Rumors speak of a dragon sighting on the horizon.</p>
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                            Chat Rooms · {currentLocation.name}
-                          </p>
-                          <span className="text-xs text-slate-500">Public rooms</span>
-                        </div>
-                        <div className="mt-4 space-y-3">
-                          {currentLocation.rooms.map((room) => (
-                            <button
-                              key={room}
-                              type="button"
-                              onClick={() => setActiveRoom(room)}
-                              className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
-                                activeRoom === room
-                                  ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
-                                  : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
-                              }`}
-                            >
-                              {room}
-                            </button>
-                          ))}
-                        </div>
+                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
+                      <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-slate-400">
+                        <button
+                          type="button"
+                          onClick={() => setGameTab("life")}
+                          className={`rounded-full border px-4 py-2 ${
+                            gameTab === "life"
+                              ? "border-amber-300 text-amber-100"
+                              : "border-slate-700 text-slate-300"
+                          }`}
+                        >
+                          🏰 Travel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setGameTab("chat")}
+                          className={`rounded-full border px-4 py-2 ${
+                            gameTab === "chat"
+                              ? "border-amber-300 text-amber-100"
+                              : "border-slate-700 text-slate-300"
+                          }`}
+                        >
+                          💬 Chats
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setGameTab("stats")}
+                          className={`rounded-full border px-4 py-2 ${
+                            gameTab === "stats"
+                              ? "border-amber-300 text-amber-100"
+                              : "border-slate-700 text-slate-300"
+                          }`}
+                        >
+                          ⚔️ Stats
+                        </button>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                            Direct Messages
-                          </p>
-                          <span className="text-xs text-slate-500">Private</span>
-                        </div>
+                      {gameTab === "life" && (
                         <div className="mt-4 space-y-3">
-                          {directMessages.map((contact) => (
-                            <button
-                              key={contact}
-                              type="button"
-                              className="w-full rounded-xl border border-slate-700/70 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-amber-300/70"
-                            >
-                              {contact}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                            Royal Attributes
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                            Major keeps &amp; villages
                           </p>
-                          <div className="flex items-center gap-2 text-xs text-slate-300">
-                            <span className="h-2 w-2 animate-pulse rounded-full bg-amber-300" />
-                            {pointsAvailable} points to assign
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {travelLocations.map((location) => (
+                              <button
+                                key={location.name}
+                                type="button"
+                                onClick={() => {
+                                  setCurrentLocation(location);
+                                  setActiveRoom(location.rooms[0]);
+                                }}
+                                className={`rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.3em] transition ${
+                                  currentLocation.name === location.name
+                                    ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
+                                    : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
+                                }`}
+                              >
+                                <p className="text-sm font-semibold normal-case">{location.name}</p>
+                                <p className="text-[10px] text-slate-400">{location.type}</p>
+                              </button>
+                            ))}
                           </div>
                         </div>
+                      )}
+
+                      {gameTab === "chat" && (
+                        <div className="mt-4 space-y-4">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                              📣 Public rooms · {currentLocation.name}
+                            </p>
+                            <div className="mt-3 space-y-2">
+                              {currentLocation.rooms.map((room) => (
+                                <button
+                                  key={room}
+                                  type="button"
+                                  onClick={() => setActiveRoom(room)}
+                                  className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
+                                    activeRoom === room
+                                      ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
+                                      : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
+                                  }`}
+                                >
+                                  {room}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                              🕊️ Direct messages
+                            </p>
+                            <div className="mt-3 space-y-2">
+                              {directMessages.map((contact) => (
+                                <button
+                                  key={contact}
+                                  type="button"
+                                  className="w-full rounded-xl border border-slate-700/70 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-amber-300/70"
+                                >
+                                  {contact}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {gameTab === "stats" && (
                         <div className="mt-4 space-y-3">
+                          <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.3em] text-slate-400">
+                            <span>⚔️ Royal Attributes</span>
+                            <span className="text-slate-300">{pointsAvailable} points</span>
+                          </div>
                           {stats.map((stat) => (
                             <div
                               key={stat.key}
@@ -1149,18 +1185,18 @@
                               </div>
                             </div>
                           ))}
+                          <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+                            <span>Total: {totalStatValue} pts</span>
+                            <button
+                              type="button"
+                              onClick={handleResetStats}
+                              className="rounded-full border border-slate-700 px-3 py-1 uppercase tracking-[0.3em] transition hover:border-amber-300 hover:text-amber-200"
+                            >
+                              Reset
+                            </button>
+                          </div>
                         </div>
-                        <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
-                          <span>Total: {totalStatValue} pts</span>
-                          <button
-                            type="button"
-                            onClick={handleResetStats}
-                            className="rounded-full border border-slate-700 px-3 py-1 uppercase tracking-[0.3em] transition hover:border-amber-300 hover:text-amber-200"
-                          >
-                            Reset
-                          </button>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
 
