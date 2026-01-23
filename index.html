@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>An Iron Reign</title>
+    <title>Into The Dark</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -11,74 +11,89 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       body {
-        font-family: "Cinzel", "Trajan Pro", "Garamond", "Times New Roman", serif;
+        font-family: "Share Tech Mono", "Fira Mono", "JetBrains Mono", monospace;
       }
 
-      .ember-glow {
-        background: radial-gradient(circle at center, rgba(250, 204, 21, 0.5), transparent 60%);
-        filter: blur(0.5rem);
-        animation: emberPulse 2.8s ease-in-out infinite;
+      .scanlines::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.05) 1px,
+          rgba(0, 0, 0, 0.1) 1px,
+          rgba(0, 0, 0, 0.1) 3px
+        );
+        mix-blend-mode: screen;
+        pointer-events: none;
       }
 
-      .mist-layer {
-        background: linear-gradient(120deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.55));
-        animation: mistDrift 18s ease-in-out infinite alternate;
+      .terminal-flicker {
+        animation: flicker 3s infinite;
       }
 
-      .loading-ring {
-        border: 2px solid rgba(148, 163, 184, 0.4);
-        border-top-color: rgba(248, 113, 113, 0.9);
-        animation: spin 1.2s linear infinite;
+      .glow-pulse {
+        animation: glowPulse 2.4s ease-in-out infinite;
       }
 
-      .stat-glow {
-        box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
+      .boot-cursor {
+        display: inline-block;
+        width: 10px;
+        height: 18px;
+        background: #38f4c9;
+        margin-left: 6px;
+        animation: cursorBlink 1s steps(2, start) infinite;
       }
 
-      .shop-overlay {
+      .panel-overlay {
         opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease;
+        transform: translateY(12px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        pointer-events: none;
       }
 
-      .shop-overlay.is-open {
+      .panel-overlay.is-open {
         opacity: 1;
-        visibility: visible;
+        transform: translateY(0);
+        pointer-events: auto;
       }
 
-      @keyframes emberPulse {
+      @keyframes flicker {
+        0%,
+        19%,
+        21%,
+        23%,
+        80%,
+        100% {
+          opacity: 1;
+        }
+        20%,
+        22%,
+        24%,
+        81% {
+          opacity: 0.7;
+        }
+      }
+
+      @keyframes glowPulse {
         0%,
         100% {
-          opacity: 0.4;
-          transform: scale(0.9);
+          box-shadow: 0 0 12px rgba(56, 244, 201, 0.2);
         }
         50% {
-          opacity: 0.85;
-          transform: scale(1.15);
+          box-shadow: 0 0 24px rgba(56, 244, 201, 0.4);
         }
       }
 
-      @keyframes mistDrift {
-        0% {
-          transform: translateX(-3%);
+      @keyframes cursorBlink {
+        0%,
+        50% {
+          opacity: 1;
         }
+        51%,
         100% {
-          transform: translateX(3%);
-        }
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      @keyframes shimmer {
-        0% {
-          background-position: 0% 50%;
-        }
-        100% {
-          background-position: 100% 50%;
+          opacity: 0;
         }
       }
     </style>
@@ -87,504 +102,707 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useEffect, useMemo, useRef, useState } = React;
+      const { useCallback, useEffect, useMemo, useRef, useState } = React;
+
+      const OPENAI_API_KEY = "PUT_YOUR_KEY_HERE";
 
       const servers = [
+        { id: 1, name: "Obsidian Relay", location: "Frankfurt", status: "Secure", load: "14%" },
+        { id: 2, name: "Midnight Spine", location: "Singapore", status: "Encrypted", load: "61%" },
+        { id: 3, name: "Nocturne Gate", location: "Toronto", status: "Shielded", load: "32%" },
+        { id: 4, name: "Ghostline Hub", location: "São Paulo", status: "Hidden", load: "48%" },
+      ];
+
+      const profileIcons = ["🎭", "💀", "🧠", "🔒", "👁️", "🦉"];
+
+      const cityOptions = [
+        { city: "Coastport", country: "Fictional", timeZone: "America/New_York" },
+        { city: "Ironvale", country: "Fictional", timeZone: "America/Chicago" },
+        { city: "Nightfall", country: "Fictional", timeZone: "America/Los_Angeles" },
+        { city: "Sable Ridge", country: "Fictional", timeZone: "Europe/London" },
+        { city: "Driftmark", country: "Fictional", timeZone: "Europe/Berlin" },
+        { city: "Ashlock", country: "Fictional", timeZone: "Asia/Tokyo" },
+      ];
+
+      const usernameSeeds = ["Void", "Cipher", "Specter", "Glitch", "Ghost", "Zero", "Rogue", "Null", "Pulse", "Signal"];
+      const usernameSuffixes = ["Walker", "Shade", "Node", "Runner", "Wire", "Crow"];
+
+      const appModules = [
+        { id: "supply", label: "Supply 🧪", status: "Online" },
+        { id: "contracts", label: "Contracts 📑", status: "Live" },
+        { id: "transit", label: "Transit 🚚", status: "Live" },
+        { id: "network", label: "Network 🕸️", status: "Live" },
+        { id: "map", label: "Map 🗺️", status: "Live" },
+        { id: "messages", label: "Messages 🔐", status: "Live" },
+        { id: "bank", label: "DarkVault Bank 🏦", status: "Secure" },
+        { id: "facilities", label: "Facilities / Real Estate 🏗️", status: "Locked" },
+      ];
+
+      const loadingLines = [
+        "[boot] establishing encrypted tunnel...",
+        "[auth] negotiating shadow certificates...",
+        "[relay] proxy chain stabilized...",
+        "[sync] mirroring dark indices...",
+        "[access] access key verified...",
+      ];
+
+      const brokers = [
         {
-          id: 1,
-          name: "Test Realm — Winterfell",
-          status: "Stable",
-          players: "42/120",
-          region: "The North",
-          tag: "Roleplay",
+          id: "broker-onyx",
+          name: "Broker Onyx",
+          city: "Coastport",
+          personality: {
+            fearTolerance: 0.4,
+            patience: 0.6,
+            pride: 0.7,
+            aggressionResponse: 0.5,
+            riskAppetite: 0.6,
+          },
         },
         {
-          id: 2,
-          name: "Stormwatch — Dragonstone",
-          status: "High Traffic",
-          players: "96/120",
-          region: "Crownlands",
-          tag: "Hardcore",
+          id: "broker-veil",
+          name: "Broker Veil",
+          city: "Ironvale",
+          personality: {
+            fearTolerance: 0.7,
+            patience: 0.5,
+            pride: 0.4,
+            aggressionResponse: 0.6,
+            riskAppetite: 0.7,
+          },
         },
         {
-          id: 3,
-          name: "Golden Spires — Oldtown",
-          status: "New",
-          players: "12/90",
-          region: "The Reach",
-          tag: "Narrative",
+          id: "broker-kite",
+          name: "Broker Kite",
+          city: "Nightfall",
+          personality: {
+            fearTolerance: 0.3,
+            patience: 0.8,
+            pride: 0.5,
+            aggressionResponse: 0.4,
+            riskAppetite: 0.5,
+          },
         },
       ];
 
-      const baseStats = [
-        { key: "combat", label: "Combat", value: 5 },
-        { key: "intrigue", label: "Intrigue", value: 5 },
-        { key: "knowledge", label: "Knowledge", value: 5 },
-        { key: "stewardship", label: "Stewardship", value: 5 },
+      const cities = {
+        Coastport: {
+          name: "Coastport",
+          basePrice: [120, 160],
+          reliability: "Stable",
+          transitRisk: "Medium",
+          transitHours: 10,
+          culture: "Direct",
+        },
+        Ironvale: {
+          name: "Ironvale",
+          basePrice: [140, 180],
+          reliability: "Moderate",
+          transitRisk: "Low",
+          transitHours: 8,
+          culture: "Formal",
+        },
+        Nightfall: {
+          name: "Nightfall",
+          basePrice: [100, 150],
+          reliability: "Volatile",
+          transitRisk: "High",
+          transitHours: 14,
+          culture: "Guarded",
+        },
+      };
+
+      const accountsTemplate = [
+        { id: "wallet", label: "Wallet 💵", balance: 250, feePct: 0.01, delayMinutes: 0 },
+        { id: "offshore", label: "Offshore 🏦", balance: 800, feePct: 0.03, delayMinutes: 30 },
+        { id: "stash", label: "Stash 📦", balance: 400, feePct: 0.02, delayMinutes: 15 },
+        { id: "business", label: "Business 🧾", balance: 600, feePct: 0.015, delayMinutes: 10 },
       ];
 
-      const skinTones = [
-        { name: "Pale", filter: "brightness(1.2) saturate(0.85)" },
-        { name: "Fair", filter: "brightness(1.05) saturate(0.95)" },
-        { name: "Tan", filter: "brightness(0.95) sepia(0.2) saturate(1.1)" },
-        { name: "Olive", filter: "brightness(0.85) sepia(0.35) saturate(1.15)" },
-        { name: "Brown", filter: "brightness(0.7) sepia(0.45) saturate(1.2)" },
-        { name: "Deep", filter: "brightness(0.55) sepia(0.55) saturate(1.25)" },
+      const verdantTierOptions = [
+        { tier: "Standard", visibility: "Low", stability: "Stable" },
+        { tier: "Premium", visibility: "High", stability: "Fragile" },
       ];
 
-      const firstNameSets = [
-        {
-          label: "Northern",
-          names: ["Arya", "Bran", "Eddard", "Lyanna", "Rickon", "Sansa", "Theon"],
-        },
-        {
-          label: "Riverlands",
-          names: ["Ellyn", "Hoster", "Marra", "Roslin", "Tansy", "Walder", "Wylla"],
-        },
-        {
-          label: "Crownlands",
-          names: ["Aemon", "Alys", "Baelor", "Davos", "Rhae", "Shiera", "Visenya"],
-        },
-        {
-          label: "Dorne",
-          names: ["Arianne", "Edric", "Nym", "Oberon", "Sarella", "Torrhen", "Ysand"],
-        },
-      ];
-
-      const lastNameSets = [
-        {
-          label: "Northern",
-          names: ["Cassel", "Glover", "Hornwood", "Mormont", "Reed", "Tallhart"],
-        },
-        {
-          label: "Riverlands",
-          names: ["Brax", "Darry", "Mallister", "Piper", "Smallwood", "Vance"],
-        },
-        {
-          label: "Crownlands",
-          names: ["Celtigar", "Massey", "Rosby", "Staunton", "Wendwater", "Wyk"],
-        },
-        {
-          label: "Dorne",
-          names: ["Dayne", "Fowler", "Jordayne", "Santagar", "Uller", "Yronwood"],
-        },
-      ];
-
-      const supabaseUrl =
-        window.SUPABASE_URL || window.__ENV__?.SUPABASE_URL || window.ENV?.SUPABASE_URL;
-      const supabaseKey =
-        window.SUPABASE_PUBLISHABLE_KEY ||
-        window.__ENV__?.SUPABASE_PUBLISHABLE_KEY ||
-        window.ENV?.SUPABASE_PUBLISHABLE_KEY;
-      const supabaseClient =
-        window.supabase && supabaseUrl && supabaseKey
-          ? window.supabase.createClient(supabaseUrl, supabaseKey)
-          : null;
+      const toneKeywords = {
+        polite: ["please", "appreciate", "thank", "respect"],
+        pushy: ["urgent", "now", "immediately", "fast"],
+        threatening: ["or else", "threat", "consequence", "pressure"],
+        flattering: ["admire", "legend", "impressive", "trusted"],
+      };
 
       const App = () => {
         const [screen, setScreen] = useState("landing");
-        const [selectedServer, setSelectedServer] = useState(null);
+        const [nextScreen, setNextScreen] = useState("servers");
         const [loadingProgress, setLoadingProgress] = useState(0);
-        const [characterFirstName, setCharacterFirstName] = useState("");
-        const [characterLastName, setCharacterLastName] = useState("");
-        const [activeNameSet, setActiveNameSet] = useState(firstNameSets[0]);
-        const [characterHouse, setCharacterHouse] = useState("Traveler");
-        const [characterRole] = useState("Wandering Traveler");
-        const [characterGender, setCharacterGender] = useState(null);
-        const [skinTone, setSkinTone] = useState(skinTones[1]);
-        const [hasPremium, setHasPremium] = useState(false);
-        const [goldCoins, setGoldCoins] = useState(120);
-        const [stats, setStats] = useState(baseStats);
-        const [pointsAvailable, setPointsAvailable] = useState(6);
-        const detailsRef = useRef(null);
+        const [loadingLineIndex, setLoadingLineIndex] = useState(0);
+        const [selectedServer, setSelectedServer] = useState(null);
+        const [hasSubscription, setHasSubscription] = useState(false);
+        const [hasCustomNamePass, setHasCustomNamePass] = useState(false);
         const [showShop, setShowShop] = useState(false);
-        const [authUser, setAuthUser] = useState(null);
-        const [supabaseWarning, setSupabaseWarning] = useState(false);
+        const [profileIcon, setProfileIcon] = useState(profileIcons[0]);
+        const [username, setUsername] = useState("");
+        const [customUsername, setCustomUsername] = useState("");
+        const [selectedCity, setSelectedCity] = useState(cityOptions[0]);
+        const [profileStep, setProfileStep] = useState(1);
+        const [systemTime, setSystemTime] = useState(new Date());
+        const [activeApp, setActiveApp] = useState("supply");
+        const [accounts, setAccounts] = useState(accountsTemplate);
+        const [inventory, setInventory] = useState({ Standard: 0, Premium: 0 });
+        const [heat, setHeat] = useState(8);
+        const [reputation, setReputation] = useState(35);
+        const [shipments, setShipments] = useState([]);
+        const [contracts, setContracts] = useState([]);
+        const [selectedBroker, setSelectedBroker] = useState(brokers[0]);
+        const [messages, setMessages] = useState({});
+        const [messageInput, setMessageInput] = useState("");
+        const [messageCounts, setMessageCounts] = useState({});
+        const [bankAccount, setBankAccount] = useState(null);
+        const [accountAlias, setAccountAlias] = useState("Main Vault");
+        const [creditLine, setCreditLine] = useState(null);
+        const [bootTimestamp] = useState(Date.now());
+        const eventLogRef = useRef([]);
+
+        useEffect(() => {
+          setUsername(
+            `${usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)]}${
+              usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)]
+            }${Math.floor(Math.random() * 900 + 100)}`
+          );
+        }, []);
+
+        useEffect(() => {
+          const interval = setInterval(() => {
+            setSystemTime(new Date());
+          }, 1000);
+          return () => clearInterval(interval);
+        }, []);
 
         useEffect(() => {
           if (screen !== "loading") return;
           setLoadingProgress(0);
+          setLoadingLineIndex(0);
           const interval = setInterval(() => {
             setLoadingProgress((prev) => {
-              const nextValue = Math.min(prev + Math.floor(Math.random() * 12 + 6), 100);
+              const nextValue = Math.min(prev + Math.floor(Math.random() * 14 + 6), 100);
               if (nextValue >= 100) {
                 clearInterval(interval);
-                setTimeout(() => setScreen("game"), 500);
+                setTimeout(() => setScreen(nextScreen), 500);
               }
               return nextValue;
             });
-          }, 350);
+            setLoadingLineIndex((prev) => Math.min(prev + 1, loadingLines.length - 1));
+          }, 450);
 
           return () => clearInterval(interval);
-        }, [screen]);
+        }, [screen, nextScreen]);
 
         useEffect(() => {
-          if (!supabaseClient) return;
-          supabaseClient.auth.getUser().then(({ data }) => {
-            setAuthUser(data?.user ?? null);
-          });
-          const { data: authListener } = supabaseClient.auth.onAuthStateChange(
-            (_event, session) => {
-              setAuthUser(session?.user ?? null);
-            }
-          );
+          if (contracts.length === 0) {
+            setContracts(generateContracts());
+          }
+        }, [contracts.length]);
 
-          return () => {
-            authListener?.subscription?.unsubscribe();
-          };
+        const msPerGameMinute = (5 * 60 * 1000) / (24 * 60);
+        const gameElapsedMs = Date.now() - bootTimestamp;
+        const gameMinutes = Math.floor(gameElapsedMs / msPerGameMinute);
+        const gameDay = Math.floor(gameMinutes / 1440) + 1;
+        const gameHour = Math.floor((gameMinutes % 1440) / 60);
+        const gameMinute = gameMinutes % 60;
+        const gameProgress = ((gameMinutes % 1440) / 1440) * 100;
+        const gamePhase = useMemo(() => {
+          if (gameHour < 6) return "Night Watch";
+          if (gameHour < 12) return "Dawn Patrol";
+          if (gameHour < 18) return "Day Shift";
+          return "Blackout";
+        }, [gameHour]);
+
+        const localTimeLabel = useMemo(() => {
+          return new Intl.DateTimeFormat("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            timeZone: selectedCity.timeZone,
+          }).format(systemTime);
+        }, [selectedCity, systemTime]);
+
+        const systemTimeLabel = useMemo(() => {
+          return systemTime.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        }, [systemTime]);
+
+        const displayUsername =
+          hasCustomNamePass && customUsername.trim() ? customUsername : username;
+        const profileProgress = useMemo(() => {
+          let progress = 0;
+          if (profileIcon) progress += 34;
+          if ((hasCustomNamePass && customUsername.trim()) || username.trim()) progress += 33;
+          if (selectedCity) progress += 33;
+          return Math.min(progress, 100);
+        }, [profileIcon, username, customUsername, selectedCity, hasCustomNamePass]);
+
+        const profileComplete = profileProgress === 100;
+
+        const totalCash = useMemo(() => {
+          const accountTotal = accounts.reduce((sum, account) => sum + account.balance, 0);
+          const creditAvailable = creditLine?.available || 0;
+          return accountTotal + creditAvailable;
+        }, [accounts, creditLine]);
+
+        const addLog = (entry) => {
+          eventLogRef.current = [
+            { id: Date.now(), text: entry },
+            ...eventLogRef.current,
+          ].slice(0, 8);
+        };
+
+        const updateShipments = useCallback(() => {
+          setShipments((prev) =>
+            prev
+              .map((shipment) => {
+                const elapsed = Date.now() - shipment.createdAt;
+                const remaining = shipment.durationMs - elapsed;
+                if (remaining <= 0 && shipment.status === "In Transit") {
+                  const outcome = resolveShipmentOutcome(shipment);
+                  addLog(`Shipment ${shipment.id} resolved: ${outcome}.`);
+                  return { ...shipment, status: outcome, remainingMs: 0 };
+                }
+                return { ...shipment, remainingMs: Math.max(remaining, 0) };
+              })
+              .filter((shipment) => shipment.status === "In Transit")
+          );
         }, []);
 
-        const immersionLines = useMemo(
-          () => [
-            "Swearing fealty to the realm...",
-            "Saddling your warhorse...",
-            "Summoning ravens across Westeros...",
-            "Sharpening steel and sealing vows...",
-          ],
-          []
-        );
+        const updateContracts = useCallback(() => {
+          setContracts((prev) =>
+            prev
+              .map((contract) => {
+                const elapsed = Date.now() - contract.createdAt;
+                const remaining = contract.durationMs - elapsed;
+                if (remaining <= 0 && contract.status === "Open") {
+                  addLog(`Contract ${contract.title} expired.`);
+                  return { ...contract, status: "Expired", remainingMs: 0 };
+                }
+                return { ...contract, remainingMs: Math.max(remaining, 0) };
+              })
+              .filter((contract) => contract.status !== "Expired")
+          );
+        }, []);
 
-        const progressMessage = useMemo(() => {
-          const index = Math.floor((loadingProgress / 100) * immersionLines.length);
-          return immersionLines[Math.min(index, immersionLines.length - 1)];
-        }, [loadingProgress, immersionLines]);
+        useEffect(() => {
+          const interval = setInterval(() => {
+            updateShipments();
+            updateContracts();
+          }, 1000);
+          return () => clearInterval(interval);
+        }, [updateShipments, updateContracts]);
 
-        const householdLabel =
-          characterHouse === "Traveler" ? "Traveler" : `House ${characterHouse}`;
+        const resolveShipmentOutcome = (shipment) => {
+          const outcomes = ["Delivered", "Delayed", "Partial Loss", "Disrupted"];
+          const roll = Math.random();
+          let outcome = outcomes[0];
+          if (roll > 0.85) outcome = outcomes[3];
+          else if (roll > 0.7) outcome = outcomes[2];
+          else if (roll > 0.5) outcome = outcomes[1];
 
-        const totalStatValue = stats.reduce((sum, stat) => sum + stat.value, 0);
-        const characterProgress = useMemo(() => {
-          let progress = 0;
-          if (characterGender) progress += 34;
-          if (characterGender && skinTone) progress += 33;
-          if (characterFirstName.trim() && characterLastName.trim()) progress += 33;
-          return Math.min(progress, 100);
-        }, [characterGender, skinTone, characterFirstName, characterLastName]);
+          setInventory((prev) => {
+            const newInventory = { ...prev };
+            if (outcome === "Delivered") {
+              newInventory[shipment.tier] += shipment.quantity;
+            } else if (outcome === "Delayed") {
+              newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.8);
+            } else if (outcome === "Partial Loss") {
+              newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.5);
+            }
+            return newInventory;
+          });
 
-        const genderImage = characterGender
-          ? characterGender === "Female"
-            ? "https://i.imgur.com/5dSdv1p.png"
-            : "https://i.imgur.com/MQiTPfC.png"
-          : null;
-        const fullName =
-          characterFirstName && characterLastName
-            ? `${characterFirstName} ${characterLastName}`
-            : "Unnamed Traveler";
+          setHeat((prev) => Math.min(prev + (outcome === "Disrupted" ? 6 : 2), 100));
+          setReputation((prev) => Math.max(prev - (outcome === "Disrupted" ? 5 : 1), 0));
+          return outcome;
+        };
 
-        const handleGenderSelect = (gender) => {
-          setCharacterGender(gender);
-          requestAnimationFrame(() => {
-            detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        const generateContracts = () => {
+          return brokers.map((broker, index) => {
+            const tier = index % 2 === 0 ? "Standard" : "Premium";
+            const base = tier === "Premium" ? 190 : 130;
+            const windowHours = Math.floor(Math.random() * 18 + 6);
+            const durationMs = windowHours * 60 * msPerGameMinute;
+            return {
+              id: `contract-${broker.id}-${Date.now()}`,
+              brokerId: broker.id,
+              title: `${broker.name} · ${broker.city}`,
+              tier,
+              quantityRange: [20, 80],
+              priceBand: [base, base + 40],
+              risk: index % 2 === 0 ? "Medium" : "High",
+              createdAt: Date.now(),
+              durationMs,
+              remainingMs: durationMs,
+              status: "Open",
+            };
           });
         };
 
-        const handleNameSetChange = (label) => {
-          const nextSet = firstNameSets.find((set) => set.label === label);
-          if (nextSet) {
-            setActiveNameSet(nextSet);
-          }
-        };
+        const handlePlaceOrder = (event) => {
+          event.preventDefault();
+          const form = new FormData(event.target);
+          const city = form.get("city");
+          const tier = form.get("tier");
+          const quantity = Number(form.get("quantity"));
+          const accountId = form.get("account");
+          const cityData = cities[city];
+          const basePrice = tier === "Premium" ? cityData.basePrice[1] : cityData.basePrice[0];
+          const totalCost = basePrice * quantity;
 
-        const handleRollName = () => {
-          const firstNames = activeNameSet.names;
-          const lastNames =
-            lastNameSets.find((set) => set.label === activeNameSet.label)?.names ||
-            lastNameSets[0].names;
-          const firstName =
-            firstNames[Math.floor(Math.random() * firstNames.length)];
-          const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-          setCharacterFirstName(firstName);
-          setCharacterLastName(lastName);
-        };
-
-        const handleAllocatePoint = (key) => {
-          if (pointsAvailable <= 0) return;
-          setStats((prev) =>
-            prev.map((stat) =>
-              stat.key === key ? { ...stat, value: stat.value + 1 } : stat
-            )
+          setAccounts((prev) =>
+            prev.map((account) => {
+              if (account.id !== accountId) return account;
+              const fee = totalCost * account.feePct;
+              const newBalance = Math.max(account.balance - totalCost - fee, 0);
+              return { ...account, balance: newBalance };
+            })
           );
-          setPointsAvailable((prev) => Math.max(prev - 1, 0));
+
+          const transitMinutes = cityData.transitHours * 60;
+          const durationMs = transitMinutes * msPerGameMinute;
+          setShipments((prev) => [
+            {
+              id: `S-${Math.floor(Math.random() * 9000 + 1000)}`,
+              city,
+              tier,
+              quantity,
+              status: "In Transit",
+              createdAt: Date.now(),
+              durationMs,
+              remainingMs: durationMs,
+            },
+            ...prev,
+          ]);
+          addLog(`Supply order placed: ${quantity} units (${tier}) from ${city}.`);
         };
 
-        const handleResetStats = () => {
-          setStats(baseStats);
-          setPointsAvailable(6);
-        };
-
-        const handleDiscordLogin = async () => {
-          if (!supabaseClient) {
-            setSupabaseWarning(true);
+        const handleSubmitOffer = (contract, quantity, price, payoutAccountId) => {
+          const tierInventory = inventory[contract.tier] || 0;
+          if (quantity > tierInventory) {
+            addLog("Insufficient inventory for that offer.");
             return;
           }
-          await supabaseClient.auth.signInWithOAuth({
-            provider: "discord",
-            options: { redirectTo: window.location.href },
+          const accepted = Math.random() > 0.35;
+          const status = accepted ? "Accepted" : "Counter";
+          setContracts((prev) =>
+            prev.map((item) =>
+              item.id === contract.id ? { ...item, status, offer: { quantity, price } } : item
+            )
+          );
+          if (accepted) {
+            const revenue = quantity * price;
+            setInventory((prev) => ({ ...prev, [contract.tier]: prev[contract.tier] - quantity }));
+            setAccounts((prev) =>
+              prev.map((account) =>
+                account.id === payoutAccountId
+                  ? { ...account, balance: account.balance + revenue }
+                  : account
+              )
+            );
+            setReputation((prev) => Math.min(prev + 4, 100));
+            setHeat((prev) => Math.min(prev + 3, 100));
+            addLog(`Contract fulfilled: ${contract.title} for $${revenue}.`);
+          } else {
+            addLog(`Broker countered: ${contract.title}.`);
+          }
+        };
+
+        const analyzeTone = (text) => {
+          const lower = text.toLowerCase();
+          let tone = "neutral";
+          Object.entries(toneKeywords).forEach(([key, words]) => {
+            if (words.some((word) => lower.includes(word))) {
+              tone = key;
+            }
+          });
+          return tone;
+        };
+
+        const handleSendMessage = () => {
+          const trimmed = messageInput.trim();
+          if (!trimmed) return;
+          const count = messageCounts[selectedBroker.id] || 0;
+          if (count >= 5) {
+            addLog(`Negotiation window closed for ${selectedBroker.name}.`);
+            return;
+          }
+          const tone = analyzeTone(trimmed);
+          const broker = selectedBroker;
+          const reply = getScriptedReply(broker, tone);
+          setMessages((prev) => {
+            const existing = prev[broker.id] || [];
+            return {
+              ...prev,
+              [broker.id]: [
+                ...existing,
+                { id: Date.now(), sender: "You", text: trimmed },
+                { id: Date.now() + 1, sender: broker.name, text: reply },
+              ],
+            };
+          });
+          setMessageCounts((prev) => ({
+            ...prev,
+            [broker.id]: (prev[broker.id] || 0) + 1,
+          }));
+          if (tone === "threatening") {
+            setHeat((prev) => Math.min(prev + 6, 100));
+            setReputation((prev) => Math.max(prev - 4, 0));
+          } else if (tone === "pushy") {
+            setHeat((prev) => Math.min(prev + 2, 100));
+          }
+          setMessageInput("");
+        };
+
+        const getScriptedReply = (broker, tone) => {
+          const base = {
+            polite: "Respect noted. Keep the offer within the band and we can move.",
+            neutral: "Keep it clean. Send the numbers you can stand behind.",
+            pushy: "Pressure noted. Don’t rush the ledger or the window closes.",
+            threatening: "That tone adds heat. Dial it back or we walk.",
+            flattering: "Flattery helps. Bring a tight proposal and we’ll listen.",
+          };
+          return base[tone] || base.neutral;
+        };
+
+        const generateCardNumber = () => {
+          const chunks = Array.from({ length: 3 }, () =>
+            Math.floor(Math.random() * 9000 + 1000)
+          );
+          return `7777-${chunks.join("-")}`;
+        };
+
+        const handleCreateBankAccount = () => {
+          if (bankAccount) return;
+          setBankAccount({
+            alias: accountAlias || "Primary Vault",
+            balance: 0,
+            id: `DV-${Math.floor(Math.random() * 900000 + 100000)}`,
           });
         };
 
-        const handleLogout = async () => {
-          if (!supabaseClient) return;
-          await supabaseClient.auth.signOut();
+        const handleRequestCreditLine = () => {
+          if (creditLine) return;
+          setCreditLine({
+            limit: 500,
+            available: 500,
+            cardNumber: generateCardNumber(),
+          });
         };
 
-        return (
-          <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-            <div className="absolute inset-0 mist-layer opacity-80" />
-            <div className="absolute inset-0">
-              <div className="absolute -left-10 top-20 h-64 w-64 rounded-full ember-glow" />
-              <div className="absolute right-10 top-24 h-72 w-72 rounded-full ember-glow" />
-              <div className="absolute bottom-10 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full ember-glow" />
-            </div>
+        const activeMessages = messages[selectedBroker.id] || [];
 
-            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-10 px-5 py-10 sm:px-6">
-              <nav className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-700/60 bg-slate-900/60 px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 overflow-hidden rounded-full border border-amber-300/40 bg-slate-950/70">
-                    <img
-                      src="https://i.imgur.com/8Pi0tUO.png"
-                      alt="An Iron Reign logo"
-                      className="h-full w-full object-cover"
-                      onError={(event) => {
-                        event.currentTarget.style.display = "none";
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.4em] text-slate-400">An Iron Reign</p>
-                    <p className="text-sm text-amber-100">Realm Access</p>
-                  </div>
+        return (
+          <main className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-slate-100">
+            <div className="absolute inset-0 scanlines opacity-60" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_55%)]" />
+
+            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10">
+              <header className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-semibold tracking-[0.2em] text-emerald-100">
+                    Into The Dark
+                  </h1>
+                  <p className="text-xs uppercase tracking-[0.6em] text-slate-400">
+                    Dark Web Simulation
+                  </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
-                  {!supabaseClient && (
-                    <span className="rounded-full border border-rose-400/60 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-rose-200">
-                      Supabase keys not detected
-                    </span>
-                  )}
-                  {supabaseWarning && !supabaseClient && (
-                    <span className="rounded-full border border-amber-300/60 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-amber-200">
-                      Verify Netlify env injection
-                    </span>
-                  )}
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setShowShop(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-300/60 text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                    aria-label="Open shop"
+                    className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
                   >
                     🛒
                   </button>
-                  {authUser ? (
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="rounded-xl border border-amber-300/60 px-4 py-2 font-semibold text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                    >
-                      Sign Out
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleDiscordLogin}
-                      className="rounded-xl border border-amber-300/60 px-4 py-2 font-semibold text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                    >
-                      Discord Login
-                    </button>
+                  {screen === "dashboard" && (
+                    <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
+                      {hasSubscription && (
+                        <span className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-emerald-200">
+                          [VIP]
+                        </span>
+                      )}
+                      <span className="rounded-md border border-slate-700 px-3 py-1 text-slate-300">
+                        {selectedServer?.name}
+                      </span>
+                      <span className="rounded-md border border-slate-700 px-3 py-1 text-slate-300">
+                        {selectedCity.city}
+                      </span>
+                    </div>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setScreen("servers")}
-                    className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
-                  >
-                    Realms
-                  </button>
                 </div>
-              </nav>
+              </header>
 
               <div
-                className={`shop-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-8 ${
+                className={`panel-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-8 ${
                   showShop ? "is-open" : ""
                 }`}
-                aria-hidden={!showShop}
               >
-                <section className="w-full max-w-4xl rounded-3xl border border-amber-300/30 bg-slate-950/95 p-6 shadow-2xl shadow-black/60">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Realm Shop</p>
-                      <h2 className="mt-2 text-2xl font-semibold text-amber-100">
-                        Support the reign
-                      </h2>
-                      <p className="mt-2 text-sm text-slate-300">
-                        Templates for premium one-time items and subscriptions. Test unlocking below.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowShop(false)}
-                      className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
-                    >
-                      Close
-                    </button>
-                  </div>
-
-                  <div className="mt-6 grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-5">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                        One-time purchases
-                      </p>
-                      <div className="mt-4 space-y-3 text-sm text-slate-300">
-                        <div className="flex items-center justify-between rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
-                          <span>Founder Sigil Pack</span>
-                          <span className="text-amber-200">120 coins</span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
-                          <span>Banner Cosmetics</span>
-                          <span className="text-amber-200">80 coins</span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
-                          <span>Royal Mount Skin</span>
-                          <span className="text-amber-200">150 coins</span>
-                        </div>
+                {showShop && (
+                  <div className="w-full max-w-2xl rounded-lg border border-emerald-400/30 bg-slate-950 p-6 shadow-2xl shadow-emerald-500/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-400/70">
+                          Black Ops Store
+                        </p>
+                        <p className="text-sm text-slate-300">
+                          Test entitlements for subscription and custom handle access.
+                        </p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowShop(false)}
+                        className="rounded-md border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300"
+                      >
+                        Close
+                      </button>
                     </div>
-
-                    <div className="rounded-2xl border border-amber-300/40 bg-slate-900/70 p-5">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                        Subscriptions
-                      </p>
-                      <div className="mt-4 space-y-3 text-sm text-slate-300">
-                        <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
-                          <p className="text-amber-100">Realm Pass</p>
-                          <p className="text-xs text-slate-400">
-                            Unlock custom names, exclusive halls, and weekly bonuses.
-                          </p>
-                        </div>
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-md border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                          Test Subscription
+                        </p>
+                        <p className="mt-2 text-sm text-slate-300">
+                          Unlock premium status for experimental features.
+                        </p>
                         <button
                           type="button"
-                          onClick={() => setHasPremium(true)}
-                          className="w-full rounded-xl bg-amber-400 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-900 transition hover:bg-amber-300"
+                          onClick={() => setHasSubscription(true)}
+                          className="mt-4 w-full rounded-md border border-emerald-400/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
                         >
-                          Test Subscription Unlock
+                          Activate Test Subscription
                         </button>
-                        {hasPremium && (
-                          <p className="text-xs uppercase tracking-[0.3em] text-amber-200">
-                            Premium active
+                        {hasSubscription && (
+                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-emerald-200">
+                            Active
+                          </p>
+                        )}
+                      </div>
+                      <div className="rounded-md border border-amber-400/40 bg-black/70 p-4 text-sm text-slate-300">
+                        <p className="text-xs uppercase tracking-[0.3em] text-amber-300">
+                          Custom Handle Pass
+                        </p>
+                        <p className="mt-2 text-sm text-slate-300">
+                          Permanent access to custom handles. $5 test pass.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setHasCustomNamePass(true)}
+                          className="mt-4 w-full rounded-md border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                        >
+                          Purchase $5 Pass
+                        </button>
+                        {hasCustomNamePass && (
+                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-amber-200">
+                            Active
                           </p>
                         )}
                       </div>
                     </div>
                   </div>
-                </section>
+                )}
               </div>
 
-              <header className="space-y-4 text-center">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-amber-300/40 bg-slate-950/70">
-                  <img
-                    src="https://i.imgur.com/8Pi0tUO.png"
-                    alt="An Iron Reign logo"
-                    className="h-14 w-14 object-contain"
-                    onError={(event) => {
-                      event.currentTarget.style.display = "none";
-                    }}
-                  />
-                </div>
-                <p className="text-xs font-semibold uppercase tracking-[0.5em] text-amber-200/70">
-                  Welcome to An Iron Reign
-                </p>
-                <p className="mx-auto max-w-xl text-sm text-slate-300">
-                  A medieval fantasy RP experience inspired by Westeros.
-                </p>
-              </header>
-
-              {!selectedServer && (
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setScreen("servers")}
-                    className="w-full max-w-md rounded-2xl bg-amber-400 px-6 py-4 text-base font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-xl shadow-amber-500/40 transition hover:scale-[1.02] hover:bg-amber-300"
-                  >
-                    Play Now
-                  </button>
-                </div>
-              )}
-
               {screen === "landing" && (
-                <section className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40">
-                  <h2 className="text-2xl font-semibold text-amber-100">A living realm awaits</h2>
-                  <p className="mt-3 text-sm text-slate-300">
-                    Choose a realm, forge your traveler, and step into the stories of Westeros.
-                  </p>
-                  <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                    {["Choose a Realm", "Create a Character", "Enter the Realm"].map((step) => (
-                      <div
-                        key={step}
-                        className="rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-4 text-xs uppercase tracking-[0.3em] text-slate-300"
-                      >
-                        {step}
-                      </div>
-                    ))}
+                <section className="relative overflow-hidden rounded-lg border border-emerald-500/30 bg-black/80 p-10 shadow-2xl shadow-emerald-500/10">
+                  <div className="terminal-flicker">
+                    <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">
+                      darknet gateway
+                    </p>
+                    <h2 className="mt-4 text-3xl font-semibold text-emerald-100">
+                      Terminal access granted
+                    </h2>
+                    <p className="mt-3 max-w-xl text-sm text-slate-300">
+                      Initialize your contraband network. Time is compressed and every decision leaves
+                      a trace.
+                    </p>
+                  </div>
+                  <div className="mt-8 rounded-md border border-emerald-400/20 bg-slate-950/70 p-5 text-xs text-emerald-200/80">
+                    <p>root@shadowgrid:~$ access --portal dark.gateway</p>
+                    <p className="mt-2">status: READY_FOR_SESSION</p>
+                    <p className="mt-2">signal strength: 98%</p>
+                    <div className="mt-3 flex items-center">
+                      <span>awaiting command</span>
+                      <span className="boot-cursor" />
+                    </div>
+                  </div>
+                  <div className="mt-8">
+                    <button
+                      type="button"
+                      onClick={() => setScreen("servers")}
+                      className="glow-pulse w-full rounded-md border border-emerald-400/60 bg-emerald-500/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.4em] text-emerald-100 transition hover:border-emerald-300 hover:bg-emerald-400/20"
+                    >
+                      Start Enterprise
+                    </button>
                   </div>
                 </section>
               )}
 
               {screen === "servers" && (
-                <section className="rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40">
-                  <div className="flex flex-wrap items-center justify-between gap-6">
+                <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                        Server Browser
+                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">
+                        server browser
                       </p>
-                      <h2 className="text-2xl font-semibold text-amber-100">Choose your realm</h2>
+                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Select a relay</h2>
                       <p className="text-sm text-slate-300">
-                        Select a test server to begin your roleplay journey.
+                        Choose an enterprise node to begin your session.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setScreen("landing")}
-                      className="rounded-xl border border-slate-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
+                      className="rounded-md border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-emerald-300 hover:text-emerald-200"
                     >
                       Back
                     </button>
                   </div>
-
-                  <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
                     {servers.map((server) => (
                       <button
                         key={server.id}
                         type="button"
                         onClick={() => {
                           setSelectedServer(server);
-                          setScreen("character");
+                          setNextScreen("profile");
+                          setScreen("loading");
                         }}
-                        className="group flex w-full flex-col gap-5 rounded-2xl border border-slate-700/80 bg-gradient-to-br from-slate-950/80 via-slate-950/60 to-slate-900/60 p-5 text-left transition hover:-translate-y-1 hover:border-amber-300/70 hover:shadow-lg hover:shadow-amber-500/20"
+                        className="group flex w-full flex-col gap-4 rounded-md border border-slate-700/70 bg-black/70 p-5 text-left transition hover:-translate-y-1 hover:border-emerald-300/70 hover:shadow-lg hover:shadow-emerald-500/20"
                       >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="text-lg font-semibold text-amber-100 group-hover:text-amber-200">
+                            <h3 className="text-lg font-semibold text-emerald-100 group-hover:text-emerald-200">
                               {server.name}
                             </h3>
-                            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-                              {server.region}
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                              {server.location}
                             </p>
                           </div>
-                          <span className="rounded-full border border-amber-300/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-amber-200">
-                            {server.tag}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-slate-300">
-                          <span className="rounded-full bg-slate-800/80 px-3 py-1">
+                          <span className="rounded-md border border-emerald-400/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-emerald-200">
                             {server.status}
                           </span>
-                          <span className="rounded-full bg-slate-800/80 px-3 py-1">
-                            {server.players} online
-                          </span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-slate-800">
-                          <div className="h-2 w-3/4 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-rose-400" />
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Load</span>
+                          <span>{server.load}</span>
                         </div>
-                        <span className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-300">
-                          Join Test Server →
+                        <div className="h-2 w-full rounded-md bg-slate-800">
+                          <div
+                            className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400"
+                            style={{ width: server.load }}
+                          />
+                        </div>
+                        <span className="text-xs uppercase tracking-[0.4em] text-emerald-300">
+                          Connect →
                         </span>
                       </button>
                     ))}
@@ -592,450 +810,791 @@
                 </section>
               )}
 
-              {screen === "character" && (
-                <section className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40 sm:p-10">
-                  <div className="flex flex-wrap items-center justify-between gap-6">
+              {screen === "loading" && (
+                <section className="rounded-lg border border-emerald-500/30 bg-black/80 p-8 text-left shadow-2xl shadow-emerald-500/20">
+                  <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">boot sequence</p>
+                  <h2 className="mt-3 text-2xl font-semibold text-emerald-100">
+                    Establishing {selectedServer?.name || "relay"}
+                  </h2>
+                  <div className="mt-6 space-y-2 text-xs text-emerald-200/80">
+                    {loadingLines.slice(0, loadingLineIndex + 1).map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                      <span>Loading</span>
+                      <span>{loadingProgress}%</span>
+                    </div>
+                    <div className="mt-3 h-3 w-full rounded-md bg-slate-800">
+                      <div
+                        className="h-3 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all"
+                        style={{ width: `${loadingProgress}%` }}
+                      />
+                    </div>
+                    <p className="mt-3 text-xs text-emerald-200/70">
+                      Keep this channel open until handshake completes.
+                    </p>
+                  </div>
+                  {loadingProgress >= 100 && (
+                    <div className="mt-6 text-xs uppercase tracking-[0.3em] text-emerald-300">
+                      Access granted.
+                    </div>
+                  )}
+                  {loadingProgress >= 100 && (
+                    <button
+                      type="button"
+                      onClick={() => setScreen("profile")}
+                      className="mt-6 w-full rounded-md border border-emerald-400/50 bg-emerald-500/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:border-emerald-300 hover:bg-emerald-400/20"
+                    >
+                      Proceed to Profile
+                    </button>
+                  )}
+                </section>
+              )}
+
+              {screen === "profile" && (
+                <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                        Character Creation
+                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">
+                        identity forge
                       </p>
-                      <h2 className="mt-2 text-3xl font-semibold text-amber-100">
-                        Shape your traveler
-                      </h2>
-                      <p className="mt-3 text-sm text-slate-300">
-                        Start with a gender, then build your look and identity. You can remain a Traveler
-                        and find your household later.
+                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Build your profile</h2>
+                      <p className="text-sm text-slate-300">
+                        Select a signature icon, claim a handle, and choose a city.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setScreen("servers")}
-                      className="rounded-xl border border-slate-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
+                      className="rounded-md border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-emerald-300 hover:text-emerald-200"
                     >
                       Back
                     </button>
                   </div>
 
-                  <div className="mt-6 rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-3">
+                  <div className="mt-6 rounded-md border border-slate-700/70 bg-black/60 px-4 py-3">
                     <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                      <span>Progress</span>
-                      <span>{characterProgress}%</span>
+                      <span>Profile completion</span>
+                      <span>{profileProgress}%</span>
                     </div>
-                    <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
+                    <div className="mt-2 h-2 w-full rounded-md bg-slate-800">
                       <div
-                        className="h-2 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200 transition-all"
-                        style={{ width: `${characterProgress}%` }}
+                        className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all"
+                        style={{ width: `${profileProgress}%` }}
                       />
                     </div>
                   </div>
 
                   <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                     <div className="space-y-6">
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                          Step 1 · Choose gender
-                        </p>
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          {["Male", "Female"].map((gender) => (
-                            <button
-                              key={gender}
-                              type="button"
-                              onClick={() => handleGenderSelect(gender)}
-                              className={`rounded-2xl border px-4 py-4 text-sm font-semibold uppercase tracking-[0.3em] transition ${
-                                characterGender === gender
-                                  ? "border-amber-300 bg-amber-300/10 text-amber-100"
-                                  : "border-slate-700 bg-slate-950/60 text-slate-300 hover:border-amber-300/70"
-                              }`}
-                            >
-                              {gender}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div
-                        ref={detailsRef}
-                        className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5"
-                      >
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                          Step 2 · Appearance &amp; identity
-                        </p>
-                        <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-                          <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
-                            <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                              <span>Base model</span>
-                              <span>{characterGender || "Select gender"}</span>
-                            </div>
-                            <div className="mt-4 flex justify-center">
-                              {genderImage ? (
-                                <img
-                                  src={genderImage}
-                                  alt={`${characterGender} base model`}
-                                  className="h-96 w-auto translate-y-4 scale-125 object-contain"
-                                  style={{ filter: skinTone.filter }}
-                                />
-                              ) : (
-                                <div className="flex h-56 w-full items-center justify-center rounded-2xl border border-dashed border-slate-700/70 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                  Awaiting selection
-                                </div>
-                              )}
-                            </div>
-                            <p className="mt-4 text-center text-xs text-slate-400">
-                              Skin tone preview updates instantly.
+                      {profileStep === 1 && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Step 1 · Profile icon
                             </p>
+                            <button
+                              type="button"
+                              onClick={() => setProfileStep(2)}
+                              className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                            >
+                              Next →
+                            </button>
                           </div>
-
-                          <div className="space-y-4">
-                            <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                                Skin tone
-                              </p>
-                              <div
-                                className={`mt-3 flex flex-wrap gap-3 ${
-                                  characterGender ? "" : "pointer-events-none opacity-50"
+                          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                            {profileIcons.map((icon, index) => (
+                              <button
+                                key={`${icon}-${index}`}
+                                type="button"
+                                onClick={() => setProfileIcon(icon)}
+                                className={`rounded-md border px-4 py-4 text-left text-sm transition ${
+                                  profileIcon === icon
+                                    ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                    : "border-slate-700/70 text-slate-300 hover:border-emerald-400/70"
                                 }`}
                               >
-                                {skinTones.map((tone) => (
-                                  <button
-                                    key={tone.name}
-                                    type="button"
-                                    onClick={() => setSkinTone(tone)}
-                                    className={`flex items-center gap-3 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                      skinTone.name === tone.name
-                                        ? "border-amber-300 text-amber-100"
-                                        : "border-slate-700 text-slate-300 hover:border-amber-300/70"
-                                    }`}
-                                  >
-                                    <span
-                                      className="h-5 w-5 rounded-full border border-slate-700/70"
-                                      style={{ filter: tone.filter, background: "#f1e8dc" }}
-                                    />
-                                    {tone.name}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
+                                <div className="flex h-12 w-12 items-center justify-center text-2xl">
+                                  {icon}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                            <div className="space-y-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                                Name set
-                              </p>
-                              <div className="flex flex-wrap gap-3">
-                                {firstNameSets.map((set) => (
-                                  <button
-                                    key={set.label}
-                                    type="button"
-                                    onClick={() => handleNameSetChange(set.label)}
-                                    className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                      activeNameSet.label === set.label
-                                        ? "border-amber-300 text-amber-100"
-                                        : "border-slate-700 text-slate-300 hover:border-amber-300/70"
-                                    }`}
-                                  >
-                                    {set.label}
-                                  </button>
-                                ))}
-                              </div>
-                              <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                  <div>
-                                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                      Rolled name
-                                    </p>
-                                    <p className="mt-2 text-lg font-semibold text-amber-100">
-                                      {characterFirstName || "First"} {characterLastName || "Last"}
-                                    </p>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={handleRollName}
-                                    className="rounded-xl border border-amber-300/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                                  >
-                                    Roll Name
-                                  </button>
-                                </div>
-                                <p className="mt-3 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                  {activeNameSet.label} name set
-                                </p>
-                                <div className="mt-4 rounded-xl border border-slate-700/70 bg-slate-950/60 p-3 text-xs text-slate-400">
-                                  Custom names are locked behind a premium pass.
-                                  <span className="ml-2 rounded-full border border-amber-300/40 px-2 py-0.5 text-[10px] uppercase tracking-[0.3em] text-amber-200">
-                                    Premium
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                Custom name
-                              </p>
-                              {hasPremium ? (
-                                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                  <input
-                                    type="text"
-                                    value={characterFirstName}
-                                    onChange={(event) => setCharacterFirstName(event.target.value)}
-                                    placeholder="First"
-                                    className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                                  />
-                                  <input
-                                    type="text"
-                                    value={characterLastName}
-                                    onChange={(event) => setCharacterLastName(event.target.value)}
-                                    placeholder="Last"
-                                    className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="mt-3 rounded-xl border border-dashed border-slate-700/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                  Unlock with Realm Pass
-                                </div>
-                              )}
-                            </div>
-
-                            <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                              Household
-                              <select
-                                value={characterHouse}
-                                onChange={(event) => setCharacterHouse(event.target.value)}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                      {profileStep === 2 && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Step 2 · Handle
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setProfileStep(1)}
+                                className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
                               >
-                                <option>Traveler</option>
-                                <option>Stark</option>
-                                <option>Lannister</option>
-                                <option>Targaryen</option>
-                                <option>Tyrell</option>
-                                <option>Martell</option>
-                                <option>Greyjoy</option>
-                              </select>
-                            </label>
+                                ← Back
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setProfileStep(3)}
+                                className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                              >
+                                Next →
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="flex flex-col justify-between gap-6 rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
-                      <div className="space-y-3">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Starting Status</p>
-                        <p className="text-base text-amber-100">{fullName}</p>
-                        <p className="text-xs text-slate-400">
-                          {characterGender || "Gender pending"}
-                        </p>
-                        <p className="text-xs text-slate-400">{characterRole}</p>
-                        <p className="text-xs text-slate-400">{householdLabel}</p>
-                        <div className="mt-4 space-y-2 text-sm text-slate-300">
-                          <p>• Neutral reputation across all regions.</p>
-                          <p>• Basic gear: cloak, dagger, travel rations.</p>
-                          <p>• Free to pledge loyalty after arrival.</p>
-                        </div>
-                      </div>
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Selected Realm</p>
-                        <p className="mt-2 text-base text-amber-100">
-                          {selectedServer?.name || "Test Realm"}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          Region: {selectedServer?.region || "Westeros"}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setScreen("loading")}
-                        className="w-full rounded-xl bg-amber-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-lg shadow-amber-500/40 transition hover:bg-amber-300"
-                      >
-                        Create Character
-                      </button>
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              {screen === "loading" && (
-                <section className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40 sm:p-10">
-                  <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                    Entering the realm
-                  </p>
-                  <h2 className="mt-3 text-3xl font-semibold text-amber-100">
-                    {selectedServer?.name || "Preparing the realm"}
-                  </h2>
-                  <p className="mt-4 text-sm text-slate-300">{progressMessage}</p>
-
-                  <div className="mt-8 flex flex-col items-center justify-center gap-6 sm:flex-row">
-                    <div className="loading-ring h-16 w-16 rounded-full" />
-                    <div className="w-full">
-                      <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                        <span>Loading</span>
-                        <span>{loadingProgress}%</span>
-                      </div>
-                      <div className="mt-3 h-3 w-full rounded-full bg-slate-800">
-                        <div
-                          className="h-3 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200 transition-all"
-                          style={{ width: `${loadingProgress}%` }}
-                        />
-                      </div>
-                      <div
-                        className="mt-4 h-2 rounded-full bg-[length:200%_200%] bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900"
-                        style={{ animation: "shimmer 2s linear infinite" }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-10 grid gap-4 text-left text-sm text-slate-300 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Character</p>
-                      <p className="mt-2 text-base text-amber-100">{fullName}</p>
-                      <p className="text-xs text-slate-400">{characterRole}</p>
-                      <p className="text-xs text-slate-400">{householdLabel}</p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Realm Weather</p>
-                      <p className="mt-2 text-base text-amber-100">Cold winds, low visibility</p>
-                      <p className="text-xs text-slate-400">Adjusting to region: {selectedServer?.region}</p>
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              {screen === "game" && (
-                <section className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-6 shadow-2xl shadow-black/40 sm:p-10">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                        Temp Game Screen
-                      </p>
-                      <h2 className="mt-2 text-3xl font-semibold text-amber-100">
-                        The Realm of Westeros
-                      </h2>
-                      <p className="mt-3 text-sm text-slate-300">
-                        You are now connected to {selectedServer?.name || "the realm"}. This is a temporary
-                        staging area while the full RP world loads.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-2xl border border-amber-300/30 bg-slate-950/70 px-4 py-2">
-                      <span className="text-xs uppercase tracking-[0.3em] text-amber-200">Gold</span>
-                      <span className="text-lg font-semibold text-amber-100">{goldCoins}</span>
-                      <span className="text-xs text-slate-400">coins</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <h3 className="text-lg font-semibold text-amber-100">Life Ledger</h3>
-                        <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300">
-                          {selectedServer?.region || "Westeros"}
-                        </span>
-                      </div>
-                      <div className="mt-4 grid gap-4 text-sm text-slate-300">
-                        <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-4">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Opening Move</p>
-                          <p className="mt-2 text-base text-amber-100">A new season dawns</p>
-                          <p className="text-xs text-slate-400">
-                            You arrive with only a satchel of supplies and a name to carve into history.
-                          </p>
-                        </div>
-                        <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-4">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Whispers</p>
-                          <p className="mt-2 text-base text-amber-100">Opportunity calls</p>
-                          <p className="text-xs text-slate-400">
-                            A steward offers work in exchange for loyalty to a noble cause.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Character Status</p>
-                        <div className="mt-4 flex items-center gap-4">
-                          <div className="h-32 w-28 overflow-hidden rounded-full border border-amber-300/40 bg-slate-900/70">
-                            {genderImage ? (
-                              <img
-                                src={genderImage}
-                                alt="Character portrait"
-                                className="h-full w-full translate-y-0 scale-[1.55] object-cover object-top"
-                                style={{ filter: skinTone.filter }}
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                                --
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-base text-amber-100">{fullName}</p>
-                            <p className="text-xs text-slate-400">{characterRole}</p>
-                            <p className="text-xs text-slate-400">{householdLabel}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Royal Attributes</p>
-                          <div className="flex items-center gap-2 text-xs text-slate-300">
-                            <span className="h-2 w-2 animate-pulse rounded-full bg-amber-300" />
-                            {pointsAvailable} points to assign
-                          </div>
-                        </div>
-                        <div className="mt-4 space-y-3">
-                          {stats.map((stat) => (
-                            <div
-                              key={stat.key}
-                              className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2"
-                            >
-                              <div>
-                                <p className="text-sm text-amber-100">{stat.label}</p>
-                                <p className="text-xs text-slate-400">Level {stat.value}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-24 rounded-full bg-slate-800">
-                                  <div
-                                    className="h-2 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all"
-                                    style={{ width: `${Math.min(stat.value * 8, 100)}%` }}
-                                  />
+                          <div className="mt-4 space-y-4">
+                            <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                    Generated handle
+                                  </p>
+                                  <p className="mt-2 text-lg font-semibold text-emerald-100">
+                                    {username || "--"}
+                                  </p>
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={() => handleAllocatePoint(stat.key)}
-                                  disabled={pointsAvailable <= 0}
-                                  className={`stat-glow h-8 w-8 rounded-full border text-sm font-semibold transition ${
-                                    pointsAvailable <= 0
-                                      ? "cursor-not-allowed border-slate-700 text-slate-600"
-                                      : "border-amber-300/70 text-amber-200 hover:scale-105"
-                                  }`}
+                                  onClick={() => {
+                                    const seed =
+                                      usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)];
+                                    const suffix =
+                                      usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)];
+                                    const digits = Math.floor(Math.random() * 900 + 100);
+                                    setUsername(`${seed}${suffix}${digits}`);
+                                  }}
+                                  className="rounded-md border border-emerald-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-200 hover:text-emerald-100"
                                 >
-                                  +
+                                  Roll Handle
                                 </button>
                               </div>
                             </div>
-                          ))}
+                            <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                  Custom handle
+                                </p>
+                                <span
+                                  className={`rounded-md border px-3 py-1 text-[10px] uppercase tracking-[0.3em] ${
+                                    hasCustomNamePass
+                                      ? "border-amber-300 text-amber-200"
+                                      : "border-slate-700 text-slate-400"
+                                  }`}
+                                >
+                                  {hasCustomNamePass ? "Pass Active" : "Locked"}
+                                </span>
+                              </div>
+                              {hasCustomNamePass ? (
+                                <input
+                                  type="text"
+                                  value={customUsername}
+                                  onChange={(event) => setCustomUsername(event.target.value)}
+                                  placeholder="Enter custom handle"
+                                  className="mt-3 w-full rounded-md border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
+                                />
+                              ) : (
+                                <div className="mt-3 rounded-md border border-dashed border-slate-700/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                  Custom handle pass required
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
-                          <span>Total: {totalStatValue} pts</span>
+                      )}
+
+                      {profileStep === 3 && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Step 3 · Operating city
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setProfileStep(2)}
+                              className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                            >
+                              ← Back
+                            </button>
+                          </div>
+                          <div className="mt-4 grid max-h-64 gap-3 overflow-y-auto pr-2 sm:grid-cols-2">
+                            {cityOptions.map((city) => (
+                              <button
+                                key={`${city.city}-${city.country}`}
+                                type="button"
+                                onClick={() => setSelectedCity(city)}
+                                className={`rounded-md border px-4 py-3 text-left text-sm transition ${
+                                  selectedCity.city === city.city
+                                    ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                    : "border-slate-700/70 text-slate-300 hover:border-emerald-400/70"
+                                }`}
+                              >
+                                <p className="text-sm font-semibold">{city.city}</p>
+                                <p className="text-xs text-slate-400">{city.country}</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col justify-between gap-6 rounded-md border border-slate-700/70 bg-black/60 p-6">
+                      <div className="space-y-3">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Profile summary</p>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-md border border-emerald-400/40 bg-slate-950/70 text-2xl">
+                            {profileIcon}
+                          </div>
+                          <div>
+                            <p className="text-base font-semibold text-emerald-100">
+                              {displayUsername || "Handle pending"}
+                            </p>
+                            <p className="text-xs text-slate-400">{selectedCity.city}</p>
+                          </div>
+                        </div>
+                        <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4 text-xs text-slate-300">
+                          <p>• Identity concealment enabled.</p>
+                          <p>• Default wallet seeded in USD.</p>
+                          <p>• Access limited to Tier-1 apps.</p>
+                        </div>
+                      </div>
+                      {profileComplete && profileStep === 3 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setScreen("dashboard");
+                          }}
+                          className="w-full rounded-md bg-emerald-500/20 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:bg-emerald-400/30"
+                        >
+                          Enter The Dark
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {screen === "dashboard" && (
+                <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-6 shadow-2xl shadow-emerald-500/10">
+                  <div className="grid gap-6 lg:grid-cols-[0.25fr_1fr]">
+                    <aside className="rounded-md border border-slate-800/80 bg-black/70 p-4 text-sm text-slate-300">
+                      <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-md border border-emerald-400/40 bg-slate-950/70 text-2xl">
+                          {profileIcon}
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold text-emerald-100">
+                            {displayUsername || "Anonymous"}
+                          </p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                            Level 1 Operator
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4 space-y-2 text-xs uppercase tracking-[0.3em] text-slate-400">
+                        {appModules.map((app) => (
                           <button
+                            key={app.id}
                             type="button"
-                            onClick={handleResetStats}
-                            className="rounded-full border border-slate-700 px-3 py-1 uppercase tracking-[0.3em] transition hover:border-amber-300 hover:text-amber-200"
+                            onClick={() => setActiveApp(app.id)}
+                            className={`w-full rounded-md border px-3 py-2 text-left transition ${
+                              activeApp === app.id
+                                ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                : "border-slate-800 bg-black/60 text-slate-300 hover:border-emerald-400/70"
+                            }`}
                           >
-                            Reset
+                            <div className="flex items-center justify-between">
+                              <span>{app.label}</span>
+                              <span className="text-[10px] text-slate-500">{app.status}</span>
+                            </div>
                           </button>
+                        ))}
+                      </div>
+                      <div className="mt-6 rounded-md border border-emerald-400/30 bg-black/70 p-3 text-xs">
+                        <p className="uppercase tracking-[0.3em] text-emerald-300">Total Cash</p>
+                        <p className="mt-2 text-lg font-semibold text-emerald-100">
+                          ${totalCash.toFixed(2)} USD
+                        </p>
+                      </div>
+                    </aside>
+
+                    <div className="space-y-6">
+                      <div className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-slate-800/80 bg-black/60 px-4 py-3">
+                        <div className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                          {selectedCity.city} · {selectedCity.country}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
+                          <div className="rounded-md border border-slate-700 bg-black/60 px-3 py-2">
+                            <p className="text-[10px] text-slate-400">System</p>
+                            <p className="text-emerald-100">{systemTimeLabel}</p>
+                          </div>
+                          <div className="rounded-md border border-amber-400/40 bg-black/60 px-3 py-2">
+                            <p className="text-[10px] text-slate-400">City Time</p>
+                            <p className="text-amber-200">{localTimeLabel}</p>
+                          </div>
+                          <div className="rounded-md border border-slate-700 bg-black/60 px-3 py-2">
+                            <p className="text-[10px] text-slate-400">In-Game</p>
+                            <p className="text-emerald-100">
+                              Day {gameDay} · {String(gameHour).padStart(2, "0")}:
+                              {String(gameMinute).padStart(2, "0")}
+                            </p>
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                              Phase: {gamePhase}
+                            </p>
+                            <div className="mt-2 h-1.5 w-24 rounded-md bg-slate-800">
+                              <div
+                                className="h-1.5 rounded-md bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400"
+                                style={{ width: `${gameProgress}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {activeApp === "supply" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                              Supply Node Orders
+                            </p>
+                            <span className="text-xs text-slate-500">
+                              Verdant 🌿 · USD only
+                            </span>
+                          </div>
+                          <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={handlePlaceOrder}>
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              City
+                              <select
+                                name="city"
+                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
+                              >
+                                {Object.values(cities).map((city) => (
+                                  <option key={city.name} value={city.name}>
+                                    {city.name} · {city.transitRisk}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Tier
+                              <select
+                                name="tier"
+                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
+                              >
+                                {verdantTierOptions.map((tier) => (
+                                  <option key={tier.tier} value={tier.tier}>
+                                    {tier.tier} · {tier.visibility}/{tier.stability}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Quantity
+                              <input
+                                name="quantity"
+                                type="number"
+                                min="10"
+                                defaultValue="30"
+                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
+                              />
+                            </label>
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Pay Account
+                              <select
+                                name="account"
+                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
+                              >
+                                {accounts.map((account) => (
+                                  <option key={account.id} value={account.id}>
+                                    {account.label} (${account.balance.toFixed(0)})
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <button
+                              type="submit"
+                              className="sm:col-span-2 rounded-md border border-emerald-400/60 bg-emerald-500/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:border-emerald-300"
+                            >
+                              Place Wholesale Order
+                            </button>
+                          </form>
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2 text-xs text-slate-400">
+                            {Object.values(cities).map((city) => (
+                              <div key={city.name} className="rounded-md border border-slate-800 bg-black/70 p-3">
+                                <p className="text-slate-300">{city.name}</p>
+                                <p>Price band: ${city.basePrice.join("-")}</p>
+                                <p>Reliability: {city.reliability}</p>
+                                <p>Transit: {city.transitHours}h · Risk {city.transitRisk}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "contracts" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                              Contract Board
+                            </p>
+                            <span className="text-xs text-slate-500">Rapid windows</span>
+                          </div>
+                          <div className="mt-4 space-y-3 text-sm text-slate-300">
+                            {contracts.map((contract) => (
+                              <div key={contract.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div>
+                                    <p className="text-emerald-100 font-semibold">{contract.title}</p>
+                                    <p className="text-xs text-slate-400">
+                                      Verdant {contract.tier} · Qty {contract.quantityRange.join("-")}
+                                    </p>
+                                    <p className="text-xs text-slate-400">
+                                      Price band ${contract.priceBand.join("-")} · Risk {contract.risk}
+                                    </p>
+                                  </div>
+                                  <div className="text-xs text-slate-400">
+                                    {Math.ceil(contract.remainingMs / 1000)}s
+                                  </div>
+                                </div>
+                                {contract.status === "Open" ? (
+                                  <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                                    <input
+                                      type="number"
+                                      min={contract.quantityRange[0]}
+                                      max={contract.quantityRange[1]}
+                                      placeholder="Qty"
+                                      className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                      id={`${contract.id}-qty`}
+                                    />
+                                    <input
+                                      type="number"
+                                      min={contract.priceBand[0]}
+                                      max={contract.priceBand[1]}
+                                      placeholder="$ / unit"
+                                      className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                      id={`${contract.id}-price`}
+                                    />
+                                    <select
+                                      id={`${contract.id}-account`}
+                                      className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                    >
+                                      {accounts.map((account) => (
+                                        <option key={account.id} value={account.id}>
+                                          {account.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const quantity = Number(
+                                          document.getElementById(`${contract.id}-qty`).value
+                                        );
+                                        const price = Number(
+                                          document.getElementById(`${contract.id}-price`).value
+                                        );
+                                        const payoutAccountId = document.getElementById(
+                                          `${contract.id}-account`
+                                        ).value;
+                                        handleSubmitOffer(contract, quantity, price, payoutAccountId);
+                                      }}
+                                      className="rounded-md border border-emerald-400/50 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200"
+                                    >
+                                      Submit Offer
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <p className="mt-3 text-xs text-slate-400">Status: {contract.status}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "transit" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Transit</p>
+                          <div className="mt-4 space-y-3 text-sm text-slate-300">
+                            {shipments.length === 0 && <p>No shipments in transit.</p>}
+                            {shipments.map((shipment) => (
+                              <div key={shipment.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                                <div className="flex items-center justify-between">
+                                  <p className="text-emerald-100">{shipment.id}</p>
+                                  <span className="text-xs text-slate-400">{shipment.status}</span>
+                                </div>
+                                <p className="text-xs text-slate-400">
+                                  {shipment.city} · {shipment.quantity} units · {shipment.tier}
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                  ETA: {Math.ceil(shipment.remainingMs / 1000)}s
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "network" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Network</p>
+                          <div className="mt-4 grid gap-4 md:grid-cols-2 text-sm text-slate-300">
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Reputation</p>
+                              <p className="mt-2 text-lg text-emerald-100">{reputation}%</p>
+                              <div className="mt-2 h-2 rounded-md bg-slate-800">
+                                <div
+                                  className="h-2 rounded-md bg-gradient-to-r from-emerald-400 to-emerald-200"
+                                  style={{ width: `${reputation}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Exposure</p>
+                              <p className="mt-2 text-lg text-rose-200">{heat}%</p>
+                              <div className="mt-2 h-2 rounded-md bg-slate-800">
+                                <div
+                                  className="h-2 rounded-md bg-gradient-to-r from-rose-400 to-amber-300"
+                                  style={{ width: `${heat}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Accounts</p>
+                              <div className="mt-2 space-y-2 text-xs">
+                                {accounts.map((account) => (
+                                  <div key={account.id} className="flex items-center justify-between">
+                                    <span>
+                                      {account.label} · Fee {(account.feePct * 100).toFixed(1)}% · Delay{" "}
+                                      {account.delayMinutes}m
+                                    </span>
+                                    <span>${account.balance.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Inventory</p>
+                              <div className="mt-2 space-y-2 text-xs">
+                                <div className="flex items-center justify-between">
+                                  <span>Verdant Standard</span>
+                                  <span>{inventory.Standard}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span>Verdant Premium</span>
+                                  <span>{inventory.Premium}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "map" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Map</p>
+                          <div className="mt-4 grid gap-3 md:grid-cols-3 text-sm text-slate-300">
+                            {Object.values(cities).map((city) => (
+                              <div key={city.name} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                                <p className="text-emerald-100">{city.name}</p>
+                                <p className="text-xs text-slate-400">Reliability: {city.reliability}</p>
+                                <p className="text-xs text-slate-400">Culture: {city.culture}</p>
+                                <p className="text-xs text-slate-400">Risk: {city.transitRisk}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "messages" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Messages</p>
+                            <span className="text-xs text-slate-500">
+                              AI mode: {OPENAI_API_KEY === "PUT_YOUR_KEY_HERE" ? "Scripted" : "Live"}
+                            </span>
+                          </div>
+                          <div className="mt-4 grid gap-4 lg:grid-cols-[0.35fr_1fr]">
+                            <div className="space-y-2">
+                              {brokers.map((broker) => (
+                                <button
+                                  key={broker.id}
+                                  type="button"
+                                  onClick={() => setSelectedBroker(broker)}
+                                  className={`w-full rounded-md border px-3 py-2 text-left text-xs uppercase tracking-[0.3em] transition ${
+                                    selectedBroker.id === broker.id
+                                      ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                      : "border-slate-800 bg-black/60 text-slate-300"
+                                  }`}
+                                >
+                                  {broker.name}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                Thread · {selectedBroker.name}
+                              </p>
+                              <div className="mt-3 h-52 space-y-3 overflow-y-auto text-xs text-slate-300">
+                                {activeMessages.length === 0 && (
+                                  <p className="text-slate-500">
+                                    Initiate negotiation. Tone matters.
+                                  </p>
+                                )}
+                                {activeMessages.map((message) => (
+                                  <div key={message.id} className="rounded-md border border-slate-800 bg-black/60 p-2">
+                                    <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                      {message.sender}
+                                    </p>
+                                    <p>{message.text}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-3 flex gap-2">
+                                <input
+                                  type="text"
+                                  value={messageInput}
+                                  onChange={(event) => setMessageInput(event.target.value)}
+                                  placeholder="Compose message..."
+                                  className="flex-1 rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={handleSendMessage}
+                                  className="rounded-md border border-emerald-400/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200"
+                                >
+                                  Send
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "bank" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                            DarkVault Bank
+                          </p>
+                          <div className="mt-4 space-y-4">
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                Vault status
+                              </p>
+                              {bankAccount ? (
+                                <div className="mt-3 space-y-2">
+                                  <p className="text-lg font-semibold text-emerald-100">
+                                    {bankAccount.alias}
+                                  </p>
+                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                    Account ID: {bankAccount.id}
+                                  </p>
+                                  <p className="text-sm text-slate-300">
+                                    Balance: ${bankAccount.balance.toFixed(2)} USD
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="mt-3 text-sm text-slate-400">
+                                  No vault created. Submit a request to open your first account.
+                                </p>
+                              )}
+                            </div>
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                Request account
+                              </p>
+                              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                <input
+                                  type="text"
+                                  value={accountAlias}
+                                  onChange={(event) => setAccountAlias(event.target.value)}
+                                  placeholder="Account alias"
+                                  disabled={!!bankAccount}
+                                  className="w-full rounded-md border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-500"
+                                />
+                                <div className="flex items-center rounded-md border border-slate-800 bg-black/60 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                  Initial balance: $0.00
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleCreateBankAccount}
+                                disabled={!!bankAccount}
+                                className={`mt-4 w-full rounded-md px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                  bankAccount
+                                    ? "cursor-not-allowed bg-slate-800 text-slate-500"
+                                    : "bg-emerald-500/20 text-emerald-100 hover:bg-emerald-400/30"
+                                }`}
+                              >
+                                {bankAccount ? "Account Active" : "Submit Request"}
+                              </button>
+                            </div>
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                Credit line request
+                              </p>
+                              {creditLine ? (
+                                <div className="mt-3 space-y-2">
+                                  <p className="text-sm text-slate-300">
+                                    Approved limit: ${creditLine.limit.toFixed(2)} USD
+                                  </p>
+                                  <p className="text-sm text-slate-300">
+                                    Available: ${creditLine.available.toFixed(2)} USD
+                                  </p>
+                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                    Card: {creditLine.cardNumber}
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="mt-3 text-sm text-slate-400">
+                                  Apply for a $500 line of credit for immediate access.
+                                </p>
+                              )}
+                              <button
+                                type="button"
+                                onClick={handleRequestCreditLine}
+                                disabled={!!creditLine}
+                                className={`mt-4 w-full rounded-md px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                  creditLine
+                                    ? "cursor-not-allowed bg-slate-800 text-slate-500"
+                                    : "bg-amber-500/20 text-amber-200 hover:bg-amber-400/30"
+                                }`}
+                              >
+                                {creditLine ? "Credit Active" : "Apply for Credit"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "facilities" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5 text-sm text-slate-300">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                            Facilities / Real Estate
+                          </p>
+                          <p className="mt-3 text-slate-400">
+                            Locked. Expansion nodes will unlock after reputation tiers increase.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="rounded-md border border-slate-800 bg-black/60 p-4 text-xs text-slate-400">
+                        <p className="uppercase tracking-[0.3em] text-slate-500">Event Log</p>
+                        <div className="mt-2 space-y-1">
+                          {eventLogRef.current.length === 0 && (
+                            <p>No events logged yet.</p>
+                          )}
+                          {eventLogRef.current.map((entry) => (
+                            <p key={entry.id}>• {entry.text}</p>
+                          ))}
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {["Character", "Travel", "Message", "Inventory"].map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        className="rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
-                      >
-                        {item}
-                      </button>
-                    ))}
                   </div>
                 </section>
               )}
