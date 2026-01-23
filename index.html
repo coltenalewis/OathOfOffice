@@ -19,10 +19,10 @@
         inset: 0;
         background: repeating-linear-gradient(
           to bottom,
-          rgba(255, 255, 255, 0.04),
-          rgba(255, 255, 255, 0.04) 1px,
-          rgba(0, 0, 0, 0.08) 1px,
-          rgba(0, 0, 0, 0.08) 3px
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.05) 1px,
+          rgba(0, 0, 0, 0.1) 1px,
+          rgba(0, 0, 0, 0.1) 3px
         );
         mix-blend-mode: screen;
         pointer-events: none;
@@ -40,7 +40,7 @@
         display: inline-block;
         width: 10px;
         height: 18px;
-        background: #22d3ee;
+        background: #38f4c9;
         margin-left: 6px;
         animation: cursorBlink 1s steps(2, start) infinite;
       }
@@ -71,17 +71,17 @@
         22%,
         24%,
         81% {
-          opacity: 0.75;
+          opacity: 0.7;
         }
       }
 
       @keyframes glowPulse {
         0%,
         100% {
-          box-shadow: 0 0 12px rgba(34, 211, 238, 0.2);
+          box-shadow: 0 0 12px rgba(56, 244, 201, 0.2);
         }
         50% {
-          box-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
+          box-shadow: 0 0 24px rgba(56, 244, 201, 0.4);
         }
       }
 
@@ -101,99 +101,40 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useEffect, useMemo, useState } = React;
+      const { useCallback, useEffect, useMemo, useRef, useState } = React;
+
+      const OPENAI_API_KEY = "PUT_YOUR_KEY_HERE";
 
       const servers = [
-        {
-          id: 1,
-          name: "Obsidian Relay",
-          location: "Frankfurt",
-          status: "Secure",
-          load: "14%",
-        },
-        {
-          id: 2,
-          name: "Midnight Spine",
-          location: "Singapore",
-          status: "Encrypted",
-          load: "61%",
-        },
-        {
-          id: 3,
-          name: "Nocturne Gate",
-          location: "Toronto",
-          status: "Shielded",
-          load: "32%",
-        },
-        {
-          id: 4,
-          name: "Ghostline Hub",
-          location: "São Paulo",
-          status: "Hidden",
-          load: "48%",
-        },
+        { id: 1, name: "Obsidian Relay", location: "Frankfurt", status: "Secure", load: "14%" },
+        { id: 2, name: "Midnight Spine", location: "Singapore", status: "Encrypted", load: "61%" },
+        { id: 3, name: "Nocturne Gate", location: "Toronto", status: "Shielded", load: "32%" },
+        { id: 4, name: "Ghostline Hub", location: "São Paulo", status: "Hidden", load: "48%" },
       ];
 
-      const profileIcons = [
-        { id: "mask", label: "Hollow Mask", glyph: "🎭" },
-        { id: "skull", label: "Skull Relay", glyph: "💀" },
-        { id: "circuit", label: "Circuit Eye", glyph: "🧠" },
-        { id: "lock", label: "Cipher Lock", glyph: "🔒" },
-        { id: "ghost", label: "Ghost Signal", glyph: "👻" },
-        { id: "owl", label: "Night Owl", glyph: "🦉" },
-      ];
+      const profileIcons = ["🎭", "💀", "🧠", "🔒", "👁️", "🦉"];
 
       const cityOptions = [
-        { city: "New York", country: "USA", timeZone: "America/New_York" },
-        { city: "Los Angeles", country: "USA", timeZone: "America/Los_Angeles" },
-        { city: "Toronto", country: "Canada", timeZone: "America/Toronto" },
-        { city: "Mexico City", country: "Mexico", timeZone: "America/Mexico_City" },
-        { city: "São Paulo", country: "Brazil", timeZone: "America/Sao_Paulo" },
-        { city: "Buenos Aires", country: "Argentina", timeZone: "America/Argentina/Buenos_Aires" },
-        { city: "London", country: "United Kingdom", timeZone: "Europe/London" },
-        { city: "Paris", country: "France", timeZone: "Europe/Paris" },
-        { city: "Berlin", country: "Germany", timeZone: "Europe/Berlin" },
-        { city: "Madrid", country: "Spain", timeZone: "Europe/Madrid" },
-        { city: "Rome", country: "Italy", timeZone: "Europe/Rome" },
-        { city: "Stockholm", country: "Sweden", timeZone: "Europe/Stockholm" },
-        { city: "Warsaw", country: "Poland", timeZone: "Europe/Warsaw" },
-        { city: "Moscow", country: "Russia", timeZone: "Europe/Moscow" },
-        { city: "Istanbul", country: "Turkey", timeZone: "Europe/Istanbul" },
-        { city: "Dubai", country: "UAE", timeZone: "Asia/Dubai" },
-        { city: "Johannesburg", country: "South Africa", timeZone: "Africa/Johannesburg" },
-        { city: "Lagos", country: "Nigeria", timeZone: "Africa/Lagos" },
-        { city: "Nairobi", country: "Kenya", timeZone: "Africa/Nairobi" },
-        { city: "Mumbai", country: "India", timeZone: "Asia/Kolkata" },
-        { city: "Delhi", country: "India", timeZone: "Asia/Kolkata" },
-        { city: "Beijing", country: "China", timeZone: "Asia/Shanghai" },
-        { city: "Shanghai", country: "China", timeZone: "Asia/Shanghai" },
-        { city: "Seoul", country: "South Korea", timeZone: "Asia/Seoul" },
-        { city: "Tokyo", country: "Japan", timeZone: "Asia/Tokyo" },
-        { city: "Sydney", country: "Australia", timeZone: "Australia/Sydney" },
-        { city: "Melbourne", country: "Australia", timeZone: "Australia/Melbourne" },
-        { city: "Auckland", country: "New Zealand", timeZone: "Pacific/Auckland" },
+        { city: "Coastport", country: "Fictional", timeZone: "America/New_York" },
+        { city: "Ironvale", country: "Fictional", timeZone: "America/Chicago" },
+        { city: "Nightfall", country: "Fictional", timeZone: "America/Los_Angeles" },
+        { city: "Sable Ridge", country: "Fictional", timeZone: "Europe/London" },
+        { city: "Driftmark", country: "Fictional", timeZone: "Europe/Berlin" },
+        { city: "Ashlock", country: "Fictional", timeZone: "Asia/Tokyo" },
       ];
 
-      const usernameSeeds = [
-        "Void",
-        "Cipher",
-        "Specter",
-        "Glitch",
-        "Ghost",
-        "Zero",
-        "Rogue",
-        "Null",
-        "Pulse",
-        "Signal",
-      ];
-
+      const usernameSeeds = ["Void", "Cipher", "Specter", "Glitch", "Ghost", "Zero", "Rogue", "Null", "Pulse", "Signal"];
       const usernameSuffixes = ["Walker", "Shade", "Node", "Runner", "Wire", "Crow"];
 
       const appModules = [
-        { id: "bank", label: "DarkVault Bank", status: "Secure" },
-        { id: "archives", label: "Shadow Archives", status: "Locked" },
-        { id: "market", label: "Ghost Market", status: "Offline" },
-        { id: "drops", label: "Dead Drops", status: "Standby" },
+        { id: "supply", label: "Supply 🧪", status: "Online" },
+        { id: "contracts", label: "Contracts 📑", status: "Live" },
+        { id: "transit", label: "Transit 🚚", status: "Live" },
+        { id: "network", label: "Network 🕸️", status: "Live" },
+        { id: "map", label: "Map 🗺️", status: "Live" },
+        { id: "messages", label: "Messages 🔐", status: "Live" },
+        { id: "bank", label: "DarkVault Bank 🏦", status: "Secure" },
+        { id: "facilities", label: "Facilities / Real Estate 🏗️", status: "Locked" },
       ];
 
       const loadingLines = [
@@ -203,6 +144,91 @@
         "[sync] mirroring dark indices...",
         "[access] access key verified...",
       ];
+
+      const brokers = [
+        {
+          id: "broker-onyx",
+          name: "Broker Onyx",
+          city: "Coastport",
+          personality: {
+            fearTolerance: 0.4,
+            patience: 0.6,
+            pride: 0.7,
+            aggressionResponse: 0.5,
+            riskAppetite: 0.6,
+          },
+        },
+        {
+          id: "broker-veil",
+          name: "Broker Veil",
+          city: "Ironvale",
+          personality: {
+            fearTolerance: 0.7,
+            patience: 0.5,
+            pride: 0.4,
+            aggressionResponse: 0.6,
+            riskAppetite: 0.7,
+          },
+        },
+        {
+          id: "broker-kite",
+          name: "Broker Kite",
+          city: "Nightfall",
+          personality: {
+            fearTolerance: 0.3,
+            patience: 0.8,
+            pride: 0.5,
+            aggressionResponse: 0.4,
+            riskAppetite: 0.5,
+          },
+        },
+      ];
+
+      const cities = {
+        Coastport: {
+          name: "Coastport",
+          basePrice: [120, 160],
+          reliability: "Stable",
+          transitRisk: "Medium",
+          transitHours: 10,
+          culture: "Direct",
+        },
+        Ironvale: {
+          name: "Ironvale",
+          basePrice: [140, 180],
+          reliability: "Moderate",
+          transitRisk: "Low",
+          transitHours: 8,
+          culture: "Formal",
+        },
+        Nightfall: {
+          name: "Nightfall",
+          basePrice: [100, 150],
+          reliability: "Volatile",
+          transitRisk: "High",
+          transitHours: 14,
+          culture: "Guarded",
+        },
+      };
+
+      const accountsTemplate = [
+        { id: "wallet", label: "Wallet 💵", balance: 250, feePct: 0.01, delayMinutes: 0 },
+        { id: "offshore", label: "Offshore 🏦", balance: 800, feePct: 0.03, delayMinutes: 30 },
+        { id: "stash", label: "Stash 📦", balance: 400, feePct: 0.02, delayMinutes: 15 },
+        { id: "business", label: "Business 🧾", balance: 600, feePct: 0.015, delayMinutes: 10 },
+      ];
+
+      const verdantTierOptions = [
+        { tier: "Standard", visibility: "Low", stability: "Stable" },
+        { tier: "Premium", visibility: "High", stability: "Fragile" },
+      ];
+
+      const toneKeywords = {
+        polite: ["please", "appreciate", "thank", "respect"],
+        pushy: ["urgent", "now", "immediately", "fast"],
+        threatening: ["or else", "threat", "consequence", "pressure"],
+        flattering: ["admire", "legend", "impressive", "trusted"],
+      };
 
       const App = () => {
         const [screen, setScreen] = useState("landing");
@@ -219,12 +245,22 @@
         const [selectedCity, setSelectedCity] = useState(cityOptions[0]);
         const [profileStep, setProfileStep] = useState(1);
         const [systemTime, setSystemTime] = useState(new Date());
-        const [appLoading, setAppLoading] = useState(false);
-        const [activeApp, setActiveApp] = useState(null);
+        const [activeApp, setActiveApp] = useState("supply");
+        const [accounts, setAccounts] = useState(accountsTemplate);
+        const [inventory, setInventory] = useState({ Standard: 0, Premium: 0 });
+        const [heat, setHeat] = useState(8);
+        const [reputation, setReputation] = useState(35);
+        const [shipments, setShipments] = useState([]);
+        const [contracts, setContracts] = useState([]);
+        const [selectedBroker, setSelectedBroker] = useState(brokers[0]);
+        const [messages, setMessages] = useState({});
+        const [messageInput, setMessageInput] = useState("");
+        const [messageCounts, setMessageCounts] = useState({});
         const [bankAccount, setBankAccount] = useState(null);
         const [accountAlias, setAccountAlias] = useState("Main Vault");
         const [creditLine, setCreditLine] = useState(null);
         const [bootTimestamp] = useState(Date.now());
+        const eventLogRef = useRef([]);
 
         useEffect(() => {
           setUsername(
@@ -261,12 +297,24 @@
         }, [screen, nextScreen]);
 
         useEffect(() => {
-          if (!appLoading) return;
-          const timer = setTimeout(() => {
-            setAppLoading(false);
-          }, 650);
-          return () => clearTimeout(timer);
-        }, [appLoading]);
+          if (contracts.length === 0) {
+            setContracts(generateContracts());
+          }
+        }, [contracts.length]);
+
+        const msPerGameMinute = (5 * 60 * 1000) / (24 * 60);
+        const gameElapsedMs = Date.now() - bootTimestamp;
+        const gameMinutes = Math.floor(gameElapsedMs / msPerGameMinute);
+        const gameDay = Math.floor(gameMinutes / 1440) + 1;
+        const gameHour = Math.floor((gameMinutes % 1440) / 60);
+        const gameMinute = gameMinutes % 60;
+        const gameProgress = ((gameMinutes % 1440) / 1440) * 100;
+        const gamePhase = useMemo(() => {
+          if (gameHour < 6) return "Night Watch";
+          if (gameHour < 12) return "Dawn Patrol";
+          if (gameHour < 18) return "Day Shift";
+          return "Blackout";
+        }, [gameHour]);
 
         const localTimeLabel = useMemo(() => {
           return new Intl.DateTimeFormat("en-US", {
@@ -285,25 +333,8 @@
           });
         }, [systemTime]);
 
-        const inGameDay = useMemo(() => {
-          const elapsed = Date.now() - bootTimestamp;
-          const dayLength = 2 * 60 * 60 * 1000;
-          return Math.floor(elapsed / dayLength) + 1;
-        }, [bootTimestamp, systemTime]);
-
-        const inGameProgress = useMemo(() => {
-          const elapsed = Date.now() - bootTimestamp;
-          const dayLength = 2 * 60 * 60 * 1000;
-          return ((elapsed % dayLength) / dayLength) * 100;
-        }, [bootTimestamp, systemTime]);
-
-        const handleRollUsername = () => {
-          const seed = usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)];
-          const suffix = usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)];
-          const digits = Math.floor(Math.random() * 900 + 100);
-          setUsername(`${seed}${suffix}${digits}`);
-        };
-
+        const displayUsername =
+          hasCustomNamePass && customUsername.trim() ? customUsername : username;
         const profileProgress = useMemo(() => {
           let progress = 0;
           if (profileIcon) progress += 34;
@@ -313,17 +344,232 @@
         }, [profileIcon, username, customUsername, selectedCity, hasCustomNamePass]);
 
         const profileComplete = profileProgress === 100;
-        const displayUsername =
-          hasCustomNamePass && customUsername.trim() ? customUsername : username;
-        const totalCash = useMemo(() => {
-          const bankBalance = bankAccount?.balance || 0;
-          const creditAvailable = creditLine?.available || 0;
-          return bankBalance + creditAvailable;
-        }, [bankAccount, creditLine]);
 
-        const handleOpenApp = (appId) => {
-          setActiveApp(appId);
-          setAppLoading(true);
+        const totalCash = useMemo(() => {
+          const accountTotal = accounts.reduce((sum, account) => sum + account.balance, 0);
+          const creditAvailable = creditLine?.available || 0;
+          return accountTotal + creditAvailable;
+        }, [accounts, creditLine]);
+
+        const addLog = (entry) => {
+          eventLogRef.current = [
+            { id: Date.now(), text: entry },
+            ...eventLogRef.current,
+          ].slice(0, 8);
+        };
+
+        const updateShipments = useCallback(() => {
+          setShipments((prev) =>
+            prev
+              .map((shipment) => {
+                const elapsed = Date.now() - shipment.createdAt;
+                const remaining = shipment.durationMs - elapsed;
+                if (remaining <= 0 && shipment.status === "In Transit") {
+                  const outcome = resolveShipmentOutcome(shipment);
+                  addLog(`Shipment ${shipment.id} resolved: ${outcome}.`);
+                  return { ...shipment, status: outcome, remainingMs: 0 };
+                }
+                return { ...shipment, remainingMs: Math.max(remaining, 0) };
+              })
+              .filter((shipment) => shipment.status === "In Transit")
+          );
+        }, []);
+
+        const updateContracts = useCallback(() => {
+          setContracts((prev) =>
+            prev
+              .map((contract) => {
+                const elapsed = Date.now() - contract.createdAt;
+                const remaining = contract.durationMs - elapsed;
+                if (remaining <= 0 && contract.status === "Open") {
+                  addLog(`Contract ${contract.title} expired.`);
+                  return { ...contract, status: "Expired", remainingMs: 0 };
+                }
+                return { ...contract, remainingMs: Math.max(remaining, 0) };
+              })
+              .filter((contract) => contract.status !== "Expired")
+          );
+        }, []);
+
+        useEffect(() => {
+          const interval = setInterval(() => {
+            updateShipments();
+            updateContracts();
+          }, 1000);
+          return () => clearInterval(interval);
+        }, [updateShipments, updateContracts]);
+
+        const resolveShipmentOutcome = (shipment) => {
+          const outcomes = ["Delivered", "Delayed", "Partial Loss", "Disrupted"];
+          const roll = Math.random();
+          let outcome = outcomes[0];
+          if (roll > 0.85) outcome = outcomes[3];
+          else if (roll > 0.7) outcome = outcomes[2];
+          else if (roll > 0.5) outcome = outcomes[1];
+
+          setInventory((prev) => {
+            const newInventory = { ...prev };
+            if (outcome === "Delivered") {
+              newInventory[shipment.tier] += shipment.quantity;
+            } else if (outcome === "Delayed") {
+              newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.8);
+            } else if (outcome === "Partial Loss") {
+              newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.5);
+            }
+            return newInventory;
+          });
+
+          setHeat((prev) => Math.min(prev + (outcome === "Disrupted" ? 6 : 2), 100));
+          setReputation((prev) => Math.max(prev - (outcome === "Disrupted" ? 5 : 1), 0));
+          return outcome;
+        };
+
+        const generateContracts = () => {
+          return brokers.map((broker, index) => {
+            const tier = index % 2 === 0 ? "Standard" : "Premium";
+            const base = tier === "Premium" ? 190 : 130;
+            const windowHours = Math.floor(Math.random() * 18 + 6);
+            const durationMs = windowHours * 60 * msPerGameMinute;
+            return {
+              id: `contract-${broker.id}-${Date.now()}`,
+              brokerId: broker.id,
+              title: `${broker.name} · ${broker.city}`,
+              tier,
+              quantityRange: [20, 80],
+              priceBand: [base, base + 40],
+              risk: index % 2 === 0 ? "Medium" : "High",
+              createdAt: Date.now(),
+              durationMs,
+              remainingMs: durationMs,
+              status: "Open",
+            };
+          });
+        };
+
+        const handlePlaceOrder = (event) => {
+          event.preventDefault();
+          const form = new FormData(event.target);
+          const city = form.get("city");
+          const tier = form.get("tier");
+          const quantity = Number(form.get("quantity"));
+          const accountId = form.get("account");
+          const cityData = cities[city];
+          const basePrice = tier === "Premium" ? cityData.basePrice[1] : cityData.basePrice[0];
+          const totalCost = basePrice * quantity;
+
+          setAccounts((prev) =>
+            prev.map((account) => {
+              if (account.id !== accountId) return account;
+              const fee = totalCost * account.feePct;
+              const newBalance = Math.max(account.balance - totalCost - fee, 0);
+              return { ...account, balance: newBalance };
+            })
+          );
+
+          const transitMinutes = cityData.transitHours * 60;
+          const durationMs = transitMinutes * msPerGameMinute;
+          setShipments((prev) => [
+            {
+              id: `S-${Math.floor(Math.random() * 9000 + 1000)}`,
+              city,
+              tier,
+              quantity,
+              status: "In Transit",
+              createdAt: Date.now(),
+              durationMs,
+              remainingMs: durationMs,
+            },
+            ...prev,
+          ]);
+          addLog(`Supply order placed: ${quantity} units (${tier}) from ${city}.`);
+        };
+
+        const handleSubmitOffer = (contract, quantity, price, payoutAccountId) => {
+          const tierInventory = inventory[contract.tier] || 0;
+          if (quantity > tierInventory) {
+            addLog("Insufficient inventory for that offer.");
+            return;
+          }
+          const accepted = Math.random() > 0.35;
+          const status = accepted ? "Accepted" : "Counter";
+          setContracts((prev) =>
+            prev.map((item) =>
+              item.id === contract.id ? { ...item, status, offer: { quantity, price } } : item
+            )
+          );
+          if (accepted) {
+            const revenue = quantity * price;
+            setInventory((prev) => ({ ...prev, [contract.tier]: prev[contract.tier] - quantity }));
+            setAccounts((prev) =>
+              prev.map((account) =>
+                account.id === payoutAccountId
+                  ? { ...account, balance: account.balance + revenue }
+                  : account
+              )
+            );
+            setReputation((prev) => Math.min(prev + 4, 100));
+            setHeat((prev) => Math.min(prev + 3, 100));
+            addLog(`Contract fulfilled: ${contract.title} for $${revenue}.`);
+          } else {
+            addLog(`Broker countered: ${contract.title}.`);
+          }
+        };
+
+        const analyzeTone = (text) => {
+          const lower = text.toLowerCase();
+          let tone = "neutral";
+          Object.entries(toneKeywords).forEach(([key, words]) => {
+            if (words.some((word) => lower.includes(word))) {
+              tone = key;
+            }
+          });
+          return tone;
+        };
+
+        const handleSendMessage = () => {
+          const trimmed = messageInput.trim();
+          if (!trimmed) return;
+          const count = messageCounts[selectedBroker.id] || 0;
+          if (count >= 5) {
+            addLog(`Negotiation window closed for ${selectedBroker.name}.`);
+            return;
+          }
+          const tone = analyzeTone(trimmed);
+          const broker = selectedBroker;
+          const reply = getScriptedReply(broker, tone);
+          setMessages((prev) => {
+            const existing = prev[broker.id] || [];
+            return {
+              ...prev,
+              [broker.id]: [
+                ...existing,
+                { id: Date.now(), sender: "You", text: trimmed },
+                { id: Date.now() + 1, sender: broker.name, text: reply },
+              ],
+            };
+          });
+          setMessageCounts((prev) => ({
+            ...prev,
+            [broker.id]: (prev[broker.id] || 0) + 1,
+          }));
+          if (tone === "threatening") {
+            setHeat((prev) => Math.min(prev + 6, 100));
+            setReputation((prev) => Math.max(prev - 4, 0));
+          } else if (tone === "pushy") {
+            setHeat((prev) => Math.min(prev + 2, 100));
+          }
+          setMessageInput("");
+        };
+
+        const getScriptedReply = (broker, tone) => {
+          const base = {
+            polite: "Respect noted. Keep the offer within the band and we can move.",
+            neutral: "Keep it clean. Send the numbers you can stand behind.",
+            pushy: "Pressure noted. Don’t rush the ledger or the window closes.",
+            threatening: "That tone adds heat. Dial it back or we walk.",
+            flattering: "Flattery helps. Bring a tight proposal and we’ll listen.",
+          };
+          return base[tone] || base.neutral;
         };
 
         const generateCardNumber = () => {
@@ -351,37 +597,46 @@
           });
         };
 
+        const activeMessages = messages[selectedBroker.id] || [];
+
         return (
           <main className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-slate-100">
             <div className="absolute inset-0 scanlines opacity-60" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(14,116,144,0.25),_transparent_55%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_55%)]" />
 
             <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10">
               <header className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/60">
+                  <h1 className="text-3xl font-semibold tracking-[0.2em] text-emerald-100">
                     Into The Dark
+                  </h1>
+                  <p className="text-xs uppercase tracking-[0.6em] text-slate-400">
+                    Dark Web Simulation
                   </p>
-                  <h1 className="text-2xl font-semibold text-cyan-100">Dark Web Simulation</h1>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setShowShop(true)}
-                    className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
+                    className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
                   >
-                    Shop
+                    🛒
                   </button>
-                {screen === "dashboard" && (
-                  <div className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.3em]">
-                    <div className="rounded-full border border-cyan-400/40 px-3 py-1 text-cyan-200">
-                      {selectedServer?.name}
+                  {screen === "dashboard" && (
+                    <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
+                      {hasSubscription && (
+                        <span className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-emerald-200">
+                          [VIP]
+                        </span>
+                      )}
+                      <span className="rounded-md border border-slate-700 px-3 py-1 text-slate-300">
+                        {selectedServer?.name}
+                      </span>
+                      <span className="rounded-md border border-slate-700 px-3 py-1 text-slate-300">
+                        {selectedCity.city}
+                      </span>
                     </div>
-                    <div className="rounded-full border border-slate-700 px-3 py-1 text-slate-300">
-                      {selectedCity.city}, {selectedCity.country}
-                    </div>
-                  </div>
-                )}
+                  )}
                 </div>
               </header>
 
@@ -391,7 +646,7 @@
                 }`}
               >
                 {showShop && (
-                  <div className="w-full max-w-2xl rounded-3xl border border-emerald-400/30 bg-slate-950 p-6 shadow-2xl shadow-emerald-500/20">
+                  <div className="w-full max-w-2xl rounded-lg border border-emerald-400/30 bg-slate-950 p-6 shadow-2xl shadow-emerald-500/20">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs uppercase tracking-[0.3em] text-emerald-400/70">
@@ -404,13 +659,13 @@
                       <button
                         type="button"
                         onClick={() => setShowShop(false)}
-                        className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300"
+                        className="rounded-md border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300"
                       >
                         Close
                       </button>
                     </div>
                     <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      <div className="rounded-2xl border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
+                      <div className="rounded-md border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
                         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                           Test Subscription
                         </p>
@@ -420,7 +675,7 @@
                         <button
                           type="button"
                           onClick={() => setHasSubscription(true)}
-                          className="mt-4 w-full rounded-xl border border-emerald-400/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
+                          className="mt-4 w-full rounded-md border border-emerald-400/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
                         >
                           Activate Test Subscription
                         </button>
@@ -430,7 +685,7 @@
                           </p>
                         )}
                       </div>
-                      <div className="rounded-2xl border border-amber-400/40 bg-black/70 p-4 text-sm text-slate-300">
+                      <div className="rounded-md border border-amber-400/40 bg-black/70 p-4 text-sm text-slate-300">
                         <p className="text-xs uppercase tracking-[0.3em] text-amber-300">
                           Custom Handle Pass
                         </p>
@@ -440,7 +695,7 @@
                         <button
                           type="button"
                           onClick={() => setHasCustomNamePass(true)}
-                          className="mt-4 w-full rounded-xl border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                          className="mt-4 w-full rounded-md border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
                         >
                           Purchase $5 Pass
                         </button>
@@ -456,20 +711,20 @@
               </div>
 
               {screen === "landing" && (
-                <section className="relative overflow-hidden rounded-3xl border border-cyan-500/40 bg-black/80 p-10 shadow-2xl shadow-cyan-500/20">
+                <section className="relative overflow-hidden rounded-lg border border-emerald-500/30 bg-black/80 p-10 shadow-2xl shadow-emerald-500/10">
                   <div className="terminal-flicker">
-                    <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/60">
+                    <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">
                       darknet gateway
                     </p>
-                    <h2 className="mt-4 text-3xl font-semibold text-cyan-100">
+                    <h2 className="mt-4 text-3xl font-semibold text-emerald-100">
                       Terminal access granted
                     </h2>
-                    <p className="mt-3 max-w-xl text-sm text-cyan-100/70">
-                      Initialize your clandestine identity. Navigate encrypted networks, build accounts,
-                      and operate from the shadows.
+                    <p className="mt-3 max-w-xl text-sm text-slate-300">
+                      Initialize your contraband network. Time is compressed and every decision leaves
+                      a trace.
                     </p>
                   </div>
-                  <div className="mt-8 rounded-2xl border border-cyan-400/20 bg-slate-950/70 p-5 text-xs text-cyan-200/80">
+                  <div className="mt-8 rounded-md border border-emerald-400/20 bg-slate-950/70 p-5 text-xs text-emerald-200/80">
                     <p>root@shadowgrid:~$ access --portal dark.gateway</p>
                     <p className="mt-2">status: READY_FOR_SESSION</p>
                     <p className="mt-2">signal strength: 98%</p>
@@ -482,7 +737,7 @@
                     <button
                       type="button"
                       onClick={() => setScreen("servers")}
-                      className="glow-pulse w-full rounded-2xl border border-cyan-400/60 bg-cyan-500/20 px-6 py-4 text-sm font-semibold uppercase tracking-[0.4em] text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/30"
+                      className="glow-pulse w-full rounded-md border border-emerald-400/60 bg-emerald-500/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.4em] text-emerald-100 transition hover:border-emerald-300 hover:bg-emerald-400/20"
                     >
                       Start Enterprise
                     </button>
@@ -491,21 +746,21 @@
               )}
 
               {screen === "servers" && (
-                <section className="rounded-3xl border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-cyan-500/10">
+                <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/60">
+                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">
                         server browser
                       </p>
-                      <h2 className="mt-2 text-2xl font-semibold text-cyan-100">Select a relay</h2>
+                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Select a relay</h2>
                       <p className="text-sm text-slate-300">
-                        Choose an enterprise node to begin your dark web session.
+                        Choose an enterprise node to begin your session.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setScreen("landing")}
-                      className="rounded-full border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-cyan-300 hover:text-cyan-200"
+                      className="rounded-md border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-emerald-300 hover:text-emerald-200"
                     >
                       Back
                     </button>
@@ -520,18 +775,18 @@
                           setNextScreen("profile");
                           setScreen("loading");
                         }}
-                        className="group flex w-full flex-col gap-4 rounded-2xl border border-slate-700/70 bg-black/70 p-5 text-left transition hover:-translate-y-1 hover:border-cyan-300/70 hover:shadow-lg hover:shadow-cyan-500/20"
+                        className="group flex w-full flex-col gap-4 rounded-md border border-slate-700/70 bg-black/70 p-5 text-left transition hover:-translate-y-1 hover:border-emerald-300/70 hover:shadow-lg hover:shadow-emerald-500/20"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="text-lg font-semibold text-cyan-100 group-hover:text-cyan-200">
+                            <h3 className="text-lg font-semibold text-emerald-100 group-hover:text-emerald-200">
                               {server.name}
                             </h3>
                             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
                               {server.location}
                             </p>
                           </div>
-                          <span className="rounded-full border border-cyan-400/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-cyan-200">
+                          <span className="rounded-md border border-emerald-400/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-emerald-200">
                             {server.status}
                           </span>
                         </div>
@@ -539,10 +794,13 @@
                           <span>Load</span>
                           <span>{server.load}</span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-slate-800">
-                          <div className="h-2 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400" style={{ width: server.load }} />
+                        <div className="h-2 w-full rounded-md bg-slate-800">
+                          <div
+                            className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400"
+                            style={{ width: server.load }}
+                          />
                         </div>
-                        <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">
+                        <span className="text-xs uppercase tracking-[0.4em] text-emerald-300">
                           Connect →
                         </span>
                       </button>
@@ -552,12 +810,12 @@
               )}
 
               {screen === "loading" && (
-                <section className="rounded-3xl border border-cyan-500/30 bg-black/80 p-8 text-left shadow-2xl shadow-cyan-500/20">
-                  <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/70">boot sequence</p>
-                  <h2 className="mt-3 text-2xl font-semibold text-cyan-100">
+                <section className="rounded-lg border border-emerald-500/30 bg-black/80 p-8 text-left shadow-2xl shadow-emerald-500/20">
+                  <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">boot sequence</p>
+                  <h2 className="mt-3 text-2xl font-semibold text-emerald-100">
                     Establishing {selectedServer?.name || "relay"}
                   </h2>
-                  <div className="mt-6 space-y-2 text-xs text-cyan-200/80">
+                  <div className="mt-6 space-y-2 text-xs text-emerald-200/80">
                     {loadingLines.slice(0, loadingLineIndex + 1).map((line, index) => (
                       <p key={index}>{line}</p>
                     ))}
@@ -567,18 +825,18 @@
                       <span>Loading</span>
                       <span>{loadingProgress}%</span>
                     </div>
-                    <div className="mt-3 h-3 w-full rounded-full bg-slate-800">
+                    <div className="mt-3 h-3 w-full rounded-md bg-slate-800">
                       <div
-                        className="h-3 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400 transition-all"
+                        className="h-3 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all"
                         style={{ width: `${loadingProgress}%` }}
                       />
                     </div>
-                    <p className="mt-3 text-xs text-cyan-200/70">
+                    <p className="mt-3 text-xs text-emerald-200/70">
                       Keep this channel open until handshake completes.
                     </p>
                   </div>
                   {loadingProgress >= 100 && (
-                    <div className="mt-6 text-xs uppercase tracking-[0.3em] text-cyan-300">
+                    <div className="mt-6 text-xs uppercase tracking-[0.3em] text-emerald-300">
                       Access granted.
                     </div>
                   )}
@@ -586,7 +844,7 @@
                     <button
                       type="button"
                       onClick={() => setScreen("profile")}
-                      className="mt-6 w-full rounded-2xl border border-cyan-400/50 bg-cyan-500/20 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/30"
+                      className="mt-6 w-full rounded-md border border-emerald-400/50 bg-emerald-500/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:border-emerald-300 hover:bg-emerald-400/20"
                     >
                       Proceed to Profile
                     </button>
@@ -595,34 +853,34 @@
               )}
 
               {screen === "profile" && (
-                <section className="rounded-3xl border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-cyan-500/10">
+                <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/70">
+                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">
                         identity forge
                       </p>
-                      <h2 className="mt-2 text-2xl font-semibold text-cyan-100">Build your profile</h2>
+                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Build your profile</h2>
                       <p className="text-sm text-slate-300">
-                        Choose a profile signature, claim a handle, and select your operating city.
+                        Select a signature icon, claim a handle, and choose a city.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setScreen("servers")}
-                      className="rounded-full border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-cyan-300 hover:text-cyan-200"
+                      className="rounded-md border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-emerald-300 hover:text-emerald-200"
                     >
                       Back
                     </button>
                   </div>
 
-                  <div className="mt-6 rounded-2xl border border-slate-700/70 bg-black/60 px-4 py-3">
+                  <div className="mt-6 rounded-md border border-slate-700/70 bg-black/60 px-4 py-3">
                     <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
                       <span>Profile completion</span>
                       <span>{profileProgress}%</span>
                     </div>
-                    <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
+                    <div className="mt-2 h-2 w-full rounded-md bg-slate-800">
                       <div
-                        className="h-2 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400 transition-all"
+                        className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all"
                         style={{ width: `${profileProgress}%` }}
                       />
                     </div>
@@ -631,7 +889,7 @@
                   <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                     <div className="space-y-6">
                       {profileStep === 1 && (
-                        <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
                             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               Step 1 · Profile icon
@@ -639,25 +897,25 @@
                             <button
                               type="button"
                               onClick={() => setProfileStep(2)}
-                              className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                              className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
                             >
                               Next →
                             </button>
                           </div>
                           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                            {profileIcons.map((icon) => (
+                            {profileIcons.map((icon, index) => (
                               <button
-                                key={icon.id}
+                                key={`${icon}-${index}`}
                                 type="button"
                                 onClick={() => setProfileIcon(icon)}
-                                className={`rounded-2xl border px-4 py-4 text-left text-sm transition ${
-                                  profileIcon?.id === icon.id
-                                    ? "border-cyan-300 bg-cyan-500/10 text-cyan-100"
-                                    : "border-slate-700/70 text-slate-300 hover:border-cyan-400/70"
+                                className={`rounded-md border px-4 py-4 text-left text-sm transition ${
+                                  profileIcon === icon
+                                    ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                    : "border-slate-700/70 text-slate-300 hover:border-emerald-400/70"
                                 }`}
                               >
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700/70 bg-black/70 text-2xl">
-                                  {icon.glyph}
+                                <div className="flex h-12 w-12 items-center justify-center text-2xl">
+                                  {icon}
                                 </div>
                               </button>
                             ))}
@@ -666,7 +924,7 @@
                       )}
 
                       {profileStep === 2 && (
-                        <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
                             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               Step 2 · Handle
@@ -675,14 +933,14 @@
                               <button
                                 type="button"
                                 onClick={() => setProfileStep(1)}
-                                className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                                className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
                               >
                                 ← Back
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setProfileStep(3)}
-                                className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                                className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
                               >
                                 Next →
                               </button>
@@ -690,32 +948,39 @@
                           </div>
 
                           <div className="mt-4 space-y-4">
-                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4">
+                            <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                                     Generated handle
                                   </p>
-                                  <p className="mt-2 text-lg font-semibold text-cyan-100">
+                                  <p className="mt-2 text-lg font-semibold text-emerald-100">
                                     {username || "--"}
                                   </p>
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={handleRollUsername}
-                                  className="rounded-xl border border-cyan-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200 transition hover:border-cyan-200 hover:text-cyan-100"
+                                  onClick={() => {
+                                    const seed =
+                                      usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)];
+                                    const suffix =
+                                      usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)];
+                                    const digits = Math.floor(Math.random() * 900 + 100);
+                                    setUsername(`${seed}${suffix}${digits}`);
+                                  }}
+                                  className="rounded-md border border-emerald-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-200 hover:text-emerald-100"
                                 >
                                   Roll Handle
                                 </button>
                               </div>
                             </div>
-                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4">
+                            <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
                               <div className="flex items-center justify-between gap-3">
                                 <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                                   Custom handle
                                 </p>
                                 <span
-                                  className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.3em] ${
+                                  className={`rounded-md border px-3 py-1 text-[10px] uppercase tracking-[0.3em] ${
                                     hasCustomNamePass
                                       ? "border-amber-300 text-amber-200"
                                       : "border-slate-700 text-slate-400"
@@ -730,10 +995,10 @@
                                   value={customUsername}
                                   onChange={(event) => setCustomUsername(event.target.value)}
                                   placeholder="Enter custom handle"
-                                  className="mt-3 w-full rounded-xl border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"
+                                  className="mt-3 w-full rounded-md border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
                                 />
                               ) : (
-                                <div className="mt-3 rounded-xl border border-dashed border-slate-700/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                <div className="mt-3 rounded-md border border-dashed border-slate-700/70 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
                                   Custom handle pass required
                                 </div>
                               )}
@@ -743,7 +1008,7 @@
                       )}
 
                       {profileStep === 3 && (
-                        <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
                             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               Step 3 · Operating city
@@ -751,7 +1016,7 @@
                             <button
                               type="button"
                               onClick={() => setProfileStep(2)}
-                              className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                              className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
                             >
                               ← Back
                             </button>
@@ -762,10 +1027,10 @@
                                 key={`${city.city}-${city.country}`}
                                 type="button"
                                 onClick={() => setSelectedCity(city)}
-                                className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                                className={`rounded-md border px-4 py-3 text-left text-sm transition ${
                                   selectedCity.city === city.city
-                                    ? "border-cyan-300 bg-cyan-500/10 text-cyan-100"
-                                    : "border-slate-700/70 text-slate-300 hover:border-cyan-400/70"
+                                    ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                    : "border-slate-700/70 text-slate-300 hover:border-emerald-400/70"
                                 }`}
                               >
                                 <p className="text-sm font-semibold">{city.city}</p>
@@ -777,21 +1042,21 @@
                       )}
                     </div>
 
-                    <div className="flex flex-col justify-between gap-6 rounded-2xl border border-slate-700/70 bg-black/60 p-6">
+                    <div className="flex flex-col justify-between gap-6 rounded-md border border-slate-700/70 bg-black/60 p-6">
                       <div className="space-y-3">
                         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Profile summary</p>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/40 bg-slate-950/70 text-2xl">
-                            {profileIcon?.glyph}
+                          <div className="flex h-12 w-12 items-center justify-center rounded-md border border-emerald-400/40 bg-slate-950/70 text-2xl">
+                            {profileIcon}
                           </div>
                           <div>
-                            <p className="text-base font-semibold text-cyan-100">
+                            <p className="text-base font-semibold text-emerald-100">
                               {displayUsername || "Handle pending"}
                             </p>
                             <p className="text-xs text-slate-400">{selectedCity.city}</p>
                           </div>
                         </div>
-                        <div className="rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4 text-xs text-slate-300">
+                        <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4 text-xs text-slate-300">
                           <p>• Identity concealment enabled.</p>
                           <p>• Default wallet seeded in USD.</p>
                           <p>• Access limited to Tier-1 apps.</p>
@@ -803,7 +1068,7 @@
                           onClick={() => {
                             setScreen("dashboard");
                           }}
-                          className="w-full rounded-xl bg-cyan-500/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-100 transition hover:bg-cyan-400/40"
+                          className="w-full rounded-md bg-emerald-500/20 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:bg-emerald-400/30"
                         >
                           Enter The Dark
                         </button>
@@ -814,12 +1079,12 @@
               )}
 
               {screen === "dashboard" && (
-                <section className="rounded-3xl border border-slate-700/60 bg-slate-950/80 p-6 shadow-2xl shadow-emerald-500/10">
+                <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-6 shadow-2xl shadow-emerald-500/10">
                   <div className="grid gap-6 lg:grid-cols-[0.25fr_1fr]">
-                    <aside className="rounded-2xl border border-slate-800/80 bg-black/70 p-4 text-sm text-slate-300">
+                    <aside className="rounded-md border border-slate-800/80 bg-black/70 p-4 text-sm text-slate-300">
                       <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-400/40 bg-slate-950/70 text-2xl">
-                          {profileIcon?.glyph}
+                        <div className="flex h-12 w-12 items-center justify-center rounded-md border border-emerald-400/40 bg-slate-950/70 text-2xl">
+                          {profileIcon}
                         </div>
                         <div>
                           <p className="text-base font-semibold text-emerald-100">
@@ -831,18 +1096,25 @@
                         </div>
                       </div>
                       <div className="mt-4 space-y-2 text-xs uppercase tracking-[0.3em] text-slate-400">
-                        {["Supply", "Contracts", "Transit", "Network", "Map", "Messages"].map(
-                          (item) => (
-                            <div
-                              key={item}
-                              className="rounded-xl border border-slate-800 bg-black/60 px-3 py-2 text-slate-300"
-                            >
-                              {item}
+                        {appModules.map((app) => (
+                          <button
+                            key={app.id}
+                            type="button"
+                            onClick={() => setActiveApp(app.id)}
+                            className={`w-full rounded-md border px-3 py-2 text-left transition ${
+                              activeApp === app.id
+                                ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                : "border-slate-800 bg-black/60 text-slate-300 hover:border-emerald-400/70"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span>{app.label}</span>
+                              <span className="text-[10px] text-slate-500">{app.status}</span>
                             </div>
-                          )
-                        )}
+                          </button>
+                        ))}
                       </div>
-                      <div className="mt-6 rounded-2xl border border-emerald-400/30 bg-black/70 p-3 text-xs">
+                      <div className="mt-6 rounded-md border border-emerald-400/30 bg-black/70 p-3 text-xs">
                         <p className="uppercase tracking-[0.3em] text-emerald-300">Total Cash</p>
                         <p className="mt-2 text-lg font-semibold text-emerald-100">
                           ${totalCash.toFixed(2)} USD
@@ -851,171 +1123,371 @@
                     </aside>
 
                     <div className="space-y-6">
-                      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800/80 bg-black/60 px-4 py-3">
+                      <div className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-slate-800/80 bg-black/60 px-4 py-3">
                         <div className="text-xs uppercase tracking-[0.3em] text-slate-400">
                           {selectedCity.city} · {selectedCity.country}
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
-                          <div className="rounded-xl border border-slate-700 bg-black/60 px-3 py-2">
+                          <div className="rounded-md border border-slate-700 bg-black/60 px-3 py-2">
                             <p className="text-[10px] text-slate-400">System</p>
                             <p className="text-emerald-100">{systemTimeLabel}</p>
                           </div>
-                          <div className="rounded-xl border border-amber-400/40 bg-black/60 px-3 py-2">
+                          <div className="rounded-md border border-amber-400/40 bg-black/60 px-3 py-2">
                             <p className="text-[10px] text-slate-400">City Time</p>
                             <p className="text-amber-200">{localTimeLabel}</p>
                           </div>
-                          <div className="rounded-xl border border-slate-700 bg-black/60 px-3 py-2">
-                            <p className="text-[10px] text-slate-400">Cycle Day</p>
-                            <p className="text-emerald-100">{inGameDay}</p>
-                            <div className="mt-2 h-1.5 w-24 rounded-full bg-slate-800">
+                          <div className="rounded-md border border-slate-700 bg-black/60 px-3 py-2">
+                            <p className="text-[10px] text-slate-400">In-Game</p>
+                            <p className="text-emerald-100">
+                              Day {gameDay} · {String(gameHour).padStart(2, "0")}:
+                              {String(gameMinute).padStart(2, "0")}
+                            </p>
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                              Phase: {gamePhase}
+                            </p>
+                            <div className="mt-2 h-1.5 w-24 rounded-md bg-slate-800">
                               <div
-                                className="h-1.5 rounded-full bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400"
-                                style={{ width: `${inGameProgress}%` }}
+                                className="h-1.5 rounded-md bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400"
+                                style={{ width: `${gameProgress}%` }}
                               />
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-                        <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
+                      {activeApp === "supply" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
                             <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
-                              Active Contracts
+                              Supply Node Orders
                             </p>
-                            <span className="text-xs text-slate-500">Status: Green</span>
+                            <span className="text-xs text-slate-500">
+                              Verdant 🌿 · USD only
+                            </span>
+                          </div>
+                          <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={handlePlaceOrder}>
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              City
+                              <select
+                                name="city"
+                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
+                              >
+                                {Object.values(cities).map((city) => (
+                                  <option key={city.name} value={city.name}>
+                                    {city.name} · {city.transitRisk}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Tier
+                              <select
+                                name="tier"
+                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
+                              >
+                                {verdantTierOptions.map((tier) => (
+                                  <option key={tier.tier} value={tier.tier}>
+                                    {tier.tier} · {tier.visibility}/{tier.stability}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Quantity
+                              <input
+                                name="quantity"
+                                type="number"
+                                min="10"
+                                defaultValue="30"
+                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
+                              />
+                            </label>
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              Pay Account
+                              <select
+                                name="account"
+                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
+                              >
+                                {accounts.map((account) => (
+                                  <option key={account.id} value={account.id}>
+                                    {account.label} (${account.balance.toFixed(0)})
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <button
+                              type="submit"
+                              className="sm:col-span-2 rounded-md border border-emerald-400/60 bg-emerald-500/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:border-emerald-300"
+                            >
+                              Place Wholesale Order
+                            </button>
+                          </form>
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2 text-xs text-slate-400">
+                            {Object.values(cities).map((city) => (
+                              <div key={city.name} className="rounded-md border border-slate-800 bg-black/70 p-3">
+                                <p className="text-slate-300">{city.name}</p>
+                                <p>Price band: ${city.basePrice.join("-")}</p>
+                                <p>Reliability: {city.reliability}</p>
+                                <p>Transit: {city.transitHours}h · Risk {city.transitRisk}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "contracts" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                              Contract Board
+                            </p>
+                            <span className="text-xs text-slate-500">Rapid windows</span>
                           </div>
                           <div className="mt-4 space-y-3 text-sm text-slate-300">
-                            {[
-                              { label: "Coastal Syndicate", payout: "$9,600", time: "2h 15m" },
-                              { label: "Nightfall Crew", payout: "$15,000", time: "3h 10m" },
-                              { label: "Shadow Cartel", payout: "$11,500", time: "1h 45m" },
-                            ].map((contract) => (
-                              <div
-                                key={contract.label}
-                                className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm font-semibold text-emerald-100">
-                                    {contract.label}
-                                  </p>
-                                  <span className="rounded-full border border-emerald-400/40 px-3 py-1 text-xs text-emerald-200">
-                                    {contract.payout}
-                                  </span>
+                            {contracts.map((contract) => (
+                              <div key={contract.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div>
+                                    <p className="text-emerald-100 font-semibold">{contract.title}</p>
+                                    <p className="text-xs text-slate-400">
+                                      Verdant {contract.tier} · Qty {contract.quantityRange.join("-")}
+                                    </p>
+                                    <p className="text-xs text-slate-400">
+                                      Price band ${contract.priceBand.join("-")} · Risk {contract.risk}
+                                    </p>
+                                  </div>
+                                  <div className="text-xs text-slate-400">
+                                    {Math.ceil(contract.remainingMs / 1000)}s
+                                  </div>
                                 </div>
-                                <p className="mt-2 text-xs text-slate-400">
-                                  Payout: {contract.payout} · Time: {contract.time}
+                                {contract.status === "Open" ? (
+                                  <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                                    <input
+                                      type="number"
+                                      min={contract.quantityRange[0]}
+                                      max={contract.quantityRange[1]}
+                                      placeholder="Qty"
+                                      className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                      id={`${contract.id}-qty`}
+                                    />
+                                    <input
+                                      type="number"
+                                      min={contract.priceBand[0]}
+                                      max={contract.priceBand[1]}
+                                      placeholder="$ / unit"
+                                      className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                      id={`${contract.id}-price`}
+                                    />
+                                    <select
+                                      id={`${contract.id}-account`}
+                                      className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                    >
+                                      {accounts.map((account) => (
+                                        <option key={account.id} value={account.id}>
+                                          {account.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const quantity = Number(
+                                          document.getElementById(`${contract.id}-qty`).value
+                                        );
+                                        const price = Number(
+                                          document.getElementById(`${contract.id}-price`).value
+                                        );
+                                        const payoutAccountId = document.getElementById(
+                                          `${contract.id}-account`
+                                        ).value;
+                                        handleSubmitOffer(contract, quantity, price, payoutAccountId);
+                                      }}
+                                      className="rounded-md border border-emerald-400/50 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200"
+                                    >
+                                      Submit Offer
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <p className="mt-3 text-xs text-slate-400">Status: {contract.status}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "transit" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Transit</p>
+                          <div className="mt-4 space-y-3 text-sm text-slate-300">
+                            {shipments.length === 0 && <p>No shipments in transit.</p>}
+                            {shipments.map((shipment) => (
+                              <div key={shipment.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                                <div className="flex items-center justify-between">
+                                  <p className="text-emerald-100">{shipment.id}</p>
+                                  <span className="text-xs text-slate-400">{shipment.status}</span>
+                                </div>
+                                <p className="text-xs text-slate-400">
+                                  {shipment.city} · {shipment.quantity} units · {shipment.tier}
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                  ETA: {Math.ceil(shipment.remainingMs / 1000)}s
                                 </p>
                               </div>
                             ))}
                           </div>
                         </div>
+                      )}
 
-                        <div className="space-y-4">
-                          <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-4 text-sm text-slate-300">
-                            <p className="text-xs uppercase tracking-[0.3em] text-amber-300">
-                              Broker Updates
-                            </p>
-                            <div className="mt-3 space-y-2 text-xs text-slate-400">
-                              <p>• Elite client requests incoming.</p>
-                              <p>• Heat spike detected in sector 4.</p>
-                              <p>• New opportunities available.</p>
+                      {activeApp === "network" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Network</p>
+                          <div className="mt-4 grid gap-4 md:grid-cols-2 text-sm text-slate-300">
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Reputation</p>
+                              <p className="mt-2 text-lg text-emerald-100">{reputation}%</p>
+                              <div className="mt-2 h-2 rounded-md bg-slate-800">
+                                <div
+                                  className="h-2 rounded-md bg-gradient-to-r from-emerald-400 to-emerald-200"
+                                  style={{ width: `${reputation}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Exposure</p>
+                              <p className="mt-2 text-lg text-rose-200">{heat}%</p>
+                              <div className="mt-2 h-2 rounded-md bg-slate-800">
+                                <div
+                                  className="h-2 rounded-md bg-gradient-to-r from-rose-400 to-amber-300"
+                                  style={{ width: `${heat}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Accounts</p>
+                              <div className="mt-2 space-y-2 text-xs">
+                                {accounts.map((account) => (
+                                  <div key={account.id} className="flex items-center justify-between">
+                                    <span>
+                                      {account.label} · Fee {(account.feePct * 100).toFixed(1)}% · Delay{" "}
+                                      {account.delayMinutes}m
+                                    </span>
+                                    <span>${account.balance.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Inventory</p>
+                              <div className="mt-2 space-y-2 text-xs">
+                                <div className="flex items-center justify-between">
+                                  <span>Verdant Standard</span>
+                                  <span>{inventory.Standard}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span>Verdant Premium</span>
+                                  <span>{inventory.Premium}</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-4 text-sm text-slate-300">
-                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
-                              Application Dock
-                            </p>
-                            <div className="mt-3 grid gap-3">
-                              {appModules.map((app) => (
+                        </div>
+                      )}
+
+                      {activeApp === "map" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Map</p>
+                          <div className="mt-4 grid gap-3 md:grid-cols-3 text-sm text-slate-300">
+                            {Object.values(cities).map((city) => (
+                              <div key={city.name} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                                <p className="text-emerald-100">{city.name}</p>
+                                <p className="text-xs text-slate-400">Reliability: {city.reliability}</p>
+                                <p className="text-xs text-slate-400">Culture: {city.culture}</p>
+                                <p className="text-xs text-slate-400">Risk: {city.transitRisk}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeApp === "messages" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Messages</p>
+                            <span className="text-xs text-slate-500">
+                              AI mode: {OPENAI_API_KEY === "PUT_YOUR_KEY_HERE" ? "Scripted" : "Live"}
+                            </span>
+                          </div>
+                          <div className="mt-4 grid gap-4 lg:grid-cols-[0.35fr_1fr]">
+                            <div className="space-y-2">
+                              {brokers.map((broker) => (
                                 <button
-                                  key={app.id}
+                                  key={broker.id}
                                   type="button"
-                                  onClick={() => handleOpenApp(app.id)}
-                                  className="flex w-full items-center justify-between rounded-2xl border border-slate-700/70 bg-slate-950/70 px-4 py-3 text-left text-sm text-slate-200 transition hover:border-emerald-400/70"
+                                  onClick={() => setSelectedBroker(broker)}
+                                  className={`w-full rounded-md border px-3 py-2 text-left text-xs uppercase tracking-[0.3em] transition ${
+                                    selectedBroker.id === broker.id
+                                      ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                      : "border-slate-800 bg-black/60 text-slate-300"
+                                  }`}
                                 >
-                                  <span>{app.label}</span>
-                                  <span className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                                    {app.status}
-                                  </span>
+                                  {broker.name}
                                 </button>
                               ))}
                             </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl border border-slate-700/70 bg-black/60 p-5">
-                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
-                          Operations Ledger
-                        </p>
-                        <div className="mt-4 grid gap-3 md:grid-cols-3 text-xs text-slate-400">
-                          <div>
-                            <p className="text-slate-500">Verdant Supply</p>
-                            <p className="text-emerald-200">250 units</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Bloom Stock</p>
-                            <p className="text-amber-200">180 units</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Dust Reserve</p>
-                            <p className="text-rose-200">90 units</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`panel-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-8 ${
-                      activeApp ? "is-open" : ""
-                    }`}
-                  >
-                    {activeApp && (
-                      <div className="w-full max-w-3xl rounded-3xl border border-cyan-400/30 bg-slate-950 p-6 shadow-2xl shadow-cyan-500/20">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.3em] text-cyan-400/70">
-                              {activeApp === "bank" && "DarkVault Bank"}
-                              {activeApp === "archives" && "Shadow Archives"}
-                              {activeApp === "market" && "Ghost Market"}
-                              {activeApp === "drops" && "Dead Drops"}
-                            </p>
-                            <p className="text-sm text-slate-300">
-                              {activeApp === "bank" && "Manage your encrypted vault accounts."}
-                              {activeApp === "archives" && "Classified intel archive (locked)."}
-                              {activeApp === "market" && "Black market listings (offline)."}
-                              {activeApp === "drops" && "Courier relay scheduling (standby)."}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setActiveApp(null)}
-                            className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300"
-                          >
-                            Close
-                          </button>
-                        </div>
-
-                        {appLoading && (
-                          <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-black/80 p-4 text-xs text-cyan-200/80">
-                            <p>loading modules...</p>
-                            <div className="mt-3 h-2 w-full rounded-full bg-slate-800">
-                              <div className="h-2 w-2/3 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-sky-400" />
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                Thread · {selectedBroker.name}
+                              </p>
+                              <div className="mt-3 h-52 space-y-3 overflow-y-auto text-xs text-slate-300">
+                                {activeMessages.length === 0 && (
+                                  <p className="text-slate-500">
+                                    Initiate negotiation. Tone matters.
+                                  </p>
+                                )}
+                                {activeMessages.map((message) => (
+                                  <div key={message.id} className="rounded-md border border-slate-800 bg-black/60 p-2">
+                                    <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                      {message.sender}
+                                    </p>
+                                    <p>{message.text}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-3 flex gap-2">
+                                <input
+                                  type="text"
+                                  value={messageInput}
+                                  onChange={(event) => setMessageInput(event.target.value)}
+                                  placeholder="Compose message..."
+                                  className="flex-1 rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={handleSendMessage}
+                                  className="rounded-md border border-emerald-400/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200"
+                                >
+                                  Send
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {!appLoading && activeApp === "bank" && (
-                          <div className="mt-6 space-y-4">
-                            <div className="rounded-2xl border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
+                      {activeApp === "bank" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                            DarkVault Bank
+                          </p>
+                          <div className="mt-4 space-y-4">
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                                 Vault status
                               </p>
                               {bankAccount ? (
                                 <div className="mt-3 space-y-2">
-                                  <p className="text-lg font-semibold text-cyan-100">
+                                  <p className="text-lg font-semibold text-emerald-100">
                                     {bankAccount.alias}
                                   </p>
                                   <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
@@ -1031,8 +1503,7 @@
                                 </p>
                               )}
                             </div>
-
-                            <div className="rounded-2xl border border-slate-700/70 bg-black/70 p-4">
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                                 Request account
                               </p>
@@ -1043,9 +1514,9 @@
                                   onChange={(event) => setAccountAlias(event.target.value)}
                                   placeholder="Account alias"
                                   disabled={!!bankAccount}
-                                  className="w-full rounded-xl border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-500"
+                                  className="w-full rounded-md border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-500"
                                 />
-                                <div className="flex items-center rounded-xl border border-slate-800 bg-black/60 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                <div className="flex items-center rounded-md border border-slate-800 bg-black/60 px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-500">
                                   Initial balance: $0.00
                                 </div>
                               </div>
@@ -1053,17 +1524,16 @@
                                 type="button"
                                 onClick={handleCreateBankAccount}
                                 disabled={!!bankAccount}
-                                className={`mt-4 w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                className={`mt-4 w-full rounded-md px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
                                   bankAccount
                                     ? "cursor-not-allowed bg-slate-800 text-slate-500"
-                                    : "bg-cyan-500/30 text-cyan-100 hover:bg-cyan-400/40"
+                                    : "bg-emerald-500/20 text-emerald-100 hover:bg-emerald-400/30"
                                 }`}
                               >
                                 {bankAccount ? "Account Active" : "Submit Request"}
                               </button>
                             </div>
-
-                            <div className="rounded-2xl border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                                 Credit line request
                               </p>
@@ -1088,7 +1558,7 @@
                                 type="button"
                                 onClick={handleRequestCreditLine}
                                 disabled={!!creditLine}
-                                className={`mt-4 w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                className={`mt-4 w-full rounded-md px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
                                   creditLine
                                     ? "cursor-not-allowed bg-slate-800 text-slate-500"
                                     : "bg-amber-500/20 text-amber-200 hover:bg-amber-400/30"
@@ -1098,19 +1568,32 @@
                               </button>
                             </div>
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {!appLoading && activeApp !== "bank" && (
-                          <div className="mt-6 rounded-2xl border border-slate-700/70 bg-black/70 p-6 text-sm text-slate-300">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Status</p>
-                            <p className="mt-2">
-                              This module is not available yet. Maintain access level or wait for the next
-                              network update.
-                            </p>
-                          </div>
-                        )}
+                      {activeApp === "facilities" && (
+                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5 text-sm text-slate-300">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                            Facilities / Real Estate
+                          </p>
+                          <p className="mt-3 text-slate-400">
+                            Locked. Expansion nodes will unlock after reputation tiers increase.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="rounded-md border border-slate-800 bg-black/60 p-4 text-xs text-slate-400">
+                        <p className="uppercase tracking-[0.3em] text-slate-500">Event Log</p>
+                        <div className="mt-2 space-y-1">
+                          {eventLogRef.current.length === 0 && (
+                            <p>No events logged yet.</p>
+                          )}
+                          {eventLogRef.current.map((entry) => (
+                            <p key={entry.id}>• {entry.text}</p>
+                          ))}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </section>
               )}
