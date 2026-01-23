@@ -389,6 +389,111 @@
         "🎭 Attend Gathering",
       ];
 
+      const locationActivities = {
+        Winterfell: ["Hunt in Wolfswood", "Train with guards", "Gather firewood"],
+        "White Harbor": ["Fish the bay", "Inspect ships", "Trade in the docks"],
+        Maidenpool: ["Visit the baths", "Fish the river", "Scout the roads"],
+        "Mole's Town": ["Forage supplies", "Listen for rumors", "Rest at the tavern"],
+        "The Eyrie": ["Falconry practice", "Patrol the sky cells", "Study maps"],
+        Riverrun: ["Fish the Trident", "Spar in the yard", "Meet riverfolk"],
+        "King's Landing": ["Work the markets", "Patrol Flea Bottom", "Seek court favor"],
+        Dragonstone: ["Inspect the docks", "Study old tomes", "Train on the cliffs"],
+        "Storm's End": ["Drill with guards", "Scout the coast", "Repair defenses"],
+        Sunspear: ["Train with spears", "Gather spices", "Visit the water gardens"],
+        "Casterly Rock": ["Audit ledgers", "Train with knights", "Survey mines"],
+        Pyke: ["Raid practice", "Inspect longships", "Collect tribute"],
+        Highgarden: ["Tend the gardens", "Practice jousting", "Meet courtiers"],
+        Oldtown: ["Visit the Citadel", "Browse the harbor", "Attend market day"],
+        Default: ["Fish the waters", "Hunt nearby", "Explore the surroundings"],
+      };
+
+      const locationBuildings = {
+        Winterfell: [
+          {
+            name: "Market Square",
+            utility: "Buy travel rations, furs, and basic supplies.",
+          },
+          {
+            name: "Blacksmith",
+            utility: "Commission weapons, armor repairs, and tools.",
+          },
+          {
+            name: "Brothel",
+            utility: "Relax to lower stress and raise morale.",
+          },
+        ],
+        "White Harbor": [
+          {
+            name: "Harbor Market",
+            utility: "Purchase fish, trade goods, and ship supplies.",
+          },
+          {
+            name: "Shipwright",
+            utility: "Upgrade vessels and secure passage.",
+          },
+          {
+            name: "Dockside Inn",
+            utility: "Recover stamina with a warm bed.",
+          },
+        ],
+        Maidenpool: [
+          {
+            name: "Town Market",
+            utility: "Pick up fresh produce and news from travelers.",
+          },
+          {
+            name: "Bathhouse",
+            utility: "Soothe injuries and reduce stress.",
+          },
+          {
+            name: "Weaponsmith",
+            utility: "Craft spears and light armor.",
+          },
+        ],
+        "King's Landing": [
+          {
+            name: "Grand Market",
+            utility: "Buy rare goods and barter for influence.",
+          },
+          {
+            name: "Blacksmith Row",
+            utility: "Purchase blades and commission custom gear.",
+          },
+          {
+            name: "Silk House",
+            utility: "Relieve stress and gather whispers.",
+          },
+        ],
+        "Casterly Rock": [
+          {
+            name: "Golden Market",
+            utility: "Acquire premium supplies and trade ledgers.",
+          },
+          {
+            name: "Lionforge",
+            utility: "Secure heavy armor and elite weapons.",
+          },
+          {
+            name: "Noble House",
+            utility: "Reduce stress and improve standing.",
+          },
+        ],
+        Default: [
+          {
+            name: "Market",
+            utility: "Buy items and resupply.",
+          },
+          {
+            name: "Blacksmith",
+            utility: "Repair and upgrade weapons.",
+          },
+          {
+            name: "Brothel",
+            utility: "Lower stress and raise morale.",
+          },
+        ],
+      };
+
       const supabaseUrl =
         window.SUPABASE_URL || window.__ENV__?.SUPABASE_URL || window.ENV?.SUPABASE_URL;
       const supabaseKey =
@@ -540,6 +645,7 @@
           if (characterFirstName.trim() && characterLastName.trim()) progress += 33;
           return Math.min(progress, 100);
         }, [characterGender, skinTone, characterFirstName, characterLastName]);
+        const isCharacterComplete = characterProgress === 100;
 
         const genderImage = characterGender
           ? characterGender === "Female"
@@ -1182,10 +1288,16 @@
                       <button
                         type="button"
                         onClick={() => {
+                          if (!isCharacterComplete) return;
                           setNextScreen("game");
                           setScreen("loading");
                         }}
-                        className="w-full rounded-xl bg-amber-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-lg shadow-amber-500/40 transition hover:bg-amber-300"
+                        disabled={!isCharacterComplete}
+                        className={`w-full rounded-xl px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] shadow-lg shadow-amber-500/40 transition ${
+                          isCharacterComplete
+                            ? "bg-amber-400 text-slate-900 hover:bg-amber-300"
+                            : "cursor-not-allowed bg-slate-800 text-slate-500"
+                        }`}
                       >
                         Create Character
                       </button>
@@ -1313,7 +1425,9 @@
                         {[
                           { id: "travel", label: "🏰 Travel" },
                           { id: "chat", label: "💬 Chats" },
-                          { id: "actions", label: "🎯 Actions" },
+                          { id: "actions", label: "🪵 Actions" },
+                          { id: "people", label: "🧑‍🤝‍🧑 People" },
+                          { id: "buildings", label: "🏛️ Buildings" },
                           { id: "stats", label: "⚔️ Stats" },
                         ].map((menu) => (
                           <button
@@ -1333,24 +1447,28 @@
                   </div>
 
                   <div
-                    className={`panel-overlay fixed inset-0 z-40 flex items-center justify-center bg-slate-950/80 px-4 py-8 ${
+                    className={`panel-overlay fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-slate-950/80 px-4 py-8 ${
                       gameMenu ? "is-open" : ""
                     }`}
                   >
                     {gameMenu && (
-                      <div className="w-full max-w-3xl overflow-y-auto rounded-3xl border border-amber-300/30 bg-slate-950/95 p-5 shadow-2xl shadow-black/60 sm:max-h-[80vh]">
+                      <div className="w-full max-w-3xl rounded-3xl border border-amber-300/30 bg-slate-950/95 p-5 shadow-2xl shadow-black/60">
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               {gameMenu === "travel" && "🏰 Travel Planner"}
                               {gameMenu === "chat" && "💬 Chat Rooms"}
-                              {gameMenu === "actions" && "🎯 Actions"}
+                              {gameMenu === "actions" && "🪵 Local Actions"}
+                              {gameMenu === "people" && "🧑‍🤝‍🧑 People"}
+                              {gameMenu === "buildings" && "🏛️ Buildings"}
                               {gameMenu === "stats" && "⚔️ Royal Attributes"}
                             </p>
                             <p className="text-sm text-slate-300">
                               {gameMenu === "travel" && "Pick your next destination and confirm the route."}
                               {gameMenu === "chat" && "Open a room and send messages."}
-                              {gameMenu === "actions" && "Choose an action for someone nearby."}
+                              {gameMenu === "actions" && "Choose activities based on your location."}
+                              {gameMenu === "people" && "Select a resident to view interaction options."}
+                              {gameMenu === "buildings" && "Visit locations to unlock special utilities."}
                               {gameMenu === "stats" && "Assign points to your abilities."}
                             </p>
                           </div>
@@ -1513,6 +1631,31 @@
                         )}
 
                         {gameMenu === "actions" && (
+                          <div className="mt-4 space-y-4">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                              Activities near {currentLocation.name}
+                            </p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              {(locationActivities[currentLocation.name] ||
+                                locationActivities.Default ||
+                                []
+                              ).map((activity) => (
+                                <button
+                                  key={activity}
+                                  type="button"
+                                  className="rounded-2xl border border-slate-700/70 bg-slate-900/70 px-4 py-3 text-left text-sm text-slate-200 transition hover:border-amber-300/70"
+                                >
+                                  {activity}
+                                </button>
+                              ))}
+                            </div>
+                            <p className="text-xs text-slate-500">
+                              Activities update based on the location you are currently in.
+                            </p>
+                          </div>
+                        )}
+
+                        {gameMenu === "people" && (
                           <div className="mt-4 grid gap-4 lg:grid-cols-[0.6fr_1fr]">
                             <div>
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
@@ -1569,6 +1712,36 @@
                                   Select a person on the left to reveal available actions.
                                 </p>
                               )}
+                            </div>
+                          </div>
+                        )}
+
+                        {gameMenu === "buildings" && (
+                          <div className="mt-4 space-y-4">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                              Buildings in {currentLocation.name}
+                            </p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              {(locationBuildings[currentLocation.name] ||
+                                locationBuildings.Default ||
+                                []
+                              ).map((building) => (
+                                <div
+                                  key={building.name}
+                                  className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm text-slate-300"
+                                >
+                                  <p className="text-sm font-semibold text-amber-100">
+                                    {building.name}
+                                  </p>
+                                  <p className="mt-2 text-xs text-slate-400">{building.utility}</p>
+                                  <button
+                                    type="button"
+                                    className="mt-3 w-full rounded-xl border border-amber-300/50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-300 hover:text-amber-100"
+                                  >
+                                    Visit
+                                  </button>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )}
