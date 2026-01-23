@@ -3,107 +3,442 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Oath of Office</title>
+    <title>An Iron Reign</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       body {
-        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        font-family: "Cinzel", "Trajan Pro", "Garamond", "Times New Roman", serif;
+      }
+
+      .ember-glow {
+        background: radial-gradient(circle at center, rgba(250, 204, 21, 0.5), transparent 60%);
+        filter: blur(0.5rem);
+        animation: emberPulse 2.8s ease-in-out infinite;
+      }
+
+      .mist-layer {
+        background: linear-gradient(120deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.55));
+        animation: mistDrift 18s ease-in-out infinite alternate;
+      }
+
+      .loading-ring {
+        border: 2px solid rgba(148, 163, 184, 0.4);
+        border-top-color: rgba(248, 113, 113, 0.9);
+        animation: spin 1.2s linear infinite;
+      }
+
+      @keyframes emberPulse {
+        0%,
+        100% {
+          opacity: 0.4;
+          transform: scale(0.9);
+        }
+        50% {
+          opacity: 0.85;
+          transform: scale(1.15);
+        }
+      }
+
+      @keyframes mistDrift {
+        0% {
+          transform: translateX(-3%);
+        }
+        100% {
+          transform: translateX(3%);
+        }
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes shimmer {
+        0% {
+          background-position: 0% 50%;
+        }
+        100% {
+          background-position: 100% 50%;
+        }
       }
     </style>
   </head>
-  <body class="min-h-screen bg-slate-200 text-slate-800">
+  <body class="min-h-screen bg-slate-950 text-slate-100">
     <div id="root"></div>
 
     <script type="text/babel">
+      const { useEffect, useMemo, useState } = React;
+
+      const servers = [
+        {
+          id: 1,
+          name: "Test Realm — Winterfell",
+          status: "Stable",
+          players: "42/120",
+          region: "The North",
+          tag: "Roleplay",
+        },
+        {
+          id: 2,
+          name: "Stormwatch — Dragonstone",
+          status: "High Traffic",
+          players: "96/120",
+          region: "Crownlands",
+          tag: "Hardcore",
+        },
+        {
+          id: 3,
+          name: "Golden Spires — Oldtown",
+          status: "New",
+          players: "12/90",
+          region: "The Reach",
+          tag: "Narrative",
+        },
+      ];
+
       const App = () => {
+        const [screen, setScreen] = useState("landing");
+        const [selectedServer, setSelectedServer] = useState(null);
+        const [loadingProgress, setLoadingProgress] = useState(0);
+        const [characterName, setCharacterName] = useState("");
+        const [characterHouse, setCharacterHouse] = useState("Stark");
+        const [characterRole, setCharacterRole] = useState("Warden's Scout");
+
+        useEffect(() => {
+          if (screen !== "loading") return;
+          setLoadingProgress(0);
+          const interval = setInterval(() => {
+            setLoadingProgress((prev) => {
+              const nextValue = Math.min(prev + Math.floor(Math.random() * 12 + 6), 100);
+              if (nextValue >= 100) {
+                clearInterval(interval);
+                setTimeout(() => setScreen("game"), 500);
+              }
+              return nextValue;
+            });
+          }, 350);
+
+          return () => clearInterval(interval);
+        }, [screen]);
+
+        const immersionLines = useMemo(
+          () => [
+            "Swearing fealty to the realm...",
+            "Saddling your warhorse...",
+            "Summoning ravens across Westeros...",
+            "Sharpening steel and sealing vows...",
+          ],
+          []
+        );
+
+        const progressMessage = useMemo(() => {
+          const index = Math.floor((loadingProgress / 100) * immersionLines.length);
+          return immersionLines[Math.min(index, immersionLines.length - 1)];
+        }, [loadingProgress, immersionLines]);
+
         return (
-          <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300">
-            <div className="absolute inset-0 opacity-40">
-              <div className="absolute -left-16 top-10 h-56 w-56 rounded-full bg-slate-300/60 blur-3xl" />
-              <div className="absolute right-10 top-32 h-72 w-72 rounded-full bg-blue-200/60 blur-3xl" />
-              <div className="absolute bottom-10 left-1/3 h-64 w-64 rounded-full bg-slate-400/40 blur-3xl" />
+          <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+            <div className="absolute inset-0 mist-layer opacity-80" />
+            <div className="absolute inset-0">
+              <div className="absolute -left-10 top-20 h-64 w-64 rounded-full ember-glow" />
+              <div className="absolute right-10 top-24 h-72 w-72 rounded-full ember-glow" />
+              <div className="absolute bottom-10 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full ember-glow" />
             </div>
 
-            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center px-6 py-16">
-              <div className="grid w-full gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-                <section className="space-y-6">
-                  <span className="inline-flex items-center rounded-full border border-slate-400/60 bg-white/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-                    Campaign Command Interface
-                  </span>
-                  <h1 className="text-4xl font-semibold uppercase tracking-[0.3em] text-slate-600 md:text-5xl">
-                    Oath of Office
-                  </h1>
-                  <p className="max-w-xl text-lg leading-relaxed text-slate-600">
-                    Step into the strategy room. Shape your candidate, manage your
-                    message, and prepare for the race ahead with a crisp interface
-                    inspired by modern political sims.
-                  </p>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-300/70 bg-white/80 p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-                        Preparedness
+            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-12 px-6 py-16">
+              <header className="space-y-4 text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.5em] text-amber-200/70">
+                  A Medieval Fantasy RP Experience
+                </p>
+                <h1 className="text-4xl font-semibold uppercase tracking-[0.35em] text-amber-100 sm:text-5xl">
+                  An Iron Reign
+                </h1>
+                <p className="mx-auto max-w-2xl text-base text-slate-200/80">
+                  Forge your legend in Westeros. Create a character, swear allegiance, and roleplay however
+                  you please in a living world inspired by Game of Thrones.
+                </p>
+              </header>
+
+              {screen === "landing" && (
+                <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+                  <div className="space-y-6 rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40">
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Character Creation
                       </p>
-                      <div className="mt-3 h-2 w-full rounded-full bg-slate-200">
-                        <div className="h-2 w-2/3 rounded-full bg-slate-500" />
-                      </div>
+                      <h2 className="text-2xl font-semibold text-amber-100">
+                        Shape your lineage
+                      </h2>
+                      <p className="text-sm text-slate-300">
+                        Pick a name, a house, and a starting calling before you ride into the realm.
+                      </p>
                     </div>
-                    <div className="rounded-2xl border border-slate-300/70 bg-white/80 p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-                        Momentum
-                      </p>
-                      <div className="mt-3 h-2 w-full rounded-full bg-slate-200">
-                        <div className="h-2 w-1/2 rounded-full bg-blue-400" />
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                        Name
+                        <input
+                          type="text"
+                          value={characterName}
+                          onChange={(event) => setCharacterName(event.target.value)}
+                          placeholder="Asha of Riverrun"
+                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                        />
+                      </label>
+                      <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                        House
+                        <select
+                          value={characterHouse}
+                          onChange={(event) => setCharacterHouse(event.target.value)}
+                          className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                        >
+                          <option>Stark</option>
+                          <option>Lannister</option>
+                          <option>Targaryen</option>
+                          <option>Tyrell</option>
+                          <option>Martell</option>
+                          <option>Greyjoy</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    <label className="space-y-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                      Role
+                      <select
+                        value={characterRole}
+                        onChange={(event) => setCharacterRole(event.target.value)}
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                      >
+                        <option>Warden's Scout</option>
+                        <option>Master of Whispers</option>
+                        <option>Kingsguard Aspirant</option>
+                        <option>Wandering Maester</option>
+                        <option>Shipwright of the Iron Isles</option>
+                      </select>
+                    </label>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Reputation</p>
+                        <div className="mt-3 h-2 w-full rounded-full bg-slate-800">
+                          <div className="h-2 w-3/5 rounded-full bg-amber-400/70" />
+                        </div>
+                      </div>
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Resolve</p>
+                        <div className="mt-3 h-2 w-full rounded-full bg-slate-800">
+                          <div className="h-2 w-4/5 rounded-full bg-rose-400/70" />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </section>
 
-                <section className="rounded-[32px] border border-slate-300/60 bg-white/90 p-8 shadow-2xl">
-                  <div className="space-y-2">
-                    <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">
-                      Create Account
-                    </p>
-                    <h2 className="text-2xl font-semibold text-slate-700">
-                      Start your campaign
-                    </h2>
-                    <p className="text-sm text-slate-500">
-                      Choose a username and password to create your strategist profile.
-                    </p>
-                  </div>
+                  <div className="flex flex-col justify-between gap-6 rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40">
+                    <div className="space-y-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Realm Briefing
+                      </p>
+                      <h3 className="text-2xl font-semibold text-amber-100">The Iron Throne awaits</h3>
+                      <p className="text-sm text-slate-300">
+                        Enter a shared world of noble houses, secret alliances, and grand battlefields.
+                        Your character can be anything—from a commoner to a noble sworn to power.
+                      </p>
+                      <ul className="space-y-3 text-sm text-slate-300">
+                        <li className="flex items-center gap-3">
+                          <span className="h-2 w-2 rounded-full bg-amber-300" />
+                          Persistent roleplay realms with live storytellers.
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="h-2 w-2 rounded-full bg-rose-300" />
+                          Craft alliances, betray rivals, and command armies.
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="h-2 w-2 rounded-full bg-slate-300" />
+                          Seasonal events rooted in the lore of Westeros.
+                        </li>
+                      </ul>
+                    </div>
 
-                  <form className="mt-8 space-y-6">
-                    <label className="block space-y-2 text-sm font-medium text-slate-600">
-                      Username
-                      <input
-                        type="text"
-                        placeholder="Enter your username"
-                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 shadow-inner focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300"
-                      />
-                    </label>
-                    <label className="block space-y-2 text-sm font-medium text-slate-600">
-                      Password
-                      <input
-                        type="password"
-                        placeholder="Create a password"
-                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 shadow-inner focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300"
-                      />
-                    </label>
                     <button
                       type="button"
-                      className="w-full rounded-xl bg-slate-700 px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-slate-400/40 transition hover:bg-slate-600"
+                      onClick={() => setScreen("servers")}
+                      className="w-full rounded-xl bg-amber-400 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-slate-900 shadow-lg shadow-amber-500/40 transition hover:bg-amber-300"
                     >
-                      Sign Up
+                      Play
                     </button>
-                  </form>
-
-                  <div className="mt-8 rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/80 p-4 text-xs uppercase tracking-[0.3em] text-slate-400">
-                    Placeholder panel for future campaign intelligence widgets
                   </div>
                 </section>
-              </div>
+              )}
+
+              {screen === "servers" && (
+                <section className="rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40">
+                  <div className="flex flex-wrap items-center justify-between gap-6">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Server Browser
+                      </p>
+                      <h2 className="text-2xl font-semibold text-amber-100">Choose your realm</h2>
+                      <p className="text-sm text-slate-300">
+                        Each realm hosts unique stories and player-led events. Select a test server to begin.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setScreen("landing")}
+                      className="rounded-xl border border-slate-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
+                    >
+                      Back
+                    </button>
+                  </div>
+
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
+                    {servers.map((server) => (
+                      <button
+                        key={server.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedServer(server);
+                          setScreen("loading");
+                        }}
+                        className="group flex w-full flex-col gap-4 rounded-2xl border border-slate-700/80 bg-slate-950/60 p-5 text-left transition hover:-translate-y-1 hover:border-amber-300/70 hover:shadow-lg hover:shadow-amber-500/20"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-amber-100 group-hover:text-amber-200">
+                              {server.name}
+                            </h3>
+                            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+                              {server.region}
+                            </p>
+                          </div>
+                          <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300">
+                            {server.tag}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
+                          <span className="rounded-full bg-slate-800 px-3 py-1">
+                            Status: {server.status}
+                          </span>
+                          <span className="rounded-full bg-slate-800 px-3 py-1">
+                            Players: {server.players}
+                          </span>
+                        </div>
+                        <span className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-300">
+                          Join Test Server →
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {screen === "loading" && (
+                <section className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-10 text-center shadow-2xl shadow-black/40">
+                  <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                    Entering the realm
+                  </p>
+                  <h2 className="mt-3 text-3xl font-semibold text-amber-100">
+                    {selectedServer?.name || "Preparing the realm"}
+                  </h2>
+                  <p className="mt-4 text-sm text-slate-300">{progressMessage}</p>
+
+                  <div className="mt-8 flex items-center justify-center gap-6">
+                    <div className="loading-ring h-16 w-16 rounded-full" />
+                    <div className="w-full">
+                      <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                        <span>Loading</span>
+                        <span>{loadingProgress}%</span>
+                      </div>
+                      <div className="mt-3 h-3 w-full rounded-full bg-slate-800">
+                        <div
+                          className="h-3 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200 transition-all"
+                          style={{ width: `${loadingProgress}%` }}
+                        />
+                      </div>
+                      <div
+                        className="mt-4 h-2 rounded-full bg-[length:200%_200%] bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900"
+                        style={{ animation: "shimmer 2s linear infinite" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-10 grid gap-4 text-left text-sm text-slate-300 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Character</p>
+                      <p className="mt-2 text-base text-amber-100">
+                        {characterName || "Unnamed Traveler"}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        House {characterHouse} · {characterRole}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Realm Weather</p>
+                      <p className="mt-2 text-base text-amber-100">Cold winds, low visibility</p>
+                      <p className="text-xs text-slate-400">Adjusting to region: {selectedServer?.region}</p>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {screen === "game" && (
+                <section className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-10 shadow-2xl shadow-black/40">
+                  <div className="flex flex-wrap items-center justify-between gap-6">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Temp Game Screen
+                      </p>
+                      <h2 className="mt-2 text-3xl font-semibold text-amber-100">
+                        The Realm of Westeros
+                      </h2>
+                      <p className="mt-3 text-sm text-slate-300">
+                        You are now connected to {selectedServer?.name || "the realm"}. This is a temporary
+                        staging area while the full RP world loads.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setScreen("servers")}
+                      className="rounded-xl border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                    >
+                      Return to Servers
+                    </button>
+                  </div>
+
+                  <div className="mt-8 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
+                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
+                      <h3 className="text-lg font-semibold text-amber-100">Live Roleplay Feed</h3>
+                      <ul className="mt-4 space-y-3 text-sm text-slate-300">
+                        <li>Ravens report movement near the Neck.</li>
+                        <li>A new decree has been issued in King&apos;s Landing.</li>
+                        <li>Merchants gather at the Riverlands trade post.</li>
+                        <li>Night&apos;s Watch scouts request reinforcements.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Character Status</p>
+                        <p className="mt-2 text-base text-amber-100">
+                          {characterName || "Unnamed Traveler"}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          House {characterHouse} · {characterRole}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Next Step</p>
+                        <p className="mt-2 text-sm text-slate-300">
+                          Awaiting full world sync. Prepare your opening roleplay entry in the realm chat.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
             </div>
           </main>
         );
