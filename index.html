@@ -34,6 +34,17 @@
         box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
       }
 
+      .shop-overlay {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease;
+      }
+
+      .shop-overlay.is-open {
+        opacity: 1;
+        visibility: visible;
+      }
+
       @keyframes emberPulse {
         0%,
         100% {
@@ -174,7 +185,6 @@
         const [stats, setStats] = useState(baseStats);
         const [pointsAvailable, setPointsAvailable] = useState(6);
         const detailsRef = useRef(null);
-        const shopRef = useRef(null);
         const [showShop, setShowShop] = useState(false);
 
         useEffect(() => {
@@ -286,7 +296,7 @@
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-full border border-amber-300/40 bg-slate-950/70">
                     <img
-                      src="blob:https://imgur.com/ede4746b-c4bd-42ed-8345-6a1b39428017"
+                      src="https://i.imgur.com/8Pi0tUO.png"
                       alt="An Iron Reign logo"
                       className="h-full w-full object-cover"
                       onError={(event) => {
@@ -303,9 +313,10 @@
                   <button
                     type="button"
                     onClick={() => setShowShop(true)}
-                    className="rounded-xl border border-amber-300/60 px-4 py-2 font-semibold text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-300/60 text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
+                    aria-label="Open shop"
                   >
-                    Shop
+                    🛒
                   </button>
                   <button
                     type="button"
@@ -317,11 +328,13 @@
                 </div>
               </nav>
 
-              {showShop && (
-                <section
-                  ref={shopRef}
-                  className="rounded-3xl border border-amber-300/30 bg-slate-950/80 p-6 shadow-2xl shadow-black/50"
-                >
+              <div
+                className={`shop-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-8 ${
+                  showShop ? "is-open" : ""
+                }`}
+                aria-hidden={!showShop}
+              >
+                <section className="w-full max-w-4xl rounded-3xl border border-amber-300/30 bg-slate-950/95 p-6 shadow-2xl shadow-black/60">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Realm Shop</p>
@@ -389,18 +402,24 @@
                     </div>
                   </div>
                 </section>
-              )}
+              </div>
 
               <header className="space-y-4 text-center">
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-amber-300/40 bg-slate-950/70">
+                  <img
+                    src="https://i.imgur.com/8Pi0tUO.png"
+                    alt="An Iron Reign logo"
+                    className="h-14 w-14 object-contain"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                  />
+                </div>
                 <p className="text-xs font-semibold uppercase tracking-[0.5em] text-amber-200/70">
-                  A Medieval Fantasy RP Experience
+                  Welcome to An Iron Reign
                 </p>
-                <h1 className="text-4xl font-semibold uppercase tracking-[0.35em] text-amber-100 sm:text-5xl">
-                  An Iron Reign
-                </h1>
-                <p className="mx-auto max-w-2xl text-base text-slate-200/80">
-                  Forge your legend in Westeros. Create a character, swear allegiance, and roleplay however
-                  you please in a living world inspired by Game of Thrones.
+                <p className="mx-auto max-w-xl text-sm text-slate-300">
+                  A medieval fantasy RP experience inspired by Westeros.
                 </p>
               </header>
 
@@ -417,77 +436,20 @@
               )}
 
               {screen === "landing" && (
-                <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-                  <div className="space-y-6 rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40">
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                        Realm Overview
-                      </p>
-                      <h2 className="text-2xl font-semibold text-amber-100">A living Westeros</h2>
-                      <p className="text-sm text-slate-300">
-                        Step into a shared narrative where your choices shape the realm. Pick a server first,
-                        then craft your traveler&apos;s identity.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">The North</p>
-                        <p className="mt-2 text-sm text-slate-300">
-                          Brave the cold to earn loyalty from ancient houses.
-                        </p>
+                <section className="mx-auto w-full max-w-3xl rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40">
+                  <h2 className="text-2xl font-semibold text-amber-100">A living realm awaits</h2>
+                  <p className="mt-3 text-sm text-slate-300">
+                    Choose a realm, forge your traveler, and step into the stories of Westeros.
+                  </p>
+                  <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                    {["Choose a Realm", "Create a Character", "Enter the Realm"].map((step) => (
+                      <div
+                        key={step}
+                        className="rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-4 text-xs uppercase tracking-[0.3em] text-slate-300"
+                      >
+                        {step}
                       </div>
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">The Crownlands</p>
-                        <p className="mt-2 text-sm text-slate-300">
-                          Intrigue and politics rule the halls of power.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">How it works</p>
-                      <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                        <li>1. Choose a realm in the server browser.</li>
-                        <li>2. Create a character with a first name and household.</li>
-                        <li>3. Enter the realm and begin your roleplay journey.</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col justify-between gap-6 rounded-3xl border border-slate-700/60 bg-slate-900/70 p-8 shadow-2xl shadow-black/40">
-                    <div className="space-y-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-                        Realm Briefing
-                      </p>
-                      <h3 className="text-2xl font-semibold text-amber-100">The Iron Throne awaits</h3>
-                      <p className="text-sm text-slate-300">
-                        Enter a shared world of noble houses, secret alliances, and grand battlefields.
-                        Your character can be anything—from a commoner to a noble sworn to power.
-                      </p>
-                      <ul className="space-y-3 text-sm text-slate-300">
-                        <li className="flex items-center gap-3">
-                          <span className="h-2 w-2 rounded-full bg-amber-300" />
-                          Persistent roleplay realms with live storytellers.
-                        </li>
-                        <li className="flex items-center gap-3">
-                          <span className="h-2 w-2 rounded-full bg-rose-300" />
-                          Craft alliances, betray rivals, and command armies.
-                        </li>
-                        <li className="flex items-center gap-3">
-                          <span className="h-2 w-2 rounded-full bg-slate-300" />
-                          Seasonal events rooted in the lore of Westeros.
-                        </li>
-                      </ul>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setScreen("servers")}
-                      className="w-full rounded-xl border border-amber-300/60 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                    >
-                      View Servers
-                    </button>
+                    ))}
                   </div>
                 </section>
               )}
@@ -501,7 +463,7 @@
                       </p>
                       <h2 className="text-2xl font-semibold text-amber-100">Choose your realm</h2>
                       <p className="text-sm text-slate-300">
-                        Each realm hosts unique stories and player-led events. Select a test server to begin.
+                        Select a test server to begin your roleplay journey.
                       </p>
                     </div>
                     <button
@@ -513,7 +475,7 @@
                     </button>
                   </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  <div className="mt-6 grid gap-4 lg:grid-cols-3">
                     {servers.map((server) => (
                       <button
                         key={server.id}
@@ -522,9 +484,9 @@
                           setSelectedServer(server);
                           setScreen("character");
                         }}
-                        className="group flex w-full flex-col gap-4 rounded-2xl border border-slate-700/80 bg-slate-950/60 p-5 text-left transition hover:-translate-y-1 hover:border-amber-300/70 hover:shadow-lg hover:shadow-amber-500/20"
+                        className="group flex w-full flex-col gap-5 rounded-2xl border border-slate-700/80 bg-gradient-to-br from-slate-950/80 via-slate-950/60 to-slate-900/60 p-5 text-left transition hover:-translate-y-1 hover:border-amber-300/70 hover:shadow-lg hover:shadow-amber-500/20"
                       >
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-3">
                           <div>
                             <h3 className="text-lg font-semibold text-amber-100 group-hover:text-amber-200">
                               {server.name}
@@ -533,17 +495,20 @@
                               {server.region}
                             </p>
                           </div>
-                          <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300">
+                          <span className="rounded-full border border-amber-300/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-amber-200">
                             {server.tag}
                           </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
-                          <span className="rounded-full bg-slate-800 px-3 py-1">
-                            Status: {server.status}
+                        <div className="flex items-center justify-between text-xs text-slate-300">
+                          <span className="rounded-full bg-slate-800/80 px-3 py-1">
+                            {server.status}
                           </span>
-                          <span className="rounded-full bg-slate-800 px-3 py-1">
-                            Players: {server.players}
+                          <span className="rounded-full bg-slate-800/80 px-3 py-1">
+                            {server.players} online
                           </span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-slate-800">
+                          <div className="h-2 w-3/4 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-rose-400" />
                         </div>
                         <span className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-300">
                           Join Test Server →
@@ -633,7 +598,7 @@
                                 <img
                                   src={genderImage}
                                   alt={`${characterGender} base model`}
-                                  className="h-80 w-auto translate-y-3 scale-125 object-contain"
+                                  className="h-96 w-auto translate-y-4 scale-125 object-contain"
                                   style={{ filter: skinTone.filter }}
                                 />
                               ) : (
@@ -911,12 +876,12 @@
                       <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
                         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Character Status</p>
                         <div className="mt-4 flex items-center gap-4">
-                          <div className="h-20 w-16 overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/70">
+                          <div className="h-28 w-24 overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/70">
                             {genderImage ? (
                               <img
                                 src={genderImage}
                                 alt="Character portrait"
-                                className="h-full w-full scale-125 object-cover"
+                                className="h-full w-full scale-150 object-cover object-top"
                                 style={{ filter: skinTone.filter }}
                               />
                             ) : (
