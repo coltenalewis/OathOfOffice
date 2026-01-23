@@ -461,17 +461,17 @@
           return Math.max(0, q);
         }, [supplyDraft.quantity]);
 
-       // Delivery settings
+   const draftSubtotal = Number(draftUnit) * Number(draftQty);
+
 const courierServiceFee = useMemo(() => {
-  // 10% of initial contraband subtotal (unit * qty)
-  return draftSubtotal * 0.10;
+  const subtotal = Number.isFinite(draftSubtotal) ? draftSubtotal : 0;
+  return subtotal * 0.10;
 }, [draftSubtotal]);
 
 const deliveryFee = supplyDraft.deliveryMethod === "Courier" ? courierServiceFee : 0;
 
-        const draftSubtotal = draftUnit * draftQty;
-        const draftFee = payingDebit ? draftSubtotal * payingDebit.feePct : 0;
-        const draftTotal = draftSubtotal + draftFee + deliveryFee;
+const draftFee = payingDebit ? draftSubtotal * payingDebit.feePct : 0;
+const draftTotal = draftSubtotal + draftFee + deliveryFee;
 
         const canAfford = payingDebit ? payingDebit.balance >= draftTotal : false;
         const postBalance = payingDebit ? payingDebit.balance - draftTotal : 0;
