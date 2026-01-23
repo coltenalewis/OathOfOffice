@@ -11,8 +11,8 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       body {
-  font-family: "Share Tech Mono", "Fira Mono", "JetBrains Mono", monospace;
-          }
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
 
       .scanlines::before {
         content: "";
@@ -98,29 +98,25 @@
       }
     </style>
   </head>
+
   <body class="min-h-screen bg-slate-950 text-slate-100">
     <div id="root"></div>
 
     <script type="text/babel">
       const { useCallback, useEffect, useMemo, useRef, useState } = React;
 
-      const OPENAI_API_KEY = "PUT_YOUR_KEY_HERE";
+      // Replace locally ONLY (do not commit)
+      const OPENAI_API_KEY = "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";
 
       const servers = [
-        { id: 1, name: "Obsidian Relay", location: "Frankfurt", status: "Secure", load: "14%" },
-        { id: 2, name: "Midnight Spine", location: "Singapore", status: "Encrypted", load: "61%" },
-        { id: 3, name: "Nocturne Gate", location: "Toronto", status: "Shielded", load: "32%" },
-        { id: 4, name: "Ghostline Hub", location: "São Paulo", status: "Hidden", load: "48%" },
+        { id: 1, name: "Relay 01", location: "Frankfurt", status: "Secure", load: "14%" },
+        { id: 2, name: "Relay 02", location: "Singapore", status: "Encrypted", load: "61%" },
+        { id: 3, name: "Relay 03", location: "Toronto", status: "Shielded", load: "32%" },
+        { id: 4, name: "Relay 04", location: "São Paulo", status: "Hidden", load: "48%" },
       ];
 
-      // More icons + rounder cards (applied in JSX)
-      const profileIcons = [
-        "🎭","💀","🧠","🔒","👁️","🦉",
-        "🕷️","🦂","🧬","🧿","⚗️","🧲",
-        "📡","🛰️","🧪","🗝️","🕯️","🩸"
-      ];
+      const profileIcons = ["🎭","💀","🧠","🔒","👁️","🦉","🕷️","🦂","🧬","🧿","⚗️","🧲","📡","🛰️","🧪","🗝️","🕯️","🩸"];
 
-      // Real-life city options + timezones
       const cityOptions = [
         { city: "New York", country: "United States", timeZone: "America/New_York" },
         { city: "Chicago", country: "United States", timeZone: "America/Chicago" },
@@ -135,130 +131,69 @@
       const usernameSeeds = ["Void", "Cipher", "Specter", "Glitch", "Ghost", "Zero", "Rogue", "Null", "Pulse", "Signal"];
       const usernameSuffixes = ["Walker", "Shade", "Node", "Runner", "Wire", "Crow"];
 
-      // Side menu: Drug accordion + top-level apps
+      // Straightforward, expandable module naming
       const appModules = [
-        { id: "network", label: "Network 🕸️", status: "Live" },
-        { id: "map", label: "Map 🗺️", status: "Live" },
-        { id: "messages", label: "Messages 🔐", status: "Live" },
-        { id: "finances", label: "Finances 💳", status: "Secure" },
-        { id: "facilities", label: "Facilities / Real Estate 🏗️", status: "Locked" },
+        { id: "network", label: "Network", status: "Live" },
+        { id: "map", label: "Map", status: "Live" },
+        { id: "messages", label: "Messages", status: "Live" },
+        { id: "finances", label: "Finances", status: "Secure" },
+        { id: "facilities", label: "Facilities", status: "Locked" },
       ];
 
-      const drugSubModules = [
-        { id: "supply", label: "Supply 🧪", status: "Online" },
-        { id: "contracts", label: "Contracts 📑", status: "Live" },
-        { id: "transit", label: "Transit 🚚", status: "Live" },
+      const contrabandSubModules = [
+        { id: "supply", label: "Supply", status: "Online" },
+        { id: "contracts", label: "Contracts", status: "Live" },
+        { id: "transit", label: "Transit", status: "Live" },
       ];
 
       const loadingLines = [
         "[boot] establishing encrypted tunnel...",
         "[auth] negotiating shadow certificates...",
         "[relay] proxy chain stabilized...",
-        "[sync] mirroring dark indices...",
+        "[sync] mirroring indices...",
         "[access] access key verified...",
       ];
 
-      // Brokers updated to real cities
       const brokers = [
         {
           id: "broker-onyx",
-          name: "Broker Onyx",
+          name: "Broker 01",
           city: "New York",
           personality: { fearTolerance: 0.4, patience: 0.6, pride: 0.7, aggressionResponse: 0.5, riskAppetite: 0.6 },
         },
         {
           id: "broker-veil",
-          name: "Broker Veil",
+          name: "Broker 02",
           city: "Chicago",
           personality: { fearTolerance: 0.7, patience: 0.5, pride: 0.4, aggressionResponse: 0.6, riskAppetite: 0.7 },
         },
         {
           id: "broker-kite",
-          name: "Broker Kite",
+          name: "Broker 03",
           city: "Los Angeles",
           personality: { fearTolerance: 0.3, patience: 0.8, pride: 0.5, aggressionResponse: 0.4, riskAppetite: 0.5 },
         },
       ];
 
-      // Real cities for supply markets (keys must match select values)
       const cities = {
-        "New York": {
-          name: "New York",
-          basePrice: [140, 190],
-          reliability: "Stable",
-          transitRisk: "Medium",
-          transitHours: 10,
-          culture: "Direct",
-        },
-        "Chicago": {
-          name: "Chicago",
-          basePrice: [130, 175],
-          reliability: "Moderate",
-          transitRisk: "Low",
-          transitHours: 8,
-          culture: "Formal",
-        },
-        "Los Angeles": {
-          name: "Los Angeles",
-          basePrice: [120, 170],
-          reliability: "Volatile",
-          transitRisk: "High",
-          transitHours: 14,
-          culture: "Guarded",
-        },
-        "London": {
-          name: "London",
-          basePrice: [150, 205],
-          reliability: "Stable",
-          transitRisk: "Medium",
-          transitHours: 12,
-          culture: "Reserved",
-        },
-        "Berlin": {
-          name: "Berlin",
-          basePrice: [135, 185],
-          reliability: "Stable",
-          transitRisk: "Low",
-          transitHours: 11,
-          culture: "Methodical",
-        },
-        "Tokyo": {
-          name: "Tokyo",
-          basePrice: [160, 220],
-          reliability: "Stable",
-          transitRisk: "Medium",
-          transitHours: 16,
-          culture: "Polite",
-        },
+        "New York": { name: "New York", basePrice: [140, 190], reliability: "Stable", transitRisk: "Medium", transitHours: 10, culture: "Direct" },
+        "Chicago": { name: "Chicago", basePrice: [130, 175], reliability: "Moderate", transitRisk: "Low", transitHours: 8, culture: "Formal" },
+        "Los Angeles": { name: "Los Angeles", basePrice: [120, 170], reliability: "Volatile", transitRisk: "High", transitHours: 14, culture: "Guarded" },
+        "London": { name: "London", basePrice: [150, 205], reliability: "Stable", transitRisk: "Medium", transitHours: 12, culture: "Reserved" },
+        "Berlin": { name: "Berlin", basePrice: [135, 185], reliability: "Stable", transitRisk: "Low", transitHours: 11, culture: "Methodical" },
+        "Tokyo": { name: "Tokyo", basePrice: [160, 220], reliability: "Stable", transitRisk: "Medium", transitHours: 16, culture: "Polite" },
       };
 
-      // Finances: debit + credit + cash stash
+      // Increased starting balances so player can act immediately
       const debitAccountsTemplate = [
-        { id: "debit-main", label: "Checking (Main)", bank: "Chase", balance: 850, feePct: 0.01, delayMinutes: 0 },
-        { id: "debit-savings", label: "Savings", bank: "Bank of America", balance: 1200, feePct: 0.005, delayMinutes: 10 },
+        { id: "debit-main", label: "Checking", bank: "Chase", balance: 2400, feePct: 0.01, delayMinutes: 0 },
+        { id: "debit-savings", label: "Savings", bank: "Bank of America", balance: 1600, feePct: 0.005, delayMinutes: 10 },
       ];
 
+      // Credit accounts are treated as LOC-style: draw + pay
       const creditAccountsTemplate = [
-        {
-          id: "credit-1",
-          bank: "Capital One",
-          label: "Quicksilver",
-          apr: 0.2499,
-          limit: 500,
-          balance: 0,
-          paymentsThisMonth: 0,
-          lastLimitIncreaseMonth: 0,
-        },
-        {
-          id: "credit-2",
-          bank: "Discover",
-          label: "It Card",
-          apr: 0.2199,
-          limit: 800,
-          balance: 120,
-          paymentsThisMonth: 1,
-          lastLimitIncreaseMonth: 0,
-        },
+        { id: "credit-1", bank: "Capital One", label: "Line of Credit", apr: 0.2499, limit: 2000, balance: 250, paymentsThisMonth: 0, lastLimitIncreaseMonth: 0 },
+        { id: "credit-2", bank: "Discover", label: "Line of Credit", apr: 0.2199, limit: 3000, balance: 420, paymentsThisMonth: 0, lastLimitIncreaseMonth: 0 },
       ];
 
       const verdantTierOptions = [
@@ -271,6 +206,25 @@
         pushy: ["urgent", "now", "immediately", "fast"],
         threatening: ["or else", "threat", "consequence", "pressure"],
         flattering: ["admire", "legend", "impressive", "trusted"],
+      };
+
+      const formatHHMM = (date, timeZone) => {
+        try {
+          return new Intl.DateTimeFormat("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+            timeZone,
+          }).format(date);
+        } catch {
+          return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+        }
+      };
+
+      const clampMoney = (v) => {
+        const n = Number(v);
+        if (!Number.isFinite(n)) return 0;
+        return Math.max(0, Math.round(n * 100) / 100);
       };
 
       const App = () => {
@@ -293,15 +247,19 @@
 
         const [systemTime, setSystemTime] = useState(new Date());
 
-        // Active app defaults to supply (now under Drug accordion)
+        // Active app defaults to supply (under Contraband accordion)
         const [activeApp, setActiveApp] = useState("supply");
-        const [drugMenuOpen, setDrugMenuOpen] = useState(true);
+        const [contrabandMenuOpen, setContrabandMenuOpen] = useState(true);
 
         // Finances state
         const [debitAccounts, setDebitAccounts] = useState(debitAccountsTemplate);
         const [creditAccounts, setCreditAccounts] = useState(creditAccountsTemplate);
-        const [cashOnHand, setCashOnHand] = useState(150);
-        const [cashStash, setCashStash] = useState(400); // not spendable
+        const [cashOnHand, setCashOnHand] = useState(650);
+        const [cashStash, setCashStash] = useState(900); // not spendable
+
+        // UI inputs (kept minimal and per-account)
+        const [debitMoveInputs, setDebitMoveInputs] = useState({});
+        const [creditActionInputs, setCreditActionInputs] = useState({}); // { [creditId]: { draw, pay, source } }
 
         // Supply state
         const cityKeys = useMemo(() => Object.keys(cities), []);
@@ -310,6 +268,7 @@
           tier: verdantTierOptions[0].tier,
           quantity: 30,
           accountId: debitAccountsTemplate[0].id,
+          deliveryMethod: "Courier", // Courier | Personal
         }));
 
         const [inventory, setInventory] = useState({ Standard: 0, Premium: 0 });
@@ -323,6 +282,9 @@
         const [messageCounts, setMessageCounts] = useState({});
         const [bootTimestamp] = useState(Date.now());
         const eventLogRef = useRef([]);
+
+        // Personal-delivery lock
+        const [personalDeliveryActive, setPersonalDeliveryActive] = useState(false);
 
         useEffect(() => {
           setUsername(
@@ -361,33 +323,10 @@
         const gameElapsedMs = Date.now() - bootTimestamp;
         const gameMinutes = Math.floor(gameElapsedMs / msPerGameMinute);
         const gameDay = Math.floor(gameMinutes / 1440) + 1;
-        const gameHour = Math.floor((gameMinutes % 1440) / 60);
-        const gameMinute = gameMinutes % 60;
-        const gameProgress = ((gameMinutes % 1440) / 1440) * 100;
-
-        const gamePhase = useMemo(() => {
-          if (gameHour < 6) return "Night Watch";
-          if (gameHour < 12) return "Dawn Patrol";
-          if (gameHour < 18) return "Day Shift";
-          return "Blackout";
-        }, [gameHour]);
 
         const localTimeLabel = useMemo(() => {
-          return new Intl.DateTimeFormat("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            timeZone: selectedCity.timeZone,
-          }).format(systemTime);
+          return formatHHMM(systemTime, selectedCity.timeZone);
         }, [selectedCity, systemTime]);
-
-        const systemTimeLabel = useMemo(() => {
-          return systemTime.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          });
-        }, [systemTime]);
 
         const displayUsername = hasCustomNamePass && customUsername.trim() ? customUsername : username;
 
@@ -401,7 +340,7 @@
 
         const profileComplete = profileProgress === 100;
 
-        // "Total Cash" box: debit total + credit available (liquidity)
+        // Liquidity readout: debit total + credit available
         const totalCash = useMemo(() => {
           const debitTotal = debitAccounts.reduce((sum, a) => sum + a.balance, 0);
           const creditAvailable = creditAccounts.reduce((sum, c) => sum + Math.max(c.limit - c.balance, 0), 0);
@@ -409,7 +348,7 @@
         }, [debitAccounts, creditAccounts]);
 
         const addLog = (entry) => {
-          eventLogRef.current = [{ id: Date.now(), text: entry }, ...eventLogRef.current].slice(0, 8);
+          eventLogRef.current = [{ id: Date.now() + Math.random(), text: entry }, ...eventLogRef.current].slice(0, 10);
         };
 
         // Contracts generation
@@ -439,47 +378,6 @@
           });
         };
 
-        const updateShipments = useCallback(() => {
-          setShipments((prev) =>
-            prev
-              .map((shipment) => {
-                const elapsed = Date.now() - shipment.createdAt;
-                const remaining = shipment.durationMs - elapsed;
-                if (remaining <= 0 && shipment.status === "In Transit") {
-                  const outcome = resolveShipmentOutcome(shipment);
-                  addLog(`Shipment ${shipment.id} resolved: ${outcome}.`);
-                  return { ...shipment, status: outcome, remainingMs: 0 };
-                }
-                return { ...shipment, remainingMs: Math.max(remaining, 0) };
-              })
-              .filter((shipment) => shipment.status === "In Transit")
-          );
-        }, []);
-
-        const updateContracts = useCallback(() => {
-          setContracts((prev) =>
-            prev
-              .map((contract) => {
-                const elapsed = Date.now() - contract.createdAt;
-                const remaining = contract.durationMs - elapsed;
-                if (remaining <= 0 && contract.status === "Open") {
-                  addLog(`Contract ${contract.title} expired.`);
-                  return { ...contract, status: "Expired", remainingMs: 0 };
-                }
-                return { ...contract, remainingMs: Math.max(remaining, 0) };
-              })
-              .filter((contract) => contract.status !== "Expired")
-          );
-        }, []);
-
-        useEffect(() => {
-          const interval = setInterval(() => {
-            updateShipments();
-            updateContracts();
-          }, 1000);
-          return () => clearInterval(interval);
-        }, [updateShipments, updateContracts]);
-
         const resolveShipmentOutcome = (shipment) => {
           const outcomes = ["Delivered", "Delayed", "Partial Loss", "Disrupted"];
           const roll = Math.random();
@@ -498,8 +396,55 @@
 
           setHeat((prev) => Math.min(prev + (outcome === "Disrupted" ? 6 : 2), 100));
           setReputation((prev) => Math.max(prev - (outcome === "Disrupted" ? 5 : 1), 0));
+
+          // Personal delivery lock releases when that shipment resolves
+          if (shipment.deliveryMethod === "Personal") {
+            setPersonalDeliveryActive(false);
+          }
+
           return outcome;
         };
+
+        const updateShipments = useCallback(() => {
+          setShipments((prev) =>
+            prev
+              .map((shipment) => {
+                const elapsed = Date.now() - shipment.createdAt;
+                const remaining = shipment.durationMs - elapsed;
+                if (remaining <= 0 && shipment.status === "In Transit") {
+                  const outcome = resolveShipmentOutcome(shipment);
+                  addLog(`Shipment ${shipment.id}: ${outcome}.`);
+                  return { ...shipment, status: outcome, remainingMs: 0 };
+                }
+                return { ...shipment, remainingMs: Math.max(remaining, 0) };
+              })
+              .filter((shipment) => shipment.status === "In Transit")
+          );
+        }, []);
+
+        const updateContracts = useCallback(() => {
+          setContracts((prev) =>
+            prev
+              .map((contract) => {
+                const elapsed = Date.now() - contract.createdAt;
+                const remaining = contract.durationMs - elapsed;
+                if (remaining <= 0 && contract.status === "Open") {
+                  addLog(`Contract expired: ${contract.title}.`);
+                  return { ...contract, status: "Expired", remainingMs: 0 };
+                }
+                return { ...contract, remainingMs: Math.max(remaining, 0) };
+              })
+              .filter((contract) => contract.status !== "Expired")
+          );
+        }, []);
+
+        useEffect(() => {
+          const interval = setInterval(() => {
+            updateShipments();
+            updateContracts();
+          }, 1000);
+          return () => clearInterval(interval);
+        }, [updateShipments, updateContracts]);
 
         // Supply cost preview
         const draftCityData = cities[supplyDraft.city] || Object.values(cities)[0];
@@ -516,24 +461,44 @@
           return Math.max(0, q);
         }, [supplyDraft.quantity]);
 
+        // Delivery settings
+        const courierServiceFee = useMemo(() => {
+          // small, readable: base + per-unit
+          return 18 + draftQty * 0.4;
+        }, [draftQty]);
+
+        const deliveryFee = supplyDraft.deliveryMethod === "Courier" ? courierServiceFee : 0;
+
         const draftSubtotal = draftUnit * draftQty;
         const draftFee = payingDebit ? draftSubtotal * payingDebit.feePct : 0;
-        const draftTotal = draftSubtotal + draftFee;
+        const draftTotal = draftSubtotal + draftFee + deliveryFee;
 
         const canAfford = payingDebit ? payingDebit.balance >= draftTotal : false;
         const postBalance = payingDebit ? payingDebit.balance - draftTotal : 0;
 
+        const canPlaceDelivery = useMemo(() => {
+          // If you're doing personal delivery, you cannot start ANY new deliveries until it resolves.
+          if (personalDeliveryActive) return false;
+          return true;
+        }, [personalDeliveryActive]);
+
         const handlePlaceOrder = (event) => {
           event.preventDefault();
+
+          if (!canPlaceDelivery) {
+            addLog("Delivery locked: you are currently delivering in person.");
+            return;
+          }
 
           const city = supplyDraft.city;
           const tier = supplyDraft.tier;
           const quantity = Number(supplyDraft.quantity);
           const accountId = supplyDraft.accountId;
+          const deliveryMethod = supplyDraft.deliveryMethod; // Courier | Personal
 
           const cityData = cities[city];
           if (!cityData) {
-            addLog("City market not found.");
+            addLog("Market not found.");
             return;
           }
 
@@ -547,21 +512,28 @@
           }
 
           const fee = subtotal * debit.feePct;
-          const total = subtotal + fee;
+          const serviceFee = deliveryMethod === "Courier" ? (18 + quantity * 0.4) : 0;
+          const total = subtotal + fee + serviceFee;
 
           if (debit.balance < total) {
-            addLog("Purchase blocked: insufficient funds in selected debit account.");
+            addLog("Purchase blocked: insufficient funds.");
             return;
           }
 
           setDebitAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, balance: a.balance - total } : a)));
 
           const transitMinutes = cityData.transitHours * 60;
-          const durationMs = transitMinutes * msPerGameMinute;
+          const baseDurationMs = transitMinutes * msPerGameMinute;
+
+          // Personal delivery is significantly longer, but avoids the courier service fee
+          const durationMultiplier = deliveryMethod === "Personal" ? 2.6 : 1.0;
+          const durationMs = baseDurationMs * durationMultiplier;
+
+          const shipmentId = `S-${Math.floor(Math.random() * 9000 + 1000)}`;
 
           setShipments((prev) => [
             {
-              id: `S-${Math.floor(Math.random() * 9000 + 1000)}`,
+              id: shipmentId,
               city,
               tier,
               quantity,
@@ -569,11 +541,20 @@
               createdAt: Date.now(),
               durationMs,
               remainingMs: durationMs,
+              deliveryMethod,
+              serviceFee,
             },
             ...prev,
           ]);
 
-          addLog(`Supply order placed: ${quantity} units (${tier}) from ${city}.`);
+          if (deliveryMethod === "Personal") {
+            setPersonalDeliveryActive(true);
+            addLog(`Personal delivery started: ${shipmentId} (${city}).`);
+          } else {
+            addLog(`Courier delivery queued: ${shipmentId} (${city}).`);
+          }
+
+          addLog(`Order placed: ${quantity} units (${tier}) from ${city}.`);
         };
 
         const handleSubmitOffer = (contract, quantity, price, payoutAccountId) => {
@@ -594,16 +575,14 @@
             setInventory((prev) => ({ ...prev, [contract.tier]: prev[contract.tier] - quantity }));
 
             setDebitAccounts((prev) =>
-              prev.map((account) =>
-                account.id === payoutAccountId ? { ...account, balance: account.balance + revenue } : account
-              )
+              prev.map((account) => (account.id === payoutAccountId ? { ...account, balance: account.balance + revenue } : account))
             );
 
             setReputation((prev) => Math.min(prev + 4, 100));
             setHeat((prev) => Math.min(prev + 3, 100));
-            addLog(`Contract fulfilled: ${contract.title} for $${revenue}.`);
+            addLog(`Contract fulfilled: ${contract.title} ($${revenue}).`);
           } else {
-            addLog(`Broker countered: ${contract.title}.`);
+            addLog(`Countered: ${contract.title}.`);
           }
         };
 
@@ -616,9 +595,21 @@
           return tone;
         };
 
+        const getScriptedReply = (broker, tone) => {
+          const base = {
+            polite: "Noted. Keep the offer within the band and we can move.",
+            neutral: "Send numbers you can stand behind.",
+            pushy: "Don’t rush the ledger. Window closes fast.",
+            threatening: "That tone adds heat. Dial it back or we walk.",
+            flattering: "Flattery helps. Bring a tight proposal and we’ll listen.",
+          };
+          return base[tone] || base.neutral;
+        };
+
         const handleSendMessage = () => {
           const trimmed = messageInput.trim();
           if (!trimmed) return;
+
           const count = messageCounts[selectedBroker.id] || 0;
           if (count >= 5) {
             addLog(`Negotiation window closed for ${selectedBroker.name}.`);
@@ -627,6 +618,8 @@
 
           const tone = analyzeTone(trimmed);
           const broker = selectedBroker;
+
+          // Keep scripted unless you wire a server-side relay for AI.
           const reply = getScriptedReply(broker, tone);
 
           setMessages((prev) => {
@@ -653,18 +646,107 @@
           setMessageInput("");
         };
 
-        const getScriptedReply = (broker, tone) => {
-          const base = {
-            polite: "Respect noted. Keep the offer within the band and we can move.",
-            neutral: "Keep it clean. Send the numbers you can stand behind.",
-            pushy: "Pressure noted. Don’t rush the ledger or the window closes.",
-            threatening: "That tone adds heat. Dial it back or we walk.",
-            flattering: "Flattery helps. Bring a tight proposal and we’ll listen.",
-          };
-          return base[tone] || base.neutral;
+        const activeMessages = messages[selectedBroker.id] || [];
+
+        // Current Activity for top bar
+        const currentActivity = useMemo(() => {
+          const personal = shipments.find((s) => s.status === "In Transit" && s.deliveryMethod === "Personal");
+          if (personal) {
+            const etaMin = Math.max(1, Math.ceil(personal.remainingMs / 1000 / 60));
+            return `Personal delivery: ${personal.city} (${etaMin}m ETA)`;
+          }
+          const inTransit = shipments.filter((s) => s.status === "In Transit").length;
+          if (inTransit > 0) return `Managing shipments: ${inTransit} in transit`;
+          return "Idle";
+        }, [shipments]);
+
+        // -----------------------------
+        // FINANCES ACTIONS
+        // -----------------------------
+        const depositToDebit = (accountId, amount) => {
+          const v = clampMoney(amount);
+          if (v <= 0) return;
+          if (cashOnHand < v) {
+            addLog("Deposit blocked: insufficient cash on hand.");
+            return;
+          }
+          setCashOnHand((prev) => prev - v);
+          setDebitAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, balance: a.balance + v } : a)));
+          addLog(`Deposit: $${v.toFixed(2)} to debit account.`);
         };
 
-        const activeMessages = messages[selectedBroker.id] || [];
+        const withdrawFromDebit = (accountId, amount) => {
+          const v = clampMoney(amount);
+          if (v <= 0) return;
+          const acct = debitAccounts.find((a) => a.id === accountId);
+          if (!acct || acct.balance < v) {
+            addLog("Withdraw blocked: insufficient debit balance.");
+            return;
+          }
+          setDebitAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, balance: a.balance - v } : a)));
+          setCashOnHand((prev) => prev + v);
+          addLog(`Withdraw: $${v.toFixed(2)} from debit account.`);
+        };
+
+        // "Deposit/Withdraw" for credit interpreted as Draw/Pay (LOC behavior)
+        const drawCreditToCash = (creditId, amount) => {
+          const v = clampMoney(amount);
+          if (v <= 0) return;
+          const c = creditAccounts.find((x) => x.id === creditId);
+          if (!c) return;
+
+          const available = Math.max(c.limit - c.balance, 0);
+          if (v > available) {
+            addLog("Draw blocked: exceeds available credit.");
+            return;
+          }
+
+          setCreditAccounts((prev) => prev.map((x) => (x.id === creditId ? { ...x, balance: x.balance + v } : x)));
+          setCashOnHand((prev) => prev + v);
+          addLog(`Credit draw: $${v.toFixed(2)} to cash on hand.`);
+        };
+
+        const payCredit = (creditId, amount, source) => {
+          const v = clampMoney(amount);
+          if (v <= 0) return;
+
+          const c = creditAccounts.find((x) => x.id === creditId);
+          if (!c) return;
+
+          const payAmount = Math.min(v, c.balance);
+          if (payAmount <= 0) {
+            addLog("Payment blocked: credit balance is already $0.");
+            return;
+          }
+
+          if (source === "cash") {
+            if (cashOnHand < payAmount) {
+              addLog("Payment blocked: insufficient cash on hand.");
+              return;
+            }
+            setCashOnHand((prev) => prev - payAmount);
+          } else {
+            // source is a debit account id
+            const debit = debitAccounts.find((a) => a.id === source);
+            if (!debit || debit.balance < payAmount) {
+              addLog("Payment blocked: insufficient debit funds.");
+              return;
+            }
+            setDebitAccounts((prev) => prev.map((a) => (a.id === source ? { ...a, balance: a.balance - payAmount } : a)));
+          }
+
+          setCreditAccounts((prev) =>
+            prev.map((x) => {
+              if (x.id !== creditId) return x;
+              return { ...x, balance: Math.max(0, x.balance - payAmount), paymentsThisMonth: x.paymentsThisMonth + 1 };
+            })
+          );
+
+          addLog(`Credit payment: $${payAmount.toFixed(2)} applied.`);
+        };
+
+        // "Total Cash" remains liquidity metric (debit + available credit)
+        const totalCashLabel = useMemo(() => `$${totalCash.toFixed(2)} USD`, [totalCash]);
 
         return (
           <main className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-slate-100">
@@ -675,45 +757,47 @@
               <header className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h1 className="text-3xl font-semibold tracking-[0.2em] text-emerald-100">Into The Dark</h1>
-                  <p className="text-xs uppercase tracking-[0.6em] text-slate-400">Dark Web Simulation</p>
+                  <p className="text-xs uppercase tracking-[0.6em] text-slate-400">Simulation</p>
                 </div>
+
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setShowShop(true)}
                     className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
                   >
-                    🛒
+                    Shop
                   </button>
+
                   {screen === "dashboard" && (
-                    <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.25em]">
                       {hasSubscription && (
                         <span className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-emerald-200">
-                          [VIP]
+                          VIP
                         </span>
                       )}
                       <span className="rounded-md border border-slate-700 px-3 py-1 text-slate-300">
                         {selectedServer?.name}
                       </span>
                       <span className="rounded-md border border-slate-700 px-3 py-1 text-slate-300">
-                        {selectedCity.city}
+                        {selectedCity.city} · {localTimeLabel}
+                      </span>
+                      <span className="rounded-md border border-slate-700/80 bg-black/40 px-3 py-1 text-slate-300">
+                        Activity: <span className="text-emerald-200">{currentActivity}</span>
                       </span>
                     </div>
                   )}
                 </div>
               </header>
 
-              <div
-                className={`panel-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-8 ${
-                  showShop ? "is-open" : ""
-                }`}
-              >
+              {/* Shop Overlay */}
+              <div className={`panel-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-8 ${showShop ? "is-open" : ""}`}>
                 {showShop && (
                   <div className="w-full max-w-2xl rounded-lg border border-emerald-400/30 bg-slate-950 p-6 shadow-2xl shadow-emerald-500/20">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-400/70">Black Ops Store</p>
-                        <p className="text-sm text-slate-300">Test entitlements for subscription and custom handle access.</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-400/70">Store (Test)</p>
+                        <p className="text-sm text-slate-300">Entitlements for subscription + custom handle.</p>
                       </div>
                       <button
                         type="button"
@@ -725,52 +809,47 @@
                     </div>
                     <div className="mt-6 grid gap-4 sm:grid-cols-2">
                       <div className="rounded-md border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Test Subscription</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Subscription</p>
                         <p className="mt-2 text-sm text-slate-300">Unlock premium status for experimental features.</p>
                         <button
                           type="button"
                           onClick={() => setHasSubscription(true)}
                           className="mt-4 w-full rounded-md border border-emerald-400/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
                         >
-                          Activate Test Subscription
+                          Activate
                         </button>
-                        {hasSubscription && (
-                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-emerald-200">Active</p>
-                        )}
+                        {hasSubscription && <p className="mt-3 text-xs uppercase tracking-[0.3em] text-emerald-200">Active</p>}
                       </div>
 
                       <div className="rounded-md border border-amber-400/40 bg-black/70 p-4 text-sm text-slate-300">
-                        <p className="text-xs uppercase tracking-[0.3em] text-amber-300">Custom Handle Pass</p>
-                        <p className="mt-2 text-sm text-slate-300">Permanent access to custom handles. $5 test pass.</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-amber-300">Custom Handle</p>
+                        <p className="mt-2 text-sm text-slate-300">Permanent access to custom handles (test pass).</p>
                         <button
                           type="button"
                           onClick={() => setHasCustomNamePass(true)}
                           className="mt-4 w-full rounded-md border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
                         >
-                          Purchase $5 Pass
+                          Unlock
                         </button>
-                        {hasCustomNamePass && (
-                          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-amber-200">Active</p>
-                        )}
+                        {hasCustomNamePass && <p className="mt-3 text-xs uppercase tracking-[0.3em] text-amber-200">Active</p>}
                       </div>
                     </div>
                   </div>
                 )}
               </div>
 
+              {/* Landing */}
               {screen === "landing" && (
                 <section className="relative overflow-hidden rounded-lg border border-emerald-500/30 bg-black/80 p-10 shadow-2xl shadow-emerald-500/10">
                   <div className="terminal-flicker">
-                    <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">darknet gateway</p>
-                    <h2 className="mt-4 text-3xl font-semibold text-emerald-100">Terminal access granted</h2>
-                    <p className="mt-3 max-w-xl text-sm text-slate-300">
-                      Initialize your contraband network. Time is compressed and every decision leaves a trace.
-                    </p>
+                    <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">gateway</p>
+                    <h2 className="mt-4 text-3xl font-semibold text-emerald-100">Access granted</h2>
+                    <p className="mt-3 max-w-xl text-sm text-slate-300">Run an underground network. Decisions leave traces.</p>
                   </div>
                   <div className="mt-8 rounded-md border border-emerald-400/20 bg-slate-950/70 p-5 text-xs text-emerald-200/80">
-                    <p>root@shadowgrid:~$ access --portal dark.gateway</p>
-                    <p className="mt-2">status: READY_FOR_SESSION</p>
-                    <p className="mt-2">signal strength: 98%</p>
+                    <p>root@grid:~$ access --portal dark.gateway</p>
+                    <p className="mt-2">status: READY</p>
+                    <p className="mt-2">signal: 98%</p>
                     <div className="mt-3 flex items-center">
                       <span>awaiting command</span>
                       <span className="boot-cursor" />
@@ -782,19 +861,20 @@
                       onClick={() => setScreen("servers")}
                       className="glow-pulse w-full rounded-md border border-emerald-400/60 bg-emerald-500/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.4em] text-emerald-100 transition hover:border-emerald-300 hover:bg-emerald-400/20"
                     >
-                      Start Enterprise
+                      Start
                     </button>
                   </div>
                 </section>
               )}
 
+              {/* Servers */}
               {screen === "servers" && (
                 <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">server browser</p>
-                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Select a relay</h2>
-                      <p className="text-sm text-slate-300">Choose an enterprise node to begin your session.</p>
+                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Select relay</h2>
+                      <p className="text-sm text-slate-300">Pick a node to begin.</p>
                     </div>
                     <button
                       type="button"
@@ -804,6 +884,7 @@
                       Back
                     </button>
                   </div>
+
                   <div className="mt-6 grid gap-4 md:grid-cols-2">
                     {servers.map((server) => (
                       <button
@@ -828,10 +909,7 @@
                           <span>{server.load}</span>
                         </div>
                         <div className="h-2 w-full rounded-md bg-slate-800">
-                          <div
-                            className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400"
-                            style={{ width: server.load }}
-                          />
+                          <div className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400" style={{ width: server.load }} />
                         </div>
                         <span className="text-xs uppercase tracking-[0.4em] text-emerald-300">Connect →</span>
                       </button>
@@ -840,16 +918,13 @@
                 </section>
               )}
 
+              {/* Loading */}
               {screen === "loading" && (
                 <section className="rounded-lg border border-emerald-500/30 bg-black/80 p-8 text-left shadow-2xl shadow-emerald-500/20">
-                  <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">boot sequence</p>
-                  <h2 className="mt-3 text-2xl font-semibold text-emerald-100">
-                    Establishing {selectedServer?.name || "relay"}
-                  </h2>
+                  <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">boot</p>
+                  <h2 className="mt-3 text-2xl font-semibold text-emerald-100">Establishing {selectedServer?.name || "relay"}</h2>
                   <div className="mt-6 space-y-2 text-xs text-emerald-200/80">
-                    {loadingLines.slice(0, loadingLineIndex + 1).map((line, index) => (
-                      <p key={index}>{line}</p>
-                    ))}
+                    {loadingLines.slice(0, loadingLineIndex + 1).map((line, index) => <p key={index}>{line}</p>)}
                   </div>
                   <div className="mt-6">
                     <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
@@ -857,35 +932,20 @@
                       <span>{loadingProgress}%</span>
                     </div>
                     <div className="mt-3 h-3 w-full rounded-md bg-slate-800">
-                      <div
-                        className="h-3 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all"
-                        style={{ width: `${loadingProgress}%` }}
-                      />
+                      <div className="h-3 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all" style={{ width: `${loadingProgress}%` }} />
                     </div>
-                    <p className="mt-3 text-xs text-emerald-200/70">Keep this channel open until handshake completes.</p>
                   </div>
-                  {loadingProgress >= 100 && (
-                    <>
-                      <div className="mt-6 text-xs uppercase tracking-[0.3em] text-emerald-300">Access granted.</div>
-                      <button
-                        type="button"
-                        onClick={() => setScreen("profile")}
-                        className="mt-6 w-full rounded-md border border-emerald-400/50 bg-emerald-500/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:border-emerald-300 hover:bg-emerald-400/20"
-                      >
-                        Proceed to Profile
-                      </button>
-                    </>
-                  )}
                 </section>
               )}
 
+              {/* Profile */}
               {screen === "profile" && (
                 <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">identity forge</p>
-                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Build your profile</h2>
-                      <p className="text-sm text-slate-300">Select a signature icon, claim a handle, and choose a city.</p>
+                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">profile</p>
+                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Build identity</h2>
+                      <p className="text-sm text-slate-300">Icon, handle, and city.</p>
                     </div>
                     <button
                       type="button"
@@ -898,14 +958,11 @@
 
                   <div className="mt-6 rounded-md border border-slate-700/70 bg-black/60 px-4 py-3">
                     <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                      <span>Profile completion</span>
+                      <span>Completion</span>
                       <span>{profileProgress}%</span>
                     </div>
                     <div className="mt-2 h-2 w-full rounded-md bg-slate-800">
-                      <div
-                        className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all"
-                        style={{ width: `${profileProgress}%` }}
-                      />
+                      <div className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all" style={{ width: `${profileProgress}%` }} />
                     </div>
                   </div>
 
@@ -914,12 +971,8 @@
                       {profileStep === 1 && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 1 · Profile icon</p>
-                            <button
-                              type="button"
-                              onClick={() => setProfileStep(2)}
-                              className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
-                            >
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 1 · Icon</p>
+                            <button type="button" onClick={() => setProfileStep(2)} className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400">
                               Next →
                             </button>
                           </div>
@@ -948,18 +1001,10 @@
                           <div className="flex items-center justify-between">
                             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 2 · Handle</p>
                             <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setProfileStep(1)}
-                                className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
-                              >
+                              <button type="button" onClick={() => setProfileStep(1)} className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400">
                                 ← Back
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => setProfileStep(3)}
-                                className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
-                              >
+                              <button type="button" onClick={() => setProfileStep(3)} className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400">
                                 Next →
                               </button>
                             </div>
@@ -969,7 +1014,7 @@
                             <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Generated handle</p>
+                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Generated</p>
                                   <p className="mt-2 text-lg font-semibold text-emerald-100">{username || "--"}</p>
                                 </div>
                                 <button
@@ -982,14 +1027,14 @@
                                   }}
                                   className="rounded-md border border-emerald-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-200 hover:text-emerald-100"
                                 >
-                                  Roll Handle
+                                  Roll
                                 </button>
                               </div>
                             </div>
 
                             <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
                               <div className="flex items-center justify-between gap-3">
-                                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Custom handle</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Custom</p>
 
                                 <span
                                   onClick={() => !hasCustomNamePass && setShowShop(true)}
@@ -999,7 +1044,7 @@
                                       : "border-slate-700 text-slate-400 hover:border-amber-300/60 hover:text-amber-200"
                                   }`}
                                 >
-                                  {hasCustomNamePass ? "Pass Active" : "Locked"}
+                                  {hasCustomNamePass ? "Unlocked" : "Locked"}
                                 </span>
                               </div>
 
@@ -1017,7 +1062,7 @@
                                   onClick={() => setShowShop(true)}
                                   className="mt-3 w-full rounded-md border border-dashed border-amber-400/40 bg-black/40 px-4 py-3 text-left text-xs uppercase tracking-[0.3em] text-amber-200/80 transition hover:border-amber-300/70"
                                 >
-                                  Custom handle locked · click to open shop
+                                  Click to unlock
                                 </button>
                               )}
                             </div>
@@ -1028,12 +1073,8 @@
                       {profileStep === 3 && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 3 · Operating city</p>
-                            <button
-                              type="button"
-                              onClick={() => setProfileStep(2)}
-                              className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
-                            >
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 3 · City</p>
+                            <button type="button" onClick={() => setProfileStep(2)} className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400">
                               ← Back
                             </button>
                           </div>
@@ -1061,20 +1102,20 @@
 
                     <div className="flex flex-col justify-between gap-6 rounded-md border border-slate-700/70 bg-black/60 p-6">
                       <div className="space-y-3">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Profile summary</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Summary</p>
                         <div className="flex items-center gap-3">
                           <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/40 bg-slate-950/70 text-2xl">
                             {profileIcon}
                           </div>
                           <div>
-                            <p className="text-base font-semibold text-emerald-100">{displayUsername || "Handle pending"}</p>
+                            <p className="text-base font-semibold text-emerald-100">{displayUsername || "Pending"}</p>
                             <p className="text-xs text-slate-400">{selectedCity.city}</p>
                           </div>
                         </div>
                         <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4 text-xs text-slate-300">
-                          <p>• Identity concealment enabled.</p>
-                          <p>• Debit accounts seeded in USD.</p>
-                          <p>• Access limited to Tier-1 apps.</p>
+                          <p>• Starter balances loaded.</p>
+                          <p>• Deliveries can be courier or personal.</p>
+                          <p>• Personal delivery locks deliveries until complete.</p>
                         </div>
                       </div>
 
@@ -1084,7 +1125,7 @@
                           onClick={() => setScreen("dashboard")}
                           className="w-full rounded-md bg-emerald-500/20 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:bg-emerald-400/30"
                         >
-                          Enter The Dark
+                          Enter
                         </button>
                       )}
                     </div>
@@ -1092,9 +1133,10 @@
                 </section>
               )}
 
+              {/* Dashboard */}
               {screen === "dashboard" && (
                 <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-6 shadow-2xl shadow-emerald-500/10">
-                  <div className="grid gap-6 lg:grid-cols-[0.25fr_1fr]">
+                  <div className="grid gap-6 lg:grid-cols-[0.28fr_1fr]">
                     <aside className="rounded-md border border-slate-800/80 bg-black/70 p-4 text-sm text-slate-300">
                       <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/40 bg-slate-950/70 text-2xl">
@@ -1102,15 +1144,15 @@
                         </div>
                         <div>
                           <p className="text-base font-semibold text-emerald-100">{displayUsername || "Anonymous"}</p>
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Level 1 Operator</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Operator · Day {gameDay}</p>
                         </div>
                       </div>
 
-                      {/* FULL REPLACEMENT: Drug accordion + remaining apps */}
+                      {/* Contraband accordion */}
                       <div className="mt-4 space-y-2 text-xs uppercase tracking-[0.3em] text-slate-400">
                         <button
                           type="button"
-                          onClick={() => setDrugMenuOpen((v) => !v)}
+                          onClick={() => setContrabandMenuOpen((v) => !v)}
                           className={`w-full rounded-md border px-3 py-2 text-left transition ${
                             ["supply", "contracts", "transit"].includes(activeApp)
                               ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
@@ -1118,14 +1160,14 @@
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span>Drug 🧪</span>
-                            <span className="text-[10px] text-slate-500">{drugMenuOpen ? "Hide" : "Expand"}</span>
+                            <span>Contraband</span>
+                            <span className="text-[10px] text-slate-500">{contrabandMenuOpen ? "Hide" : "Expand"}</span>
                           </div>
                         </button>
 
-                        {drugMenuOpen && (
+                        {contrabandMenuOpen && (
                           <div className="ml-2 space-y-2 border-l border-slate-800 pl-3">
-                            {drugSubModules.map((app) => (
+                            {contrabandSubModules.map((app) => (
                               <button
                                 key={app.id}
                                 type="button"
@@ -1165,61 +1207,51 @@
                       </div>
 
                       <div className="mt-6 rounded-md border border-emerald-400/30 bg-black/70 p-3 text-xs">
-                        <p className="uppercase tracking-[0.3em] text-emerald-300">Total Cash</p>
-                        <p className="mt-2 text-lg font-semibold text-emerald-100">${totalCash.toFixed(2)} USD</p>
+                        <p className="uppercase tracking-[0.3em] text-emerald-300">Liquidity</p>
+                        <p className="mt-2 text-lg font-semibold text-emerald-100">{totalCashLabel}</p>
+                        <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">Cash on hand: ${cashOnHand.toFixed(2)}</p>
                       </div>
                     </aside>
 
                     <div className="space-y-6">
+                      {/* Compact top bar */}
                       <div className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-slate-800/80 bg-black/60 px-4 py-3">
                         <div className="text-xs uppercase tracking-[0.3em] text-slate-400">
                           {selectedCity.city} · {selectedCity.country}
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
-                          <div className="rounded-md border border-slate-700 bg-black/60 px-3 py-2">
-                            <p className="text-[10px] text-slate-400">System</p>
-                            <p className="text-emerald-100">{systemTimeLabel}</p>
-                          </div>
                           <div className="rounded-md border border-amber-400/40 bg-black/60 px-3 py-2">
                             <p className="text-[10px] text-slate-400">City Time</p>
                             <p className="text-amber-200">{localTimeLabel}</p>
                           </div>
-                          <div className="rounded-md border border-slate-700 bg-black/60 px-3 py-2">
-                            <p className="text-[10px] text-slate-400">In-Game</p>
-                            <p className="text-emerald-100">
-                              Day {gameDay} · {String(gameHour).padStart(2, "0")}:{String(gameMinute).padStart(2, "0")}
-                            </p>
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">Phase: {gamePhase}</p>
-                            <div className="mt-2 h-1.5 w-24 rounded-md bg-slate-800">
-                              <div
-                                className="h-1.5 rounded-md bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400"
-                                style={{ width: `${gameProgress}%` }}
-                              />
-                            </div>
+                          <div className="rounded-md border border-slate-700/80 bg-black/60 px-3 py-2">
+                            <p className="text-[10px] text-slate-400">Activity</p>
+                            <p className="text-emerald-100">{currentActivity}</p>
                           </div>
                         </div>
                       </div>
 
-                      {/* SUPPLY (improved cost preview + requires sufficient debit funds) */}
+                      {/* SUPPLY */}
                       {activeApp === "supply" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Supply Node Orders</p>
-                            <span className="text-xs text-slate-500">Verdant 🌿 · USD only</span>
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Supply</p>
+                            <span className="text-xs text-slate-500">
+                              {personalDeliveryActive ? "Delivery locked (personal)" : "Ready"}
+                            </span>
                           </div>
 
                           <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={handlePlaceOrder}>
                             <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               City
                               <select
-                                name="city"
                                 value={supplyDraft.city}
                                 onChange={(e) => setSupplyDraft((p) => ({ ...p, city: e.target.value }))}
                                 className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
                               >
                                 {Object.values(cities).map((city) => (
                                   <option key={city.name} value={city.name}>
-                                    {city.name} · {city.transitRisk}
+                                    {city.name} · Risk {city.transitRisk}
                                   </option>
                                 ))}
                               </select>
@@ -1228,7 +1260,6 @@
                             <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               Tier
                               <select
-                                name="tier"
                                 value={supplyDraft.tier}
                                 onChange={(e) => setSupplyDraft((p) => ({ ...p, tier: e.target.value }))}
                                 className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
@@ -1244,7 +1275,6 @@
                             <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               Quantity
                               <input
-                                name="quantity"
                                 type="number"
                                 min="10"
                                 value={supplyDraft.quantity}
@@ -1256,7 +1286,6 @@
                             <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
                               Pay (Debit)
                               <select
-                                name="account"
                                 value={supplyDraft.accountId}
                                 onChange={(e) => setSupplyDraft((p) => ({ ...p, accountId: e.target.value }))}
                                 className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
@@ -1269,75 +1298,80 @@
                               </select>
                             </label>
 
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400 sm:col-span-2">
+                              Delivery
+                              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setSupplyDraft((p) => ({ ...p, deliveryMethod: "Courier" }))}
+                                  className={`rounded-md border px-3 py-2 text-left text-xs transition ${
+                                    supplyDraft.deliveryMethod === "Courier"
+                                      ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
+                                      : "border-slate-700 bg-black/60 text-slate-300 hover:border-emerald-400/70"
+                                  }`}
+                                >
+                                  <p className="uppercase tracking-[0.25em]">Courier</p>
+                                  <p className="mt-1 text-[11px] text-slate-400">Small fee · normal ETA</p>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setSupplyDraft((p) => ({ ...p, deliveryMethod: "Personal" }))}
+                                  className={`rounded-md border px-3 py-2 text-left text-xs transition ${
+                                    supplyDraft.deliveryMethod === "Personal"
+                                      ? "border-amber-300 bg-amber-500/10 text-amber-100"
+                                      : "border-slate-700 bg-black/60 text-slate-300 hover:border-amber-300/70"
+                                  }`}
+                                >
+                                  <p className="uppercase tracking-[0.25em]">Personal</p>
+                                  <p className="mt-1 text-[11px] text-slate-400">No fee · much longer · locks deliveries</p>
+                                </button>
+                              </div>
+                            </label>
+
                             <button
                               type="submit"
-                              disabled={!canAfford}
+                              disabled={!canAfford || !canPlaceDelivery}
                               className={`sm:col-span-2 rounded-md border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                canAfford
+                                canAfford && canPlaceDelivery
                                   ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-100 hover:border-emerald-300"
                                   : "cursor-not-allowed border-slate-800 bg-slate-900/40 text-slate-500"
                               }`}
                             >
-                              Place Wholesale Order
+                              Place Order
                             </button>
                           </form>
 
                           <div className="mt-4 rounded-md border border-slate-800 bg-slate-950/70 p-4 text-xs text-slate-300">
                             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cost preview</p>
                             <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                              <div className="flex items-center justify-between">
-                                <span>Unit price</span>
-                                <span>${draftUnit.toFixed(2)}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span>Quantity</span>
-                                <span>{draftQty}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span>Fee</span>
-                                <span>${draftFee.toFixed(2)}</span>
-                              </div>
-                              <div className="flex items-center justify-between text-emerald-100">
-                                <span>Total</span>
-                                <span>${draftTotal.toFixed(2)}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span>Account balance</span>
-                                <span>${(payingDebit?.balance ?? 0).toFixed(2)}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span>After purchase</span>
-                                <span className={canAfford ? "text-emerald-200" : "text-rose-200"}>
-                                  ${postBalance.toFixed(2)}
-                                </span>
-                              </div>
+                              <div className="flex items-center justify-between"><span>Unit</span><span>${draftUnit.toFixed(2)}</span></div>
+                              <div className="flex items-center justify-between"><span>Qty</span><span>{draftQty}</span></div>
+                              <div className="flex items-center justify-between"><span>Debit fee</span><span>${draftFee.toFixed(2)}</span></div>
+                              <div className="flex items-center justify-between"><span>Delivery fee</span><span>${deliveryFee.toFixed(2)}</span></div>
+                              <div className="flex items-center justify-between text-emerald-100"><span>Total</span><span>${draftTotal.toFixed(2)}</span></div>
+                              <div className="flex items-center justify-between"><span>After</span><span className={canAfford ? "text-emerald-200" : "text-rose-200"}>${postBalance.toFixed(2)}</span></div>
                             </div>
-                            {!canAfford && (
+                            {!canPlaceDelivery && (
                               <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-rose-200">
-                                Insufficient funds in selected debit account.
+                                Delivery locked: personal delivery in progress.
                               </p>
                             )}
-                          </div>
-
-                          <div className="mt-4 grid gap-3 sm:grid-cols-2 text-xs text-slate-400">
-                            {Object.values(cities).map((city) => (
-                              <div key={city.name} className="rounded-md border border-slate-800 bg-black/70 p-3">
-                                <p className="text-slate-300">{city.name}</p>
-                                <p>Price band: ${city.basePrice.join("-")}</p>
-                                <p>Reliability: {city.reliability}</p>
-                                <p>Transit: {city.transitHours}h · Risk {city.transitRisk}</p>
-                              </div>
-                            ))}
+                            {!canAfford && (
+                              <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-rose-200">
+                                Insufficient debit funds.
+                              </p>
+                            )}
                           </div>
                         </div>
                       )}
 
-                      {/* CONTRACTS (payout to debit accounts) */}
+                      {/* CONTRACTS */}
                       {activeApp === "contracts" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Contract Board</p>
-                            <span className="text-xs text-slate-500">Rapid windows</span>
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Contracts</p>
+                            <span className="text-xs text-slate-500">Short windows</span>
                           </div>
 
                           <div className="mt-4 space-y-3 text-sm text-slate-300">
@@ -1346,55 +1380,34 @@
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                   <div>
                                     <p className="text-emerald-100 font-semibold">{contract.title}</p>
-                                    <p className="text-xs text-slate-400">
-                                      Verdant {contract.tier} · Qty {contract.quantityRange.join("-")}
-                                    </p>
-                                    <p className="text-xs text-slate-400">
-                                      Price band ${contract.priceBand.join("-")} · Risk {contract.risk}
-                                    </p>
+                                    <p className="text-xs text-slate-400">Tier {contract.tier} · Qty {contract.quantityRange.join("-")}</p>
+                                    <p className="text-xs text-slate-400">Band ${contract.priceBand.join("-")} · Risk {contract.risk}</p>
                                   </div>
                                   <div className="text-xs text-slate-400">{Math.ceil(contract.remainingMs / 1000)}s</div>
                                 </div>
 
                                 {contract.status === "Open" ? (
                                   <div className="mt-3 grid gap-2 sm:grid-cols-4">
-                                    <input
-                                      type="number"
-                                      min={contract.quantityRange[0]}
-                                      max={contract.quantityRange[1]}
-                                      placeholder="Qty"
+                                    <input type="number" min={contract.quantityRange[0]} max={contract.quantityRange[1]} placeholder="Qty"
                                       className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                                      id={`${contract.id}-qty`}
-                                    />
-                                    <input
-                                      type="number"
-                                      min={contract.priceBand[0]}
-                                      max={contract.priceBand[1]}
-                                      placeholder="$ / unit"
+                                      id={`${contract.id}-qty`} />
+                                    <input type="number" min={contract.priceBand[0]} max={contract.priceBand[1]} placeholder="$ / unit"
                                       className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                                      id={`${contract.id}-price`}
-                                    />
-                                    <select
-                                      id={`${contract.id}-account`}
-                                      className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                                    >
+                                      id={`${contract.id}-price`} />
+                                    <select id={`${contract.id}-account`} className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100">
                                       {debitAccounts.map((account) => (
-                                        <option key={account.id} value={account.id}>
-                                          {account.bank} · {account.label}
-                                        </option>
+                                        <option key={account.id} value={account.id}>{account.bank} · {account.label}</option>
                                       ))}
                                     </select>
-                                    <button
-                                      type="button"
+                                    <button type="button"
                                       onClick={() => {
                                         const quantity = Number(document.getElementById(`${contract.id}-qty`).value);
                                         const price = Number(document.getElementById(`${contract.id}-price`).value);
                                         const payoutAccountId = document.getElementById(`${contract.id}-account`).value;
                                         handleSubmitOffer(contract, quantity, price, payoutAccountId);
                                       }}
-                                      className="rounded-md border border-emerald-400/50 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200"
-                                    >
-                                      Submit Offer
+                                      className="rounded-md border border-emerald-400/50 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 hover:border-emerald-300">
+                                      Submit
                                     </button>
                                   </div>
                                 ) : (
@@ -1406,32 +1419,27 @@
                         </div>
                       )}
 
-                      {/* TRANSIT (progress bars added) */}
+                      {/* TRANSIT */}
                       {activeApp === "transit" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Transit</p>
                           <div className="mt-4 space-y-3 text-sm text-slate-300">
-                            {shipments.length === 0 && <p>No shipments in transit.</p>}
+                            {shipments.length === 0 && <p className="text-slate-500">No deliveries in progress.</p>}
                             {shipments.map((shipment) => {
                               const elapsed = shipment.durationMs - shipment.remainingMs;
                               const pct = shipment.durationMs > 0 ? Math.min((elapsed / shipment.durationMs) * 100, 100) : 0;
-
+                              const etaMin = Math.max(1, Math.ceil(shipment.remainingMs / 1000 / 60));
                               return (
                                 <div key={shipment.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
                                   <div className="flex items-center justify-between">
                                     <p className="text-emerald-100">{shipment.id}</p>
-                                    <span className="text-xs text-slate-400">{shipment.status}</span>
+                                    <span className="text-xs text-slate-400">{shipment.deliveryMethod === "Personal" ? "Personal" : "Courier"}</span>
                                   </div>
-                                  <p className="text-xs text-slate-400">
-                                    {shipment.city} · {shipment.quantity} units · {shipment.tier}
-                                  </p>
-                                  <p className="text-xs text-slate-400">ETA: {Math.ceil(shipment.remainingMs / 1000)}s</p>
+                                  <p className="text-xs text-slate-400">{shipment.city} · {shipment.quantity} units · {shipment.tier}</p>
+                                  <p className="text-xs text-slate-400">ETA: {etaMin}m</p>
 
                                   <div className="mt-3 h-2 w-full rounded-md bg-slate-800">
-                                    <div
-                                      className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400 transition-all"
-                                      style={{ width: `${pct}%` }}
-                                    />
+                                    <div className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400 transition-all" style={{ width: `${pct}%` }} />
                                   </div>
                                 </div>
                               );
@@ -1440,7 +1448,7 @@
                         </div>
                       )}
 
-                      {/* NETWORK (updated to debit/credit/cash) */}
+                      {/* NETWORK */}
                       {activeApp === "network" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Network</p>
@@ -1449,10 +1457,7 @@
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Reputation</p>
                               <p className="mt-2 text-lg text-emerald-100">{reputation}%</p>
                               <div className="mt-2 h-2 rounded-md bg-slate-800">
-                                <div
-                                  className="h-2 rounded-md bg-gradient-to-r from-emerald-400 to-emerald-200"
-                                  style={{ width: `${reputation}%` }}
-                                />
+                                <div className="h-2 rounded-md bg-gradient-to-r from-emerald-400 to-emerald-200" style={{ width: `${reputation}%` }} />
                               </div>
                             </div>
 
@@ -1460,58 +1465,23 @@
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Exposure</p>
                               <p className="mt-2 text-lg text-rose-200">{heat}%</p>
                               <div className="mt-2 h-2 rounded-md bg-slate-800">
-                                <div
-                                  className="h-2 rounded-md bg-gradient-to-r from-rose-400 to-amber-300"
-                                  style={{ width: `${heat}%` }}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Finances</p>
-                              <div className="mt-2 space-y-2 text-xs">
-                                <div className="flex items-center justify-between">
-                                  <span>Cash (on hand)</span>
-                                  <span>${cashOnHand.toFixed(2)}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-slate-500">
-                                  <span>Cash stash (locked)</span>
-                                  <span>${cashStash.toFixed(2)}</span>
-                                </div>
-
-                                <div className="mt-2 border-t border-slate-800 pt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                                  Debit
-                                </div>
-                                {debitAccounts.map((a) => (
-                                  <div key={a.id} className="flex items-center justify-between">
-                                    <span>{a.bank} · {a.label}</span>
-                                    <span>${a.balance.toFixed(2)}</span>
-                                  </div>
-                                ))}
-
-                                <div className="mt-2 border-t border-slate-800 pt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                                  Credit
-                                </div>
-                                {creditAccounts.map((c) => (
-                                  <div key={c.id} className="flex items-center justify-between">
-                                    <span>{c.bank} · {c.label}</span>
-                                    <span>${Math.max(c.limit - c.balance, 0).toFixed(2)} avail</span>
-                                  </div>
-                                ))}
+                                <div className="h-2 rounded-md bg-gradient-to-r from-rose-400 to-amber-300" style={{ width: `${heat}%` }} />
                               </div>
                             </div>
 
                             <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Inventory</p>
                               <div className="mt-2 space-y-2 text-xs">
-                                <div className="flex items-center justify-between">
-                                  <span>Verdant Standard</span>
-                                  <span>{inventory.Standard}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <span>Verdant Premium</span>
-                                  <span>{inventory.Premium}</span>
-                                </div>
+                                <div className="flex items-center justify-between"><span>Standard</span><span>{inventory.Standard}</span></div>
+                                <div className="flex items-center justify-between"><span>Premium</span><span>{inventory.Premium}</span></div>
+                              </div>
+                            </div>
+
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cash</p>
+                              <div className="mt-2 space-y-2 text-xs">
+                                <div className="flex items-center justify-between"><span>On hand</span><span>${cashOnHand.toFixed(2)}</span></div>
+                                <div className="flex items-center justify-between text-slate-500"><span>Stash (locked)</span><span>${cashStash.toFixed(2)}</span></div>
                               </div>
                             </div>
                           </div>
@@ -1540,9 +1510,7 @@
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
                           <div className="flex items-center justify-between">
                             <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Messages</p>
-                            <span className="text-xs text-slate-500">
-                              AI mode: {OPENAI_API_KEY === "PUT_YOUR_KEY_HERE" ? "Scripted" : "Live"}
-                            </span>
+                            <span className="text-xs text-slate-500">Mode: {OPENAI_API_KEY === "PUT_YOUR_KEY_HERE" ? "Scripted" : "Configured"}</span>
                           </div>
 
                           <div className="mt-4 grid gap-4 lg:grid-cols-[0.35fr_1fr]">
@@ -1564,13 +1532,9 @@
                             </div>
 
                             <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                                Thread · {selectedBroker.name}
-                              </p>
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Thread · {selectedBroker.name}</p>
                               <div className="mt-3 h-52 space-y-3 overflow-y-auto text-xs text-slate-300">
-                                {activeMessages.length === 0 && (
-                                  <p className="text-slate-500">Initiate negotiation. Tone matters.</p>
-                                )}
+                                {activeMessages.length === 0 && <p className="text-slate-500">Open a negotiation.</p>}
                                 {activeMessages.map((message) => (
                                   <div key={message.id} className="rounded-md border border-slate-800 bg-black/60 p-2">
                                     <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">{message.sender}</p>
@@ -1584,13 +1548,13 @@
                                   type="text"
                                   value={messageInput}
                                   onChange={(event) => setMessageInput(event.target.value)}
-                                  placeholder="Compose message..."
+                                  placeholder="Message..."
                                   className="flex-1 rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
                                 />
                                 <button
                                   type="button"
                                   onClick={handleSendMessage}
-                                  className="rounded-md border border-emerald-400/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200"
+                                  className="rounded-md border border-emerald-400/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 hover:border-emerald-300"
                                 >
                                   Send
                                 </button>
@@ -1600,112 +1564,174 @@
                         </div>
                       )}
 
-                      {/* FINANCES (replaces DarkVault Bank/Vault) */}
+                      {/* FINANCES (cleaner, LOC-style) */}
                       {activeApp === "finances" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Finances</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Finances</p>
+                            <span className="text-xs text-slate-500">Cash / Debit / Credit</span>
+                          </div>
 
-                          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Debit accounts</p>
+                          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                            {/* Cash panel */}
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cash</p>
+                              <p className="mt-2 text-2xl font-semibold text-emerald-100">${cashOnHand.toFixed(2)}</p>
+                              <p className="mt-2 text-xs text-slate-500">Stash (locked): ${cashStash.toFixed(2)}</p>
+                              <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-slate-500">Use cash for deposits or credit payments.</p>
+                            </div>
 
-                              <div className="mt-3 space-y-2 text-xs">
-                                {debitAccounts.map((a) => (
-                                  <div key={a.id} className="flex items-center justify-between">
-                                    <span>
-                                      {a.bank} · {a.label} · Fee {(a.feePct * 100).toFixed(1)}% · Delay {a.delayMinutes}m
-                                    </span>
-                                    <span className="text-emerald-100">${a.balance.toFixed(2)}</span>
-                                  </div>
-                                ))}
-                              </div>
+                            {/* Debit accounts */}
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 lg:col-span-2">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Debit Accounts</p>
+                              <div className="mt-3 space-y-3">
+                                {debitAccounts.map((a) => {
+                                  const input = debitMoveInputs[a.id] || { amt: "" };
+                                  return (
+                                    <div key={a.id} className="rounded-md border border-slate-800 bg-black/50 p-3">
+                                      <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                          <p className="text-sm font-semibold text-emerald-100">{a.bank} · {a.label}</p>
+                                          <p className="text-xs text-slate-400">Balance: ${a.balance.toFixed(2)} · Fee {(a.feePct * 100).toFixed(1)}%</p>
+                                        </div>
+                                        <div className="text-xs text-slate-400">Delay: {a.delayMinutes}m</div>
+                                      </div>
 
-                              <div className="mt-4 rounded-md border border-slate-800 bg-black/50 p-3 text-xs">
-                                <div className="flex items-center justify-between">
-                                  <span>Cash (on hand)</span>
-                                  <span className="text-emerald-100">${cashOnHand.toFixed(2)}</span>
-                                </div>
-                                <div className="mt-2 flex items-center justify-between">
-                                  <span>Cash stash (locked)</span>
-                                  <span className="text-slate-400">${cashStash.toFixed(2)}</span>
-                                </div>
-                                <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                                  Cash stash cannot be used for purchases. Reserved for later systems.
-                                </p>
+                                      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_1fr]">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={input.amt}
+                                          onChange={(e) => setDebitMoveInputs((p) => ({ ...p, [a.id]: { ...input, amt: e.target.value } }))}
+                                          placeholder="Amount"
+                                          className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            depositToDebit(a.id, input.amt);
+                                            setDebitMoveInputs((p) => ({ ...p, [a.id]: { amt: "" } }));
+                                          }}
+                                          className="rounded-md border border-emerald-400/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 hover:border-emerald-300"
+                                        >
+                                          Deposit
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            withdrawFromDebit(a.id, input.amt);
+                                            setDebitMoveInputs((p) => ({ ...p, [a.id]: { amt: "" } }));
+                                          }}
+                                          className="rounded-md border border-amber-300/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-amber-200 hover:border-amber-200"
+                                        >
+                                          Withdraw
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
 
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Credit accounts</p>
-
-                              <div className="mt-3 space-y-3">
+                            {/* Credit accounts (LOC style) */}
+                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 lg:col-span-3">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Credit (Line of Credit)</p>
+                              <div className="mt-3 grid gap-3 md:grid-cols-2">
                                 {creditAccounts.map((c) => {
                                   const available = Math.max(c.limit - c.balance, 0);
                                   const aprPct = (c.apr * 100).toFixed(2);
+                                  const inp = creditActionInputs[c.id] || { draw: "", pay: "", source: "cash" };
                                   return (
-                                    <div key={c.id} className="rounded-md border border-slate-800 bg-black/50 p-3">
-                                      <div className="flex items-center justify-between">
-                                        <p className="text-emerald-100 font-semibold">{c.bank} · {c.label}</p>
-                                        <span className="text-xs text-slate-400">APR {aprPct}%</span>
+                                    <div key={c.id} className="rounded-md border border-slate-800 bg-black/50 p-4">
+                                      <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                          <p className="text-sm font-semibold text-emerald-100">{c.bank}</p>
+                                          <p className="text-xs text-slate-400">{c.label} · APR {aprPct}%</p>
+                                        </div>
+                                        <div className="text-right text-xs text-slate-400">
+                                          <div>Limit: ${c.limit.toFixed(2)}</div>
+                                          <div>Avail: <span className="text-emerald-200">${available.toFixed(2)}</span></div>
+                                        </div>
                                       </div>
 
-                                      <div className="mt-2 grid gap-2 sm:grid-cols-2 text-xs">
+                                      <div className="mt-3 grid gap-2 sm:grid-cols-2 text-xs">
                                         <div className="flex items-center justify-between">
-                                          <span>Limit</span>
-                                          <span>${c.limit.toFixed(2)}</span>
+                                          <span className="text-slate-400">Balance</span>
+                                          <span className="text-rose-200">${c.balance.toFixed(2)}</span>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                          <span>Balance</span>
-                                          <span>${c.balance.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                          <span>Available</span>
-                                          <span className="text-emerald-100">${available.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                          <span>Payments (this month)</span>
+                                          <span className="text-slate-400">Payments (month)</span>
                                           <span>{c.paymentsThisMonth}</span>
                                         </div>
                                       </div>
 
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const currentMonth = Math.floor((gameDay - 1) / 30) + 1;
+                                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                        <div className="rounded-md border border-slate-800 bg-black/40 p-3">
+                                          <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">Draw to cash</p>
+                                          <div className="mt-2 flex gap-2">
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.01"
+                                              value={inp.draw}
+                                              onChange={(e) => setCreditActionInputs((p) => ({ ...p, [c.id]: { ...inp, draw: e.target.value } }))}
+                                              placeholder="Amount"
+                                              className="flex-1 rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                drawCreditToCash(c.id, inp.draw);
+                                                setCreditActionInputs((p) => ({ ...p, [c.id]: { ...inp, draw: "" } }));
+                                              }}
+                                              className="rounded-md border border-emerald-400/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 hover:border-emerald-300"
+                                            >
+                                              Draw
+                                            </button>
+                                          </div>
+                                        </div>
 
-                                          if (c.paymentsThisMonth < 1) {
-                                            addLog("Limit increase denied: no payment activity this month.");
-                                            return;
-                                          }
-                                          if (c.lastLimitIncreaseMonth === currentMonth) {
-                                            addLog("Limit increase already requested this month.");
-                                            return;
-                                          }
+                                        <div className="rounded-md border border-slate-800 bg-black/40 p-3">
+                                          <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">Pay balance</p>
+                                          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.01"
+                                              value={inp.pay}
+                                              onChange={(e) => setCreditActionInputs((p) => ({ ...p, [c.id]: { ...inp, pay: e.target.value } }))}
+                                              placeholder="Amount"
+                                              className="sm:col-span-2 rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                            />
+                                            <select
+                                              value={inp.source}
+                                              onChange={(e) => setCreditActionInputs((p) => ({ ...p, [c.id]: { ...inp, source: e.target.value } }))}
+                                              className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
+                                            >
+                                              <option value="cash">Cash</option>
+                                              {debitAccounts.map((a) => (
+                                                <option key={a.id} value={a.id}>{a.bank}</option>
+                                              ))}
+                                            </select>
 
-                                          const approved = Math.random() > 0.35;
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                payCredit(c.id, inp.pay, inp.source);
+                                                setCreditActionInputs((p) => ({ ...p, [c.id]: { ...inp, pay: "" } }));
+                                              }}
+                                              className="sm:col-span-3 rounded-md border border-amber-300/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-amber-200 hover:border-amber-200"
+                                            >
+                                              Make Payment
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
 
-                                          setCreditAccounts((prev) =>
-                                            prev.map((x) => {
-                                              if (x.id !== c.id) return x;
-                                              const bump = approved ? Math.floor(x.limit * 0.25) : 0;
-                                              return {
-                                                ...x,
-                                                limit: approved ? x.limit + bump : x.limit,
-                                                lastLimitIncreaseMonth: currentMonth,
-                                              };
-                                            })
-                                          );
-
-                                          addLog(
-                                            approved
-                                              ? `Credit limit increased for ${c.bank} (${c.label}).`
-                                              : `Limit increase denied by ${c.bank}.`
-                                          );
-                                        }}
-                                        className="mt-3 w-full rounded-md border border-amber-300/50 px-3 py-2 text-xs uppercase tracking-[0.3em] text-amber-200 hover:border-amber-200"
-                                      >
-                                        Request Limit Increase (Monthly)
-                                      </button>
+                                      <div className="mt-3 text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                                        Payments improve limit increase odds (future).
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -1718,20 +1744,17 @@
                       {/* FACILITIES */}
                       {activeApp === "facilities" && (
                         <div className="rounded-md border border-slate-700/70 bg-black/60 p-5 text-sm text-slate-300">
-                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Facilities / Real Estate</p>
-                          <p className="mt-3 text-slate-400">
-                            Locked. Expansion nodes will unlock after reputation tiers increase.
-                          </p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Facilities</p>
+                          <p className="mt-3 text-slate-400">Locked. Unlock via reputation tiers.</p>
                         </div>
                       )}
 
+                      {/* Event Log */}
                       <div className="rounded-md border border-slate-800 bg-black/60 p-4 text-xs text-slate-400">
                         <p className="uppercase tracking-[0.3em] text-slate-500">Event Log</p>
                         <div className="mt-2 space-y-1">
-                          {eventLogRef.current.length === 0 && <p>No events logged yet.</p>}
-                          {eventLogRef.current.map((entry) => (
-                            <p key={entry.id}>• {entry.text}</p>
-                          ))}
+                          {eventLogRef.current.length === 0 && <p className="text-slate-500">No events yet.</p>}
+                          {eventLogRef.current.map((entry) => <p key={entry.id}>• {entry.text}</p>)}
                         </div>
                       </div>
                     </div>
