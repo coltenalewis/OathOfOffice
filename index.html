@@ -46,6 +46,19 @@
         visibility: visible;
       }
 
+      .panel-overlay {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        pointer-events: none;
+      }
+
+      .panel-overlay.is-open {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
       @keyframes emberPulse {
         0%,
         100% {
@@ -257,6 +270,91 @@
 
       const directMessages = ["Raven Keeper", "House Steward", "Traveling Bard", "Silent Sister"];
 
+      const travelRoutes = {
+        Winterfell: ["White Harbor", "Mole's Town"],
+        "White Harbor": ["Winterfell", "Maidenpool"],
+        "Mole's Town": ["Winterfell", "The Eyrie"],
+        "The Eyrie": ["Mole's Town", "Riverrun"],
+        Riverrun: ["The Eyrie", "Maidenpool", "Casterly Rock"],
+        Maidenpool: ["White Harbor", "Riverrun", "King's Landing"],
+        "King's Landing": ["Maidenpool", "Dragonstone", "Storm's End"],
+        Dragonstone: ["King's Landing"],
+        "Storm's End": ["King's Landing", "Sunspear"],
+        Sunspear: ["Storm's End"],
+        "Casterly Rock": ["Riverrun", "Pyke", "Highgarden"],
+        Pyke: ["Casterly Rock"],
+        Highgarden: ["Casterly Rock", "Oldtown"],
+        Oldtown: ["Highgarden"],
+      };
+
+      const locationPeople = {
+        Winterfell: [
+          { name: "Syla the Steward", relationship: 62 },
+          { name: "Torren the Guard", relationship: 41 },
+          { name: "Mara the Cook", relationship: 55 },
+        ],
+        "King's Landing": [
+          { name: "Varys' Runner", relationship: 38 },
+          { name: "Harbormaster", relationship: 47 },
+          { name: "Gold Cloak", relationship: 29 },
+        ],
+        Dragonstone: [
+          { name: "Stone Mason", relationship: 52 },
+          { name: "Dockhand", relationship: 34 },
+        ],
+        "Casterly Rock": [
+          { name: "Lion Guard", relationship: 36 },
+          { name: "Treasury Clerk", relationship: 44 },
+        ],
+        Highgarden: [
+          { name: "Garden Knight", relationship: 57 },
+          { name: "Rose Herald", relationship: 49 },
+        ],
+        Sunspear: [
+          { name: "Sand Scout", relationship: 46 },
+          { name: "Water Gardener", relationship: 58 },
+        ],
+        Riverrun: [
+          { name: "River Guard", relationship: 51 },
+          { name: "Ferryman", relationship: 39 },
+        ],
+        "The Eyrie": [
+          { name: "Falcon Keeper", relationship: 43 },
+          { name: "Sky Squire", relationship: 35 },
+        ],
+        Pyke: [
+          { name: "Ironborn Raider", relationship: 28 },
+          { name: "Shipwright", relationship: 46 },
+        ],
+        Oldtown: [
+          { name: "Young Maester", relationship: 61 },
+          { name: "Sept Guard", relationship: 48 },
+        ],
+        "Storm's End": [
+          { name: "Storm Warden", relationship: 40 },
+          { name: "Wall Archer", relationship: 33 },
+        ],
+        "White Harbor": [
+          { name: "Fishmonger", relationship: 54 },
+          { name: "Harbor Pilot", relationship: 45 },
+        ],
+        Maidenpool: [
+          { name: "Pink Maid", relationship: 50 },
+          { name: "Dock Guard", relationship: 37 },
+        ],
+        "Mole's Town": [
+          { name: "Tavern Keeper", relationship: 59 },
+          { name: "Night Watch Recruit", relationship: 42 },
+        ],
+      };
+
+      const actionOptions = [
+        "⚔️ Sparring Match",
+        "🤝 Offer Alliance",
+        "💌 Send Raven",
+        "🎭 Attend Gathering",
+      ];
+
       const supabaseUrl =
         window.SUPABASE_URL || window.__ENV__?.SUPABASE_URL || window.ENV?.SUPABASE_URL;
       const supabaseKey =
@@ -289,7 +387,11 @@
         const [authUser, setAuthUser] = useState(null);
         const [currentLocation, setCurrentLocation] = useState(travelLocations[0]);
         const [activeRoom, setActiveRoom] = useState(travelLocations[0].rooms[0]);
-        const [gameTab, setGameTab] = useState("life");
+        const [gameMenu, setGameMenu] = useState(null);
+        const [selectedDestination, setSelectedDestination] = useState(null);
+        const [chatMessages, setChatMessages] = useState({});
+        const [chatInput, setChatInput] = useState("");
+        const [characterStep, setCharacterStep] = useState(1);
 
         useEffect(() => {
           if (screen !== "loading") return;
@@ -403,6 +505,43 @@
         const handleResetStats = () => {
           setStats(baseStats);
           setPointsAvailable(6);
+        };
+
+        const availableDestinations = travelRoutes[currentLocation.name] || [];
+
+        const handleConfirmTravel = () => {
+          if (!selectedDestination) return;
+          const destination = travelLocations.find(
+            (location) => location.name === selectedDestination
+          );
+          if (!destination) return;
+          setCurrentLocation(destination);
+          setActiveRoom(destination.rooms[0]);
+          setSelectedDestination(null);
+        };
+
+        const roomKey = `${currentLocation.name}::${activeRoom}`;
+        const roomMessages = chatMessages[roomKey] || [
+          { id: 1, sender: "System", text: `Welcome to ${activeRoom}.` },
+        ];
+
+        const handleSendMessage = () => {
+          const trimmed = chatInput.trim();
+          if (!trimmed) return;
+          setChatMessages((prev) => ({
+            ...prev,
+            [roomKey]: [
+              ...(prev[roomKey] || roomMessages),
+              { id: Date.now(), sender: fullName, text: trimmed },
+            ],
+          }));
+          setChatInput("");
+        };
+
+        const handleChatKeyDown = (event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          handleSendMessage();
         };
 
         const handleDiscordLogin = async () => {
@@ -717,91 +856,119 @@
 
                   <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                     <div className="space-y-6">
-                      <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                          Step 1 · Choose gender
-                        </p>
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          {["Male", "Female"].map((gender) => (
-                            <button
-                              key={gender}
-                              type="button"
-                              onClick={() => handleGenderSelect(gender)}
-                              className={`rounded-2xl border px-4 py-4 text-sm font-semibold uppercase tracking-[0.3em] transition ${
-                                characterGender === gender
-                                  ? "border-amber-300 bg-amber-300/10 text-amber-100"
-                                  : "border-slate-700 bg-slate-950/60 text-slate-300 hover:border-amber-300/70"
-                              }`}
-                            >
-                              {gender}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div
-                        ref={detailsRef}
-                        className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5"
-                      >
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                          Step 2 · Appearance &amp; identity
-                        </p>
-                        <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-                          <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
-                            <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                              <span>Base model</span>
-                              <span>{characterGender || "Select gender"}</span>
-                            </div>
-                            <div className="mt-4 flex justify-center">
-                              {genderImage ? (
-                                <img
-                                  src={genderImage}
-                                  alt={`${characterGender} base model`}
-                                  className="h-96 w-auto translate-y-4 scale-125 object-contain"
-                                  style={{ filter: skinTone.filter }}
-                                />
-                              ) : (
-                                <div className="flex h-56 w-full items-center justify-center rounded-2xl border border-dashed border-slate-700/70 text-xs uppercase tracking-[0.3em] text-slate-500">
-                                  Awaiting selection
-                                </div>
-                              )}
-                            </div>
-                            <p className="mt-4 text-center text-xs text-slate-400">
-                              Skin tone preview updates instantly.
+                      {characterStep === 1 && (
+                        <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                              Step 1 · Choose gender
                             </p>
+                            <button
+                              type="button"
+                              onClick={() => setCharacterStep(2)}
+                              className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                            >
+                              Next →
+                            </button>
                           </div>
-
-                          <div className="space-y-4">
-                            <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                                Skin tone
-                              </p>
-                              <div
-                                className={`mt-3 flex flex-wrap gap-3 ${
-                                  characterGender ? "" : "pointer-events-none opacity-50"
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            {["Male", "Female"].map((gender) => (
+                              <button
+                                key={gender}
+                                type="button"
+                                onClick={() => handleGenderSelect(gender)}
+                                className={`rounded-2xl border px-4 py-4 text-sm font-semibold uppercase tracking-[0.3em] transition ${
+                                  characterGender === gender
+                                    ? "border-amber-300 bg-amber-300/10 text-amber-100"
+                                    : "border-slate-700 bg-slate-950/60 text-slate-300 hover:border-amber-300/70"
                                 }`}
                               >
-                                {skinTones.map((tone) => (
-                                  <button
-                                    key={tone.name}
-                                    type="button"
-                                    onClick={() => setSkinTone(tone)}
-                                    className={`flex items-center gap-3 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                      skinTone.name === tone.name
-                                        ? "border-amber-300 text-amber-100"
-                                        : "border-slate-700 text-slate-300 hover:border-amber-300/70"
-                                    }`}
-                                  >
-                                    <span
-                                      className="h-5 w-5 rounded-full border border-slate-700/70"
-                                      style={{ filter: tone.filter, background: "#f1e8dc" }}
-                                    />
-                                    {tone.name}
-                                  </button>
-                                ))}
+                                {gender}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {characterStep === 2 && (
+                        <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                              Step 2 · Appearance
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setCharacterStep(3)}
+                              className="rounded-full border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400"
+                            >
+                              Next →
+                            </button>
+                          </div>
+                          <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+                            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4">
+                              <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                                <span>Base model</span>
+                                <span>{characterGender || "Select gender"}</span>
                               </div>
+                              <div className="mt-4 flex justify-center">
+                                {genderImage ? (
+                                  <img
+                                    src={genderImage}
+                                    alt={`${characterGender} base model`}
+                                    className="h-96 w-auto translate-y-4 scale-125 object-contain"
+                                    style={{ filter: skinTone.filter }}
+                                  />
+                                ) : (
+                                  <div className="flex h-56 w-full items-center justify-center rounded-2xl border border-dashed border-slate-700/70 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                    Awaiting selection
+                                  </div>
+                                )}
+                              </div>
+                              <p className="mt-4 text-center text-xs text-slate-400">
+                                Skin tone preview updates instantly.
+                              </p>
                             </div>
 
+                            <div className="space-y-4">
+                              <div>
+                                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                                  Skin tone
+                                </p>
+                                <div
+                                  className={`mt-3 flex flex-wrap gap-3 ${
+                                    characterGender ? "" : "pointer-events-none opacity-50"
+                                  }`}
+                                >
+                                  {skinTones.map((tone) => (
+                                    <button
+                                      key={tone.name}
+                                      type="button"
+                                      onClick={() => setSkinTone(tone)}
+                                      className={`flex items-center gap-3 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                        skinTone.name === tone.name
+                                          ? "border-amber-300 text-amber-100"
+                                          : "border-slate-700 text-slate-300 hover:border-amber-300/70"
+                                      }`}
+                                    >
+                                      <span
+                                        className="h-5 w-5 rounded-full border border-slate-700/70"
+                                        style={{ filter: tone.filter, background: "#f1e8dc" }}
+                                      />
+                                      {tone.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {characterStep === 3 && (
+                        <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
+                          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                            Step 3 · Identity
+                          </p>
+                          <div className="mt-4 space-y-4">
                             <div className="space-y-3">
                               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
                                 Name set
@@ -898,7 +1065,7 @@
                             </label>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col justify-between gap-6 rounded-2xl border border-slate-700/70 bg-slate-950/60 p-6">
@@ -990,14 +1157,14 @@
                 <section className="mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-900/70 shadow-2xl shadow-black/40">
                   <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/60 bg-slate-950/70 px-6 py-5">
                     <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 overflow-hidden rounded-full border border-amber-300/50 bg-slate-900/80">
-                          {genderImage ? (
-                            <img
-                              src={genderImage}
-                              alt="Character portrait"
-                              className="h-full w-full translate-y-3 scale-[1.45] object-cover object-top"
-                              style={{ filter: skinTone.filter }}
-                            />
+                      <div className="h-16 w-16 overflow-hidden rounded-full border border-amber-300/50 bg-slate-900/80">
+                        {genderImage ? (
+                          <img
+                            src={genderImage}
+                            alt="Character portrait"
+                            className="h-full w-full translate-y-4 scale-[1.25] object-cover object-top"
+                            style={{ filter: skinTone.filter }}
+                          />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.3em] text-slate-500">
                             --
@@ -1042,172 +1209,288 @@
                     </div>
 
                     <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-5">
-                      <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-slate-400">
-                        <button
-                          type="button"
-                          onClick={() => setGameTab("life")}
-                          className={`rounded-full border px-4 py-2 ${
-                            gameTab === "life"
-                              ? "border-amber-300 text-amber-100"
-                              : "border-slate-700 text-slate-300"
-                          }`}
-                        >
-                          🏰 Travel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setGameTab("chat")}
-                          className={`rounded-full border px-4 py-2 ${
-                            gameTab === "chat"
-                              ? "border-amber-300 text-amber-100"
-                              : "border-slate-700 text-slate-300"
-                          }`}
-                        >
-                          💬 Chats
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setGameTab("stats")}
-                          className={`rounded-full border px-4 py-2 ${
-                            gameTab === "stats"
-                              ? "border-amber-300 text-amber-100"
-                              : "border-slate-700 text-slate-300"
-                          }`}
-                        >
-                          ⚔️ Stats
-                        </button>
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">🧭 Menus</p>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        {[
+                          { id: "travel", label: "🏰 Travel" },
+                          { id: "chat", label: "💬 Chats" },
+                          { id: "actions", label: "🎯 Actions" },
+                          { id: "stats", label: "⚔️ Stats" },
+                        ].map((menu) => (
+                          <button
+                            key={menu.id}
+                            type="button"
+                            onClick={() => setGameMenu(menu.id)}
+                            className="rounded-2xl border border-slate-700/70 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300/70 hover:text-amber-200"
+                          >
+                            {menu.label}
+                          </button>
+                        ))}
                       </div>
+                      <p className="mt-4 text-xs text-slate-400">
+                        Select a menu to open a focused panel. Life events stay visible on the left.
+                      </p>
+                    </div>
+                  </div>
 
-                      {gameTab === "life" && (
-                        <div className="mt-4 space-y-3">
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                            Major keeps &amp; villages
-                          </p>
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            {travelLocations.map((location) => (
-                              <button
-                                key={location.name}
-                                type="button"
-                                onClick={() => {
-                                  setCurrentLocation(location);
-                                  setActiveRoom(location.rooms[0]);
-                                }}
-                                className={`rounded-2xl border px-4 py-3 text-left text-xs uppercase tracking-[0.3em] transition ${
-                                  currentLocation.name === location.name
-                                    ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
-                                    : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
-                                }`}
-                              >
-                                <p className="text-sm font-semibold normal-case">{location.name}</p>
-                                <p className="text-[10px] text-slate-400">{location.type}</p>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {gameTab === "chat" && (
-                        <div className="mt-4 space-y-4">
+                  <div className={`panel-overlay px-6 pb-6 ${gameMenu ? "is-open" : ""}`}>
+                    {gameMenu && (
+                      <div className="rounded-3xl border border-amber-300/30 bg-slate-950/95 p-5 shadow-2xl shadow-black/60">
+                        <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                              📣 Public rooms · {currentLocation.name}
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              {gameMenu === "travel" && "🏰 Travel Planner"}
+                              {gameMenu === "chat" && "💬 Chat Rooms"}
+                              {gameMenu === "actions" && "🎯 Actions"}
+                              {gameMenu === "stats" && "⚔️ Royal Attributes"}
                             </p>
-                            <div className="mt-3 space-y-2">
-                              {currentLocation.rooms.map((room) => (
+                            <p className="text-sm text-slate-300">
+                              {gameMenu === "travel" && "Pick your next destination and confirm the route."}
+                              {gameMenu === "chat" && "Open a room and send messages."}
+                              {gameMenu === "actions" && "Choose an action for someone nearby."}
+                              {gameMenu === "stats" && "Assign points to your abilities."}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setGameMenu(null)}
+                            className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300"
+                          >
+                            Close ✕
+                          </button>
+                        </div>
+
+                        {gameMenu === "travel" && (
+                          <div className="mt-4 space-y-4">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                              Available routes from {currentLocation.name}
+                            </p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              {availableDestinations.map((dest) => (
                                 <button
-                                  key={room}
+                                  key={dest}
                                   type="button"
-                                  onClick={() => setActiveRoom(room)}
-                                  className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
-                                    activeRoom === room
+                                  onClick={() => setSelectedDestination(dest)}
+                                  className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                                    selectedDestination === dest
                                       ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
                                       : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
                                   }`}
                                 >
-                                  {room}
+                                  {dest}
                                 </button>
                               ))}
                             </div>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                              🕊️ Direct messages
-                            </p>
-                            <div className="mt-3 space-y-2">
-                              {directMessages.map((contact) => (
-                                <button
-                                  key={contact}
-                                  type="button"
-                                  className="w-full rounded-xl border border-slate-700/70 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-amber-300/70"
-                                >
-                                  {contact}
-                                </button>
-                              ))}
+                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4 text-sm text-slate-300">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                Locked routes
+                              </p>
+                              <p className="mt-2 text-xs text-slate-500">
+                                You must travel through connected villages before reaching distant keeps.
+                              </p>
                             </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {gameTab === "stats" && (
-                        <div className="mt-4 space-y-3">
-                          <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.3em] text-slate-400">
-                            <span>⚔️ Royal Attributes</span>
-                            <span className="text-slate-300">{pointsAvailable} points</span>
-                          </div>
-                          {stats.map((stat) => (
-                            <div
-                              key={stat.key}
-                              className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2"
-                            >
-                              <div>
-                                <p className="text-sm text-amber-100">{stat.label}</p>
-                                <p className="text-xs text-slate-400">Level {stat.value}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-24 rounded-full bg-slate-800">
-                                  <div
-                                    className="h-2 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all"
-                                    style={{ width: `${Math.min(stat.value * 8, 100)}%` }}
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleAllocatePoint(stat.key)}
-                                  disabled={pointsAvailable <= 0}
-                                  className={`stat-glow h-8 w-8 rounded-full border text-sm font-semibold transition ${
-                                    pointsAvailable <= 0
-                                      ? "cursor-not-allowed border-slate-700 text-slate-600"
-                                      : "border-amber-300/70 text-amber-200 hover:scale-105"
-                                  }`}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                          <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
-                            <span>Total: {totalStatValue} pts</span>
                             <button
                               type="button"
-                              onClick={handleResetStats}
-                              className="rounded-full border border-slate-700 px-3 py-1 uppercase tracking-[0.3em] transition hover:border-amber-300 hover:text-amber-200"
+                              onClick={handleConfirmTravel}
+                              className="w-full rounded-xl bg-amber-400 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-900 transition hover:bg-amber-300"
                             >
-                              Reset
+                              Confirm Travel
                             </button>
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+
+                        {gameMenu === "chat" && (
+                          <div className="mt-4 grid gap-4 lg:grid-cols-[0.6fr_1fr]">
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                                Public rooms · {currentLocation.name}
+                              </p>
+                              <div className="mt-3 space-y-2">
+                                {currentLocation.rooms.map((room) => (
+                                  <button
+                                    key={room}
+                                    type="button"
+                                    onClick={() => setActiveRoom(room)}
+                                    className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
+                                      activeRoom === room
+                                        ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
+                                        : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
+                                    }`}
+                                  >
+                                    {room}
+                                  </button>
+                                ))}
+                              </div>
+                              <p className="mt-4 text-xs uppercase tracking-[0.3em] text-slate-500">
+                                Direct messages
+                              </p>
+                              <div className="mt-3 space-y-2">
+                                {directMessages.map((contact) => (
+                                  <button
+                                    key={contact}
+                                    type="button"
+                                    className="w-full rounded-xl border border-slate-700/70 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-amber-300/70"
+                                  >
+                                    {contact}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                {activeRoom} Chat
+                              </p>
+                              <div className="mt-3 h-56 space-y-3 overflow-y-auto pr-2 text-sm">
+                                {roomMessages.map((message) => (
+                                  <div
+                                    key={message.id}
+                                    className={`max-w-[80%] rounded-2xl px-3 py-2 ${
+                                      message.sender === fullName
+                                        ? "ml-auto bg-amber-300/20 text-amber-100"
+                                        : "bg-slate-900/70 text-slate-200"
+                                    }`}
+                                  >
+                                    <p className="text-xs text-slate-400">{message.sender}</p>
+                                    <p>{message.text}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-3 flex gap-2">
+                                <input
+                                  type="text"
+                                  value={chatInput}
+                                  onChange={(event) => setChatInput(event.target.value)}
+                                  onKeyDown={handleChatKeyDown}
+                                  placeholder="Send a message..."
+                                  className="flex-1 rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={handleSendMessage}
+                                  className="rounded-xl bg-amber-400 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-900"
+                                >
+                                  Send
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {gameMenu === "actions" && (
+                          <div className="mt-4 grid gap-4 lg:grid-cols-[0.6fr_1fr]">
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                                Available actions
+                              </p>
+                              <div className="mt-3 space-y-2">
+                                {actionOptions.map((action) => (
+                                  <button
+                                    key={action}
+                                    type="button"
+                                    className="w-full rounded-xl border border-slate-700/70 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-amber-300/70"
+                                  >
+                                    {action}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                                People in {currentLocation.name}
+                              </p>
+                              <div className="mt-3 space-y-3">
+                                {(locationPeople[currentLocation.name] || []).map((person) => (
+                                  <div
+                                    key={person.name}
+                                    className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm text-slate-300"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span>{person.name}</span>
+                                      <span className="text-xs text-slate-500">
+                                        {person.relationship}% rapport
+                                      </span>
+                                    </div>
+                                    <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
+                                      <div
+                                        className="h-2 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-amber-200"
+                                        style={{ width: `${person.relationship}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {gameMenu === "stats" && (
+                          <div className="mt-4 space-y-3">
+                            <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.3em] text-slate-400">
+                              <span>⚔️ Royal Attributes</span>
+                              <span className="text-slate-300">{pointsAvailable} points</span>
+                            </div>
+                            {stats.map((stat) => (
+                              <div
+                                key={stat.key}
+                                className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-2"
+                              >
+                                <div>
+                                  <p className="text-sm text-amber-100">{stat.label}</p>
+                                  <p className="text-xs text-slate-400">Level {stat.value}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="h-2 w-24 rounded-full bg-slate-800">
+                                    <div
+                                      className="h-2 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all"
+                                      style={{ width: `${Math.min(stat.value * 8, 100)}%` }}
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAllocatePoint(stat.key)}
+                                    disabled={pointsAvailable <= 0}
+                                    className={`stat-glow h-8 w-8 rounded-full border text-sm font-semibold transition ${
+                                      pointsAvailable <= 0
+                                        ? "cursor-not-allowed border-slate-700 text-slate-600"
+                                        : "border-amber-300/70 text-amber-200 hover:scale-105"
+                                    }`}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                            <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+                              <span>Total: {totalStatValue} pts</span>
+                              <button
+                                type="button"
+                                onClick={handleResetStats}
+                                className="rounded-full border border-slate-700 px-3 py-1 uppercase tracking-[0.3em] transition hover:border-amber-300 hover:text-amber-200"
+                              >
+                                Reset
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 border-t border-slate-700/60 bg-slate-950/70 px-6 py-4 sm:grid-cols-4">
-                    {["Character", "Travel", "Message", "Inventory"].map((item) => (
+                    {[
+                      { id: "travel", label: "Travel" },
+                      { id: "chat", label: "Message" },
+                      { id: "actions", label: "Actions" },
+                      { id: "stats", label: "Stats" },
+                    ].map((item) => (
                       <button
-                        key={item}
+                        key={item.id}
                         type="button"
+                        onClick={() => setGameMenu(item.id)}
                         className="rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
                       >
-                        {item}
+                        {item.label}
                       </button>
                     ))}
                   </div>
