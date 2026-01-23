@@ -271,20 +271,54 @@
       const directMessages = ["Raven Keeper", "House Steward", "Traveling Bard", "Silent Sister"];
 
       const travelRoutes = {
-        Winterfell: ["White Harbor", "Mole's Town"],
-        "White Harbor": ["Winterfell", "Maidenpool"],
-        "Mole's Town": ["Winterfell", "The Eyrie"],
-        "The Eyrie": ["Mole's Town", "Riverrun"],
-        Riverrun: ["The Eyrie", "Maidenpool", "Casterly Rock"],
-        Maidenpool: ["White Harbor", "Riverrun", "King's Landing"],
-        "King's Landing": ["Maidenpool", "Dragonstone", "Storm's End"],
-        Dragonstone: ["King's Landing"],
-        "Storm's End": ["King's Landing", "Sunspear"],
-        Sunspear: ["Storm's End"],
-        "Casterly Rock": ["Riverrun", "Pyke", "Highgarden"],
-        Pyke: ["Casterly Rock"],
-        Highgarden: ["Casterly Rock", "Oldtown"],
-        Oldtown: ["Highgarden"],
+        Winterfell: [
+          { name: "White Harbor", days: 2 },
+          { name: "Mole's Town", days: 1 },
+        ],
+        "White Harbor": [
+          { name: "Winterfell", days: 2 },
+          { name: "Maidenpool", days: 3 },
+        ],
+        "Mole's Town": [
+          { name: "Winterfell", days: 1 },
+          { name: "The Eyrie", days: 4 },
+        ],
+        "The Eyrie": [
+          { name: "Mole's Town", days: 4 },
+          { name: "Riverrun", days: 3 },
+        ],
+        Riverrun: [
+          { name: "The Eyrie", days: 3 },
+          { name: "Maidenpool", days: 2 },
+          { name: "Casterly Rock", days: 4 },
+        ],
+        Maidenpool: [
+          { name: "White Harbor", days: 3 },
+          { name: "Riverrun", days: 2 },
+          { name: "King's Landing", days: 2 },
+        ],
+        "King's Landing": [
+          { name: "Maidenpool", days: 2 },
+          { name: "Dragonstone", days: 1 },
+          { name: "Storm's End", days: 3 },
+        ],
+        Dragonstone: [{ name: "King's Landing", days: 1 }],
+        "Storm's End": [
+          { name: "King's Landing", days: 3 },
+          { name: "Sunspear", days: 5 },
+        ],
+        Sunspear: [{ name: "Storm's End", days: 5 }],
+        "Casterly Rock": [
+          { name: "Riverrun", days: 4 },
+          { name: "Pyke", days: 4 },
+          { name: "Highgarden", days: 3 },
+        ],
+        Pyke: [{ name: "Casterly Rock", days: 4 }],
+        Highgarden: [
+          { name: "Casterly Rock", days: 3 },
+          { name: "Oldtown", days: 2 },
+        ],
+        Oldtown: [{ name: "Highgarden", days: 2 }],
       };
 
       const locationPeople = {
@@ -392,6 +426,10 @@
         const [chatMessages, setChatMessages] = useState({});
         const [chatInput, setChatInput] = useState("");
         const [characterStep, setCharacterStep] = useState(1);
+        const [selectedPerson, setSelectedPerson] = useState(null);
+        const [dayCount, setDayCount] = useState(1);
+        const [daySeconds, setDaySeconds] = useState(0);
+        const [travelPlan, setTravelPlan] = useState(null);
 
         useEffect(() => {
           if (screen !== "loading") return;
@@ -426,6 +464,47 @@
           };
         }, []);
 
+        useEffect(() => {
+          setSelectedPerson(null);
+        }, [currentLocation]);
+
+        useEffect(() => {
+          const interval = setInterval(() => {
+            setDaySeconds((prev) => {
+              const next = (prev + 1) % 10;
+              if (next === 0) {
+                setDayCount((count) => count + 1);
+              }
+              return next;
+            });
+          }, 1000);
+          return () => clearInterval(interval);
+        }, []);
+
+        useEffect(() => {
+          if (!travelPlan) return;
+          const interval = setInterval(() => {
+            setTravelPlan((prev) => {
+              if (!prev) return prev;
+              const totalSeconds = prev.days * 10;
+              const nextSeconds = prev.secondsElapsed + 1;
+              if (nextSeconds >= totalSeconds) {
+                const destination = travelLocations.find(
+                  (location) => location.name === prev.destination
+                );
+                if (destination) {
+                  setCurrentLocation(destination);
+                  setActiveRoom(destination.rooms[0]);
+                }
+                setSelectedDestination(null);
+                return null;
+              }
+              return { ...prev, secondsElapsed: nextSeconds };
+            });
+          }, 1000);
+          return () => clearInterval(interval);
+        }, [travelPlan]);
+
         const immersionLines = useMemo(
           () => [
             "Swearing fealty to the realm...",
@@ -443,6 +522,15 @@
 
         const householdLabel =
           characterHouse === "Traveler" ? "Traveler" : `House ${characterHouse}`;
+        const dayProgress = useMemo(() => (daySeconds / 10) * 100, [daySeconds]);
+        const timeLabel = useMemo(() => {
+          const hour = Math.floor((daySeconds / 10) * 24);
+          return `${String(hour).padStart(2, "0")}:00`;
+        }, [daySeconds]);
+        const travelProgress = useMemo(() => {
+          if (!travelPlan) return 0;
+          return Math.min((travelPlan.secondsElapsed / (travelPlan.days * 10)) * 100, 100);
+        }, [travelPlan]);
 
         const totalStatValue = stats.reduce((sum, stat) => sum + stat.value, 0);
         const characterProgress = useMemo(() => {
@@ -510,13 +598,12 @@
         const availableDestinations = travelRoutes[currentLocation.name] || [];
 
         const handleConfirmTravel = () => {
-          if (!selectedDestination) return;
-          const destination = travelLocations.find(
-            (location) => location.name === selectedDestination
-          );
-          if (!destination) return;
-          setCurrentLocation(destination);
-          setActiveRoom(destination.rooms[0]);
+          if (!selectedDestination || travelPlan) return;
+          setTravelPlan({
+            destination: selectedDestination.name,
+            days: selectedDestination.days,
+            secondsElapsed: 0,
+          });
           setSelectedDestination(null);
         };
 
@@ -1184,6 +1271,18 @@
                         <span className="text-xs uppercase tracking-[0.3em] text-amber-200">Gold</span>
                         <p className="text-lg font-semibold text-amber-100">{goldCoins}</p>
                       </div>
+                      <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-2">
+                        <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400">
+                          Day {dayCount}
+                        </span>
+                        <p className="text-sm font-semibold text-amber-100">{timeLabel}</p>
+                        <div className="mt-2 h-1.5 w-28 rounded-full bg-slate-800">
+                          <div
+                            className="h-1.5 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all"
+                            style={{ width: `${dayProgress}%` }}
+                          />
+                        </div>
+                      </div>
                       <div className="rounded-xl border border-slate-700/70 bg-slate-950/60 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300">
                         {selectedServer?.name || "Realm"}
                       </div>
@@ -1233,9 +1332,13 @@
                     </div>
                   </div>
 
-                  <div className={`panel-overlay px-6 pb-6 ${gameMenu ? "is-open" : ""}`}>
+                  <div
+                    className={`panel-overlay fixed inset-0 z-40 flex items-center justify-center bg-slate-950/80 px-4 py-8 ${
+                      gameMenu ? "is-open" : ""
+                    }`}
+                  >
                     {gameMenu && (
-                      <div className="rounded-3xl border border-amber-300/30 bg-slate-950/95 p-5 shadow-2xl shadow-black/60">
+                      <div className="w-full max-w-3xl overflow-y-auto rounded-3xl border border-amber-300/30 bg-slate-950/95 p-5 shadow-2xl shadow-black/60 sm:max-h-[80vh]">
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
@@ -1262,22 +1365,49 @@
 
                         {gameMenu === "travel" && (
                           <div className="mt-4 space-y-4">
+                            {travelPlan && (
+                              <div className="rounded-2xl border border-amber-300/40 bg-amber-300/10 p-4 text-sm text-amber-100">
+                                <p className="text-xs uppercase tracking-[0.3em] text-amber-200">
+                                  Traveling to {travelPlan.destination}
+                                </p>
+                                <p className="mt-2 text-xs text-amber-100/80">
+                                  Day{" "}
+                                  {Math.min(
+                                    Math.floor(travelPlan.secondsElapsed / 10) + 1,
+                                    travelPlan.days
+                                  )}{" "}
+                                  of {travelPlan.days}
+                                </p>
+                                <div className="mt-3 h-2 w-full rounded-full bg-amber-200/20">
+                                  <div
+                                    className="h-2 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-rose-300 transition-all"
+                                    style={{ width: `${travelProgress}%` }}
+                                  />
+                                </div>
+                              </div>
+                            )}
                             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
                               Available routes from {currentLocation.name}
                             </p>
                             <div className="grid gap-3 sm:grid-cols-2">
                               {availableDestinations.map((dest) => (
                                 <button
-                                  key={dest}
+                                  key={dest.name}
                                   type="button"
                                   onClick={() => setSelectedDestination(dest)}
+                                  disabled={!!travelPlan}
                                   className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                                    selectedDestination === dest
+                                    selectedDestination?.name === dest.name
                                       ? "border-amber-300/70 bg-amber-300/10 text-amber-100"
-                                      : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
+                                      : travelPlan
+                                        ? "cursor-not-allowed border-slate-800 text-slate-600"
+                                        : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
                                   }`}
                                 >
-                                  {dest}
+                                  <div className="flex items-center justify-between">
+                                    <span>{dest.name}</span>
+                                    <span className="text-xs text-slate-400">{dest.days} days</span>
+                                  </div>
                                 </button>
                               ))}
                             </div>
@@ -1292,7 +1422,12 @@
                             <button
                               type="button"
                               onClick={handleConfirmTravel}
-                              className="w-full rounded-xl bg-amber-400 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-900 transition hover:bg-amber-300"
+                              disabled={!selectedDestination || !!travelPlan}
+                              className={`w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                                !selectedDestination || travelPlan
+                                  ? "cursor-not-allowed bg-slate-800 text-slate-500"
+                                  : "bg-amber-400 text-slate-900 hover:bg-amber-300"
+                              }`}
                             >
                               Confirm Travel
                             </button>
@@ -1381,29 +1516,19 @@
                           <div className="mt-4 grid gap-4 lg:grid-cols-[0.6fr_1fr]">
                             <div>
                               <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                                Available actions
-                              </p>
-                              <div className="mt-3 space-y-2">
-                                {actionOptions.map((action) => (
-                                  <button
-                                    key={action}
-                                    type="button"
-                                    className="w-full rounded-xl border border-slate-700/70 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-amber-300/70"
-                                  >
-                                    {action}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
                                 People in {currentLocation.name}
                               </p>
                               <div className="mt-3 space-y-3">
                                 {(locationPeople[currentLocation.name] || []).map((person) => (
-                                  <div
+                                  <button
                                     key={person.name}
-                                    className="rounded-2xl border border-slate-700/70 bg-slate-900/70 p-4 text-sm text-slate-300"
+                                    type="button"
+                                    onClick={() => setSelectedPerson(person)}
+                                    className={`w-full rounded-2xl border bg-slate-900/70 p-4 text-left text-sm transition ${
+                                      selectedPerson?.name === person.name
+                                        ? "border-amber-300/70 text-amber-100"
+                                        : "border-slate-700/70 text-slate-300 hover:border-amber-300/70"
+                                    }`}
                                   >
                                     <div className="flex items-center justify-between">
                                       <span>{person.name}</span>
@@ -1417,9 +1542,33 @@
                                         style={{ width: `${person.relationship}%` }}
                                       />
                                     </div>
-                                  </div>
+                                  </button>
                                 ))}
                               </div>
+                            </div>
+                            <div className="rounded-2xl border border-slate-700/70 bg-slate-950/60 p-4">
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                                {selectedPerson
+                                  ? `Actions for ${selectedPerson.name}`
+                                  : "Choose someone to interact"}
+                              </p>
+                              {selectedPerson ? (
+                                <div className="mt-3 space-y-2">
+                                  {actionOptions.map((action) => (
+                                    <button
+                                      key={action}
+                                      type="button"
+                                      className="w-full rounded-xl border border-slate-700/70 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-amber-300/70"
+                                    >
+                                      {action}
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="mt-3 text-sm text-slate-500">
+                                  Select a person on the left to reveal available actions.
+                                </p>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1477,23 +1626,6 @@
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 border-t border-slate-700/60 bg-slate-950/70 px-6 py-4 sm:grid-cols-4">
-                    {[
-                      { id: "travel", label: "Travel" },
-                      { id: "chat", label: "Message" },
-                      { id: "actions", label: "Actions" },
-                      { id: "stats", label: "Stats" },
-                    ].map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setGameMenu(item.id)}
-                        className="rounded-2xl border border-slate-700/70 bg-slate-950/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-amber-300 hover:text-amber-200"
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
                 </section>
               )}
             </div>
