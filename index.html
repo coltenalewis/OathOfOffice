@@ -1,2130 +1,1025 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Into The Dark</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-      body {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liquid Society</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+    // Name sets representing US cultural backgrounds
+    const nameSets = {
+      "General US": {
+        male: ["James", "Robert", "John", "Michael", "David", "William", "Richard", "Joseph", "Thomas", "Christopher"],
+        female: ["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen"],
+        surnames: ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
+      },
+      "African American": {
+        male: ["DeAndre", "Jamal", "Marcus", "Terrell", "Darius", "Isaiah", "Malik", "Xavier", "Andre", "Tyrone"],
+        female: ["Aaliyah", "Destiny", "Diamond", "Ebony", "Imani", "Jasmine", "Keisha", "Latoya", "Tamika", "Zara"],
+        surnames: ["Washington", "Jefferson", "Jackson", "Harris", "Robinson", "Williams", "Thompson", "Moore", "Taylor", "Anderson"]
+      },
+      "Hispanic American": {
+        male: ["Carlos", "Jose", "Juan", "Luis", "Miguel", "Pedro", "Antonio", "Francisco", "Rafael", "Jorge"],
+        female: ["Maria", "Carmen", "Rosa", "Ana", "Elena", "Isabel", "Sofia", "Lucia", "Gloria", "Teresa"],
+        surnames: ["Garcia", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Perez", "Sanchez", "Ramirez", "Torres"]
+      },
+      "Asian American": {
+        male: ["David", "Daniel", "Kevin", "Ryan", "Andrew", "James", "Michael", "Steven", "Brian", "Jason"],
+        female: ["Jennifer", "Michelle", "Jessica", "Emily", "Amy", "Lisa", "Angela", "Christina", "Sarah", "Stephanie"],
+        surnames: ["Lee", "Kim", "Park", "Chen", "Wang", "Liu", "Nguyen", "Patel", "Singh", "Chang"]
       }
+    };
 
-      .scanlines::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: repeating-linear-gradient(
-          to bottom,
-          rgba(255, 255, 255, 0.05),
-          rgba(255, 255, 255, 0.05) 1px,
-          rgba(0, 0, 0, 0.1) 1px,
-          rgba(0, 0, 0, 0.1) 3px
-        );
-        mix-blend-mode: screen;
-        pointer-events: none;
-      }
+    const usCities = [
+      { name: "New York, NY", cost: 1.8, jobs: 1.4, education: 1.3, networking: 1.5, underground: 1.2 },
+      { name: "Los Angeles, CA", cost: 1.6, jobs: 1.2, education: 1.1, networking: 1.3, underground: 1.4 },
+      { name: "Chicago, IL", cost: 1.3, jobs: 1.1, education: 1.2, networking: 1.1, underground: 1.1 },
+      { name: "Houston, TX", cost: 1.1, jobs: 1.3, education: 0.9, networking: 1.0, underground: 1.3 },
+      { name: "Phoenix, AZ", cost: 1.0, jobs: 1.0, education: 0.8, networking: 0.9, underground: 1.2 },
+      { name: "Philadelphia, PA", cost: 1.2, jobs: 1.0, education: 1.1, networking: 1.0, underground: 1.0 },
+      { name: "San Antonio, TX", cost: 0.9, jobs: 0.9, education: 0.8, networking: 0.8, underground: 1.1 },
+      { name: "San Diego, CA", cost: 1.5, jobs: 1.1, education: 1.0, networking: 1.1, underground: 0.9 },
+      { name: "Dallas, TX", cost: 1.2, jobs: 1.2, education: 1.0, networking: 1.1, underground: 1.2 },
+      { name: "Austin, TX", cost: 1.3, jobs: 1.3, education: 1.1, networking: 1.2, underground: 0.8 }
+    ];
 
-      .terminal-flicker {
-        animation: flicker 3s infinite;
-      }
+    const communityCollegeMajors = ["General Studies", "Business Admin", "Computer Science", "Nursing", "Automotive Tech", "Culinary Arts"];
+    const publicUniversityMajors = ["Business", "Engineering", "Psychology", "Biology", "Communications", "Computer Science", "Economics", "Political Science", "Sociology", "Marketing"];
+    const ivyLeagueMajors = ["Economics", "Political Science", "Law (Pre-Law)", "International Relations", "Finance", "Philosophy", "Government", "Public Policy", "Business Analytics", "Strategic Management"];
 
-      .glow-pulse {
-        animation: glowPulse 2.4s ease-in-out infinite;
-      }
+    const MS_PER_GAME_MINUTE = (5 * 60 * 1000) / (24 * 60); // 5 real minutes = 1 game day
 
-      .boot-cursor {
-        display: inline-block;
-        width: 10px;
-        height: 18px;
-        background: #38f4c9;
-        margin-left: 6px;
-        animation: cursorBlink 1s steps(2, start) infinite;
-      }
+    const App = () => {
+      const [screen, setScreen] = useState("landing");
+      const [bootTimestamp] = useState(Date.now());
 
-      .panel-overlay {
-        opacity: 0;
-        transform: translateY(12px);
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        pointer-events: none;
-      }
+      // Shop state
+      const [hasSubscription, setHasSubscription] = useState(false);
+      const [hasCustomNameUnlock, setHasCustomNameUnlock] = useState(false);
+      const [hasIvyLeagueUnlock, setHasIvyLeagueUnlock] = useState(false);
+      const [showShop, setShowShop] = useState(false);
 
-      .panel-overlay.is-open {
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
-      }
+      // Character creation
+      const [charStep, setCharStep] = useState(1);
+      const [selectedGender, setSelectedGender] = useState("");
+      const [selectedNameSet, setSelectedNameSet] = useState("General US");
+      const [generatedName, setGeneratedName] = useState("");
+      const [customName, setCustomName] = useState("");
+      const [selectedCity, setSelectedCity] = useState(null);
+      const [enrollInCollege, setEnrollInCollege] = useState(false);
+      const [collegeType, setCollegeType] = useState("");
+      const [selectedMajor, setSelectedMajor] = useState("");
 
-      @keyframes flicker {
-        0%,
-        19%,
-        21%,
-        23%,
-        80%,
-        100% {
-          opacity: 1;
-        }
-        20%,
-        22%,
-        24%,
-        81% {
-          opacity: 0.7;
-        }
-      }
+      // Core gameplay state
+      const [activeTab, setActiveTab] = useState("finances");
+      const [undergroundOpen, setUndergroundOpen] = useState(false);
 
-      @keyframes glowPulse {
-        0%,
-        100% {
-          box-shadow: 0 0 12px rgba(56, 244, 201, 0.2);
-        }
-        50% {
-          box-shadow: 0 0 24px rgba(56, 244, 201, 0.4);
-        }
-      }
+      // Finances
+      const [cashOnHand, setCashOnHand] = useState(500);
+      const [debitAccounts, setDebitAccounts] = useState([
+        { id: "d1", bank: "Chase", type: "Checking", balance: 1200, apr: 0 },
+        { id: "d2", bank: "Bank of America", type: "Savings", balance: 3000, apr: 0.02 }
+      ]);
+      const [creditAccounts, setCreditAccounts] = useState([
+        { id: "c1", bank: "Capital One", balance: 0, limit: 2000, apr: 0.1999 },
+        { id: "c2", bank: "Discover", balance: 150, limit: 5000, apr: 0.1799 }
+      ]);
+      const [studentDebt, setStudentDebt] = useState(0);
 
-      @keyframes cursorBlink {
-        0%,
-        50% {
-          opacity: 1;
-        }
-        51%,
-        100% {
-          opacity: 0;
-        }
-      }
-    </style>
-  </head>
+      // Education & Career
+      const [jobTitle, setJobTitle] = useState("Unemployed");
+      const [monthlyIncome, setMonthlyIncome] = useState(0);
+      const [educationProgress, setEducationProgress] = useState(0);
 
-  <body class="min-h-screen bg-slate-950 text-slate-100">
-    <div id="root"></div>
+      // Social metrics
+      const [reputation, setReputation] = useState(50);
+      const [suspicion, setSuspicion] = useState(5);
 
-    <script type="text/babel">
-      const { useCallback, useEffect, useMemo, useRef, useState } = React;
+      // Underground (minimal initial state)
+      const [inventory, setInventory] = useState({});
+      const [undergroundContacts, setUndergroundContacts] = useState(0);
 
-      // Replace locally ONLY (do not commit)
-      const OPENAI_API_KEY = "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";
+      const eventLogRef = useRef([]);
 
-      const servers = [
-        { id: 1, name: "Relay 01", location: "Frankfurt", status: "Secure", load: "14%" },
-        { id: 2, name: "Relay 02", location: "Singapore", status: "Encrypted", load: "61%" },
-        { id: 3, name: "Relay 03", location: "Toronto", status: "Shielded", load: "32%" },
-        { id: 4, name: "Relay 04", location: "São Paulo", status: "Hidden", load: "48%" },
-      ];
+      const gameElapsedMs = Date.now() - bootTimestamp;
+      const gameMinutes = Math.floor(gameElapsedMs / MS_PER_GAME_MINUTE);
+      const gameDay = Math.floor(gameMinutes / 1440) + 1;
+      const gameMonth = Math.floor(gameDay / 30) + 1;
 
-      const profileIcons = ["🎭","💀","🧠","🔒","👁️","🦉","🕷️","🦂","🧬","🧿","⚗️","🧲","📡","🛰️","🧪","🗝️","🕯️","🩸"];
+      const displayName = (hasCustomNameUnlock && customName.trim()) ? customName : generatedName;
 
-      const cityOptions = [
-        { city: "New York", country: "United States", timeZone: "America/New_York" },
-        { city: "Chicago", country: "United States", timeZone: "America/Chicago" },
-        { city: "Los Angeles", country: "United States", timeZone: "America/Los_Angeles" },
-        { city: "London", country: "United Kingdom", timeZone: "Europe/London" },
-        { city: "Berlin", country: "Germany", timeZone: "Europe/Berlin" },
-        { city: "Tokyo", country: "Japan", timeZone: "Asia/Tokyo" },
-        { city: "Singapore", country: "Singapore", timeZone: "Asia/Singapore" },
-        { city: "Toronto", country: "Canada", timeZone: "America/Toronto" },
-      ];
+      const totalLiquidity = useMemo(() => {
+        const debitTotal = debitAccounts.reduce((sum, a) => sum + a.balance, 0);
+        const creditAvail = creditAccounts.reduce((sum, c) => sum + Math.max(c.limit - c.balance, 0), 0);
+        return debitTotal + creditAvail + cashOnHand;
+      }, [debitAccounts, creditAccounts, cashOnHand]);
 
-      const usernameSeeds = ["Void", "Cipher", "Specter", "Glitch", "Ghost", "Zero", "Rogue", "Null", "Pulse", "Signal"];
-      const usernameSuffixes = ["Walker", "Shade", "Node", "Runner", "Wire", "Crow"];
+      const totalDebt = useMemo(() => {
+        const creditDebt = creditAccounts.reduce((sum, c) => sum + c.balance, 0);
+        return creditDebt + studentDebt;
+      }, [creditAccounts, studentDebt]);
 
-      // Straightforward, expandable module naming
-
-      const menuEmojis = {
-  supply: "📦",
-  contracts: "🧾",
-  transit: "🚚",
-  network: "🕸️",
-  map: "🗺️",
-  messages: "💬",
-  finances: "💳",
-  facilities: "🏭",
-                        };
-
-      const appModules = [
-        { id: "network", label: "Network", status: "Live" },
-        { id: "map", label: "Map", status: "Live" },
-        { id: "messages", label: "Messages", status: "Live" },
-        { id: "finances", label: "Finances", status: "Secure" },
-        { id: "facilities", label: "Facilities", status: "Locked" },
-      ];
-
-      const contrabandSubModules = [
-        { id: "supply", label: "Supply", status: "Online" },
-        { id: "contracts", label: "Contracts", status: "Live" },
-        { id: "transit", label: "Transit", status: "Live" },
-      ];
-
-      const loadingLines = [
-        "[boot] establishing encrypted tunnel...",
-        "[auth] negotiating shadow certificates...",
-        "[relay] proxy chain stabilized...",
-        "[sync] mirroring indices...",
-        "[access] access key verified...",
-      ];
-
-      const brokers = [
-        {
-          id: "broker-onyx",
-          name: "Broker 01",
-          city: "New York",
-          personality: { fearTolerance: 0.4, patience: 0.6, pride: 0.7, aggressionResponse: 0.5, riskAppetite: 0.6 },
-        },
-        {
-          id: "broker-veil",
-          name: "Broker 02",
-          city: "Chicago",
-          personality: { fearTolerance: 0.7, patience: 0.5, pride: 0.4, aggressionResponse: 0.6, riskAppetite: 0.7 },
-        },
-        {
-          id: "broker-kite",
-          name: "Broker 03",
-          city: "Los Angeles",
-          personality: { fearTolerance: 0.3, patience: 0.8, pride: 0.5, aggressionResponse: 0.4, riskAppetite: 0.5 },
-        },
-      ];
-
-      const cities = {
-        "New York": { name: "New York", basePrice: [140, 190], reliability: "Stable", transitRisk: "Medium", transitHours: 10, culture: "Direct" },
-        "Chicago": { name: "Chicago", basePrice: [130, 175], reliability: "Moderate", transitRisk: "Low", transitHours: 8, culture: "Formal" },
-        "Los Angeles": { name: "Los Angeles", basePrice: [120, 170], reliability: "Volatile", transitRisk: "High", transitHours: 14, culture: "Guarded" },
-        "London": { name: "London", basePrice: [150, 205], reliability: "Stable", transitRisk: "Medium", transitHours: 12, culture: "Reserved" },
-        "Berlin": { name: "Berlin", basePrice: [135, 185], reliability: "Stable", transitRisk: "Low", transitHours: 11, culture: "Methodical" },
-        "Tokyo": { name: "Tokyo", basePrice: [160, 220], reliability: "Stable", transitRisk: "Medium", transitHours: 16, culture: "Polite" },
+      const addLog = (msg) => {
+        eventLogRef.current = [{ id: Date.now() + Math.random(), text: msg }, ...eventLogRef.current].slice(0, 12);
       };
 
-      // Increased starting balances so player can act immediately
-      const debitAccountsTemplate = [
-        { id: "debit-main", label: "Checking", bank: "Chase", balance: 2400, feePct: 0.01, delayMinutes: 0 },
-        { id: "debit-savings", label: "Savings", bank: "Bank of America", balance: 1600, feePct: 0.005, delayMinutes: 10 },
-      ];
-
-      // Credit accounts are treated as LOC-style: draw + pay
-      const creditAccountsTemplate = [
-        { id: "credit-1", bank: "Capital One", label: "Line of Credit", apr: 0.2499, limit: 2000, balance: 250, paymentsThisMonth: 0, lastLimitIncreaseMonth: 0 },
-        { id: "credit-2", bank: "Discover", label: "Line of Credit", apr: 0.2199, limit: 3000, balance: 420, paymentsThisMonth: 0, lastLimitIncreaseMonth: 0 },
-      ];
-
-      const verdantTierOptions = [
-        { tier: "Standard", visibility: "Low", stability: "Stable" },
-        { tier: "Premium", visibility: "High", stability: "Fragile" },
-      ];
-
-      const toneKeywords = {
-        polite: ["please", "appreciate", "thank", "respect"],
-        pushy: ["urgent", "now", "immediately", "fast"],
-        threatening: ["or else", "threat", "consequence", "pressure"],
-        flattering: ["admire", "legend", "impressive", "trusted"],
+      const generateNameFromSet = () => {
+        if (!selectedGender || !selectedNameSet) return;
+        const set = nameSets[selectedNameSet];
+        const firstNames = selectedGender === "Male" ? set.male : set.female;
+        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const lastName = set.surnames[Math.floor(Math.random() * set.surnames.length)];
+        setGeneratedName(`${firstName} ${lastName}`);
       };
 
-      const formatHHMM = (date, timeZone) => {
-        try {
-          return new Intl.DateTimeFormat("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-            timeZone,
-          }).format(date);
-        } catch {
-          return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+      useEffect(() => {
+        if (selectedGender && selectedNameSet) {
+          generateNameFromSet();
         }
-      };
-
-      const clampMoney = (v) => {
-        const n = Number(v);
-        if (!Number.isFinite(n)) return 0;
-        return Math.max(0, Math.round(n * 100) / 100);
-      };
-
-      const App = () => {
-        const [screen, setScreen] = useState("landing");
-        const [nextScreen, setNextScreen] = useState("servers");
-        const [loadingProgress, setLoadingProgress] = useState(0);
-        const [loadingLineIndex, setLoadingLineIndex] = useState(0);
-        const [selectedServer, setSelectedServer] = useState(null);
-
-        const [hasSubscription, setHasSubscription] = useState(false);
-        const [hasCustomNamePass, setHasCustomNamePass] = useState(false);
-        const [showShop, setShowShop] = useState(false);
-
-        const [profileIcon, setProfileIcon] = useState(profileIcons[0]);
-        const [username, setUsername] = useState("");
-        const [customUsername, setCustomUsername] = useState("");
-
-        const [selectedCity, setSelectedCity] = useState(cityOptions[0]);
-        const [profileStep, setProfileStep] = useState(1);
-
-        const [systemTime, setSystemTime] = useState(new Date());
-
-        // Active app defaults to supply (under Contraband accordion)
-        const [activeApp, setActiveApp] = useState("supply");
-        const [contrabandMenuOpen, setContrabandMenuOpen] = useState(true);
-
-        // Finances state
-        const [debitAccounts, setDebitAccounts] = useState(debitAccountsTemplate);
-        const [creditAccounts, setCreditAccounts] = useState(creditAccountsTemplate);
-        const [cashOnHand, setCashOnHand] = useState(650);
-        const [cashStash, setCashStash] = useState(900); // not spendable
-
-        // UI inputs (kept minimal and per-account)
-        const [debitMoveInputs, setDebitMoveInputs] = useState({});
-        const [creditActionInputs, setCreditActionInputs] = useState({}); // { [creditId]: { draw, pay, source } }
-
-        // Supply state
-        const cityKeys = useMemo(() => Object.keys(cities), []);
-        const [supplyDraft, setSupplyDraft] = useState(() => ({
-          city: cityKeys[0] || "New York",
-          tier: verdantTierOptions[0].tier,
-          quantity: 30,
-          accountId: debitAccountsTemplate[0].id,
-          deliveryMethod: "Courier", // Courier | Personal
-        }));
-
-        const [inventory, setInventory] = useState({ Standard: 0, Premium: 0 });
-        const [heat, setHeat] = useState(8);
-        const [reputation, setReputation] = useState(35);
-        const [shipments, setShipments] = useState([]);
-        const [contracts, setContracts] = useState([]);
-        const [selectedBroker, setSelectedBroker] = useState(brokers[0]);
-        const [messages, setMessages] = useState({});
-        const [messageInput, setMessageInput] = useState("");
-        const [messageCounts, setMessageCounts] = useState({});
-        const [bootTimestamp] = useState(Date.now());
-        const eventLogRef = useRef([]);
-
-        // Personal-delivery lock
-        const [personalDeliveryActive, setPersonalDeliveryActive] = useState(false);
-
-        useEffect(() => {
-          setUsername(
-            `${usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)]}${
-              usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)]
-            }${Math.floor(Math.random() * 900 + 100)}`
-          );
-        }, []);
-
-        useEffect(() => {
-          const interval = setInterval(() => setSystemTime(new Date()), 1000);
-          return () => clearInterval(interval);
-        }, []);
-
-        useEffect(() => {
-          if (screen !== "loading") return;
-          setLoadingProgress(0);
-          setLoadingLineIndex(0);
-
-          const interval = setInterval(() => {
-            setLoadingProgress((prev) => {
-              const nextValue = Math.min(prev + Math.floor(Math.random() * 14 + 6), 100);
-              if (nextValue >= 100) {
-                clearInterval(interval);
-                setTimeout(() => setScreen(nextScreen), 500);
-              }
-              return nextValue;
-            });
-            setLoadingLineIndex((prev) => Math.min(prev + 1, loadingLines.length - 1));
-          }, 450);
-
-          return () => clearInterval(interval);
-        }, [screen, nextScreen]);
-
-        const msPerGameMinute = (5 * 60 * 1000) / (24 * 60);
-        const gameElapsedMs = Date.now() - bootTimestamp;
-        const gameMinutes = Math.floor(gameElapsedMs / msPerGameMinute);
-        const gameDay = Math.floor(gameMinutes / 1440) + 1;
-
-        const localTimeLabel = useMemo(() => {
-          return formatHHMM(systemTime, selectedCity.timeZone);
-        }, [selectedCity, systemTime]);
-
-        const displayUsername = hasCustomNamePass && customUsername.trim() ? customUsername : username;
-
-        const profileProgress = useMemo(() => {
-          let progress = 0;
-          if (profileIcon) progress += 34;
-          if ((hasCustomNamePass && customUsername.trim()) || username.trim()) progress += 33;
-          if (selectedCity) progress += 33;
-          return Math.min(progress, 100);
-        }, [profileIcon, username, customUsername, selectedCity, hasCustomNamePass]);
-
-        const profileComplete = profileProgress === 100;
-
-        // Liquidity readout: debit total + credit available
-        const totalCash = useMemo(() => {
-          const debitTotal = debitAccounts.reduce((sum, a) => sum + a.balance, 0);
-          const creditAvailable = creditAccounts.reduce((sum, c) => sum + Math.max(c.limit - c.balance, 0), 0);
-          return debitTotal + creditAvailable;
-        }, [debitAccounts, creditAccounts]);
-
-        const addLog = (entry) => {
-          eventLogRef.current = [{ id: Date.now() + Math.random(), text: entry }, ...eventLogRef.current].slice(0, 10);
-        };
-
-        // Contracts generation
-        useEffect(() => {
-          if (contracts.length === 0) setContracts(generateContracts());
-        }, [contracts.length]);
-
-        const generateContracts = () => {
-          return brokers.map((broker, index) => {
-            const tier = index % 2 === 0 ? "Standard" : "Premium";
-            const base = tier === "Premium" ? 190 : 130;
-            const windowHours = Math.floor(Math.random() * 18 + 6);
-            const durationMs = windowHours * 60 * msPerGameMinute;
-            return {
-              id: `contract-${broker.id}-${Date.now()}`,
-              brokerId: broker.id,
-              title: `${broker.name} · ${broker.city}`,
-              tier,
-              quantityRange: [20, 80],
-              priceBand: [base, base + 40],
-              risk: index % 2 === 0 ? "Medium" : "High",
-              createdAt: Date.now(),
-              durationMs,
-              remainingMs: durationMs,
-              status: "Open",
-            };
-          });
-        };
-
-        const resolveShipmentOutcome = (shipment) => {
-          const outcomes = ["Delivered", "Delayed", "Partial Loss", "Disrupted"];
-          const roll = Math.random();
-          let outcome = outcomes[0];
-          if (roll > 0.85) outcome = outcomes[3];
-          else if (roll > 0.7) outcome = outcomes[2];
-          else if (roll > 0.5) outcome = outcomes[1];
-
-          setInventory((prev) => {
-            const newInventory = { ...prev };
-            if (outcome === "Delivered") newInventory[shipment.tier] += shipment.quantity;
-            else if (outcome === "Delayed") newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.8);
-            else if (outcome === "Partial Loss") newInventory[shipment.tier] += Math.floor(shipment.quantity * 0.5);
-            return newInventory;
-          });
-
-          setHeat((prev) => Math.min(prev + (outcome === "Disrupted" ? 6 : 2), 100));
-          setReputation((prev) => Math.max(prev - (outcome === "Disrupted" ? 5 : 1), 0));
-
-          // Personal delivery lock releases when that shipment resolves
-          if (shipment.deliveryMethod === "Personal") {
-            setPersonalDeliveryActive(false);
-          }
-
-          return outcome;
-        };
-
-        const updateShipments = useCallback(() => {
-          setShipments((prev) =>
-            prev
-              .map((shipment) => {
-                const elapsed = Date.now() - shipment.createdAt;
-                const remaining = shipment.durationMs - elapsed;
-                if (remaining <= 0 && shipment.status === "In Transit") {
-                  const outcome = resolveShipmentOutcome(shipment);
-                  addLog(`Shipment ${shipment.id}: ${outcome}.`);
-                  return { ...shipment, status: outcome, remainingMs: 0 };
-                }
-                return { ...shipment, remainingMs: Math.max(remaining, 0) };
-              })
-              .filter((shipment) => shipment.status === "In Transit")
-          );
-        }, []);
-
-        const updateContracts = useCallback(() => {
-          setContracts((prev) =>
-            prev
-              .map((contract) => {
-                const elapsed = Date.now() - contract.createdAt;
-                const remaining = contract.durationMs - elapsed;
-                if (remaining <= 0 && contract.status === "Open") {
-                  addLog(`Contract expired: ${contract.title}.`);
-                  return { ...contract, status: "Expired", remainingMs: 0 };
-                }
-                return { ...contract, remainingMs: Math.max(remaining, 0) };
-              })
-              .filter((contract) => contract.status !== "Expired")
-          );
-        }, []);
-
-        useEffect(() => {
-          const interval = setInterval(() => {
-            updateShipments();
-            updateContracts();
-          }, 1000);
-          return () => clearInterval(interval);
-        }, [updateShipments, updateContracts]);
-
-        // Supply cost preview
-        const draftCityData = cities[supplyDraft.city] || Object.values(cities)[0];
-        const payingDebit = debitAccounts.find((a) => a.id === supplyDraft.accountId);
-
-        const draftUnit = useMemo(() => {
-          if (!draftCityData) return 0;
-          return supplyDraft.tier === "Premium" ? draftCityData.basePrice[1] : draftCityData.basePrice[0];
-        }, [draftCityData, supplyDraft.tier]);
-
-        const draftQty = useMemo(() => {
-          const q = Number(supplyDraft.quantity);
-          if (!Number.isFinite(q)) return 0;
-          return Math.max(0, q);
-        }, [supplyDraft.quantity]);
-
-   const draftSubtotal = Number(draftUnit) * Number(draftQty);
-
-const courierServiceFee = useMemo(() => {
-  const subtotal = Number.isFinite(draftSubtotal) ? draftSubtotal : 0;
-  return subtotal * 0.10;
-}, [draftSubtotal]);
-
-const deliveryFee = supplyDraft.deliveryMethod === "Courier" ? courierServiceFee : 0;
-
-const draftFee = payingDebit ? draftSubtotal * payingDebit.feePct : 0;
-const draftTotal = draftSubtotal + draftFee + deliveryFee;
-
-        const canAfford = payingDebit ? payingDebit.balance >= draftTotal : false;
-        const postBalance = payingDebit ? payingDebit.balance - draftTotal : 0;
-
-        const canPlaceDelivery = useMemo(() => {
-          // If you're doing personal delivery, you cannot start ANY new deliveries until it resolves.
-          if (personalDeliveryActive) return false;
-          return true;
-        }, [personalDeliveryActive]);
-
-        const handlePlaceOrder = (event) => {
-          event.preventDefault();
-
-          if (!canPlaceDelivery) {
-            addLog("Delivery locked: you are currently delivering in person.");
-            return;
-          }
-
-          const city = supplyDraft.city;
-          const tier = supplyDraft.tier;
-          const quantity = Number(supplyDraft.quantity);
-          const accountId = supplyDraft.accountId;
-          const deliveryMethod = supplyDraft.deliveryMethod; // Courier | Personal
-
-          const cityData = cities[city];
-          if (!cityData) {
-            addLog("Market not found.");
-            return;
-          }
-
-          const unit = tier === "Premium" ? cityData.basePrice[1] : cityData.basePrice[0];
-          const subtotal = unit * quantity;
-
-          const debit = debitAccounts.find((a) => a.id === accountId);
-          if (!debit) {
-            addLog("Payment account not found.");
-            return;
-          }
-
-          const fee = subtotal * debit.feePct;
-          const serviceFee = deliveryMethod === "Courier" ? subtotal * 0.10 : 0;
-          const total = subtotal + fee + serviceFee;
-
-          if (debit.balance < total) {
-            addLog("Purchase blocked: insufficient funds.");
-            return;
-          }
-
-          setDebitAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, balance: a.balance - total } : a)));
-
-          const transitMinutes = cityData.transitHours * 60;
-          const baseDurationMs = transitMinutes * msPerGameMinute;
-
-          // Personal delivery is significantly longer, but avoids the courier service fee
-          const durationMultiplier = deliveryMethod === "Personal" ? 2.6 : 1.0;
-          const durationMs = baseDurationMs * durationMultiplier;
-
-          const shipmentId = `S-${Math.floor(Math.random() * 9000 + 1000)}`;
-
-          setShipments((prev) => [
-            {
-              id: shipmentId,
-              city,
-              tier,
-              quantity,
-              status: "In Transit",
-              createdAt: Date.now(),
-              durationMs,
-              remainingMs: durationMs,
-              deliveryMethod,
-              serviceFee,
-            },
-            ...prev,
-          ]);
-
-          if (deliveryMethod === "Personal") {
-            setPersonalDeliveryActive(true);
-            addLog(`Personal delivery started: ${shipmentId} (${city}).`);
-          } else {
-            addLog(`Courier delivery queued: ${shipmentId} (${city}).`);
-          }
-
-          addLog(`Order placed: ${quantity} units (${tier}) from ${city}.`);
-        };
-
-        const handleSubmitOffer = (contract, quantity, price, payoutAccountId) => {
-          const tierInventory = inventory[contract.tier] || 0;
-          if (quantity > tierInventory) {
-            addLog("Insufficient inventory for that offer.");
-            return;
-          }
-          const accepted = Math.random() > 0.35;
-          const status = accepted ? "Accepted" : "Counter";
-
-          setContracts((prev) =>
-            prev.map((item) => (item.id === contract.id ? { ...item, status, offer: { quantity, price } } : item))
-          );
-
-          if (accepted) {
-            const revenue = quantity * price;
-            setInventory((prev) => ({ ...prev, [contract.tier]: prev[contract.tier] - quantity }));
-
-            setDebitAccounts((prev) =>
-              prev.map((account) => (account.id === payoutAccountId ? { ...account, balance: account.balance + revenue } : account))
-            );
-
-            setReputation((prev) => Math.min(prev + 4, 100));
-            setHeat((prev) => Math.min(prev + 3, 100));
-            addLog(`Contract fulfilled: ${contract.title} ($${revenue}).`);
-          } else {
-            addLog(`Countered: ${contract.title}.`);
-          }
-        };
-
-        const analyzeTone = (text) => {
-          const lower = text.toLowerCase();
-          let tone = "neutral";
-          Object.entries(toneKeywords).forEach(([key, words]) => {
-            if (words.some((word) => lower.includes(word))) tone = key;
-          });
-          return tone;
-        };
-
-        const getScriptedReply = (broker, tone) => {
-          const base = {
-            polite: "Noted. Keep the offer within the band and we can move.",
-            neutral: "Send numbers you can stand behind.",
-            pushy: "Don’t rush the ledger. Window closes fast.",
-            threatening: "That tone adds heat. Dial it back or we walk.",
-            flattering: "Flattery helps. Bring a tight proposal and we’ll listen.",
-          };
-          return base[tone] || base.neutral;
-        };
-
-        const handleSendMessage = () => {
-          const trimmed = messageInput.trim();
-          if (!trimmed) return;
-
-          const count = messageCounts[selectedBroker.id] || 0;
-          if (count >= 5) {
-            addLog(`Negotiation window closed for ${selectedBroker.name}.`);
-            return;
-          }
-
-          const tone = analyzeTone(trimmed);
-          const broker = selectedBroker;
-
-          // Keep scripted unless you wire a server-side relay for AI.
-          const reply = getScriptedReply(broker, tone);
-
-          setMessages((prev) => {
-            const existing = prev[broker.id] || [];
-            return {
-              ...prev,
-              [broker.id]: [
-                ...existing,
-                { id: Date.now(), sender: "You", text: trimmed },
-                { id: Date.now() + 1, sender: broker.name, text: reply },
-              ],
-            };
-          });
-
-          setMessageCounts((prev) => ({ ...prev, [broker.id]: (prev[broker.id] || 0) + 1 }));
-
-          if (tone === "threatening") {
-            setHeat((prev) => Math.min(prev + 6, 100));
-            setReputation((prev) => Math.max(prev - 4, 0));
-          } else if (tone === "pushy") {
-            setHeat((prev) => Math.min(prev + 2, 100));
-          }
-
-          setMessageInput("");
-        };
-
-        const activeMessages = messages[selectedBroker.id] || [];
-
-        // Current Activity for top bar
-        const currentActivity = useMemo(() => {
-          const personal = shipments.find((s) => s.status === "In Transit" && s.deliveryMethod === "Personal");
-          if (personal) {
-            const etaMin = Math.max(1, Math.ceil(personal.remainingMs / 1000 / 60));
-            return `Personal delivery: ${personal.city} (${etaMin}m ETA)`;
-          }
-          const inTransit = shipments.filter((s) => s.status === "In Transit").length;
-          if (inTransit > 0) return `Managing shipments: ${inTransit} in transit`;
-          return "Idle";
-        }, [shipments]);
-
-        // -----------------------------
-        // FINANCES ACTIONS
-        // -----------------------------
-        const depositToDebit = (accountId, amount) => {
-          const v = clampMoney(amount);
-          if (v <= 0) return;
-          if (cashOnHand < v) {
-            addLog("Deposit blocked: insufficient cash on hand.");
-            return;
-          }
-          setCashOnHand((prev) => prev - v);
-          setDebitAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, balance: a.balance + v } : a)));
-          addLog(`Deposit: $${v.toFixed(2)} to debit account.`);
-        };
-
-        const withdrawFromDebit = (accountId, amount) => {
-          const v = clampMoney(amount);
-          if (v <= 0) return;
-          const acct = debitAccounts.find((a) => a.id === accountId);
-          if (!acct || acct.balance < v) {
-            addLog("Withdraw blocked: insufficient debit balance.");
-            return;
-          }
-          setDebitAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, balance: a.balance - v } : a)));
-          setCashOnHand((prev) => prev + v);
-          addLog(`Withdraw: $${v.toFixed(2)} from debit account.`);
-        };
-
-        // "Deposit/Withdraw" for credit interpreted as Draw/Pay (LOC behavior)
-        const drawCreditToCash = (creditId, amount) => {
-          const v = clampMoney(amount);
-          if (v <= 0) return;
-          const c = creditAccounts.find((x) => x.id === creditId);
-          if (!c) return;
-
-          const available = Math.max(c.limit - c.balance, 0);
-          if (v > available) {
-            addLog("Draw blocked: exceeds available credit.");
-            return;
-          }
-
-          setCreditAccounts((prev) => prev.map((x) => (x.id === creditId ? { ...x, balance: x.balance + v } : x)));
-          setCashOnHand((prev) => prev + v);
-          addLog(`Credit draw: $${v.toFixed(2)} to cash on hand.`);
-        };
-
-        const payCredit = (creditId, amount, source) => {
-          const v = clampMoney(amount);
-          if (v <= 0) return;
-
-          const c = creditAccounts.find((x) => x.id === creditId);
-          if (!c) return;
-
-          const payAmount = Math.min(v, c.balance);
-          if (payAmount <= 0) {
-            addLog("Payment blocked: credit balance is already $0.");
-            return;
-          }
-
-          if (source === "cash") {
-            if (cashOnHand < payAmount) {
-              addLog("Payment blocked: insufficient cash on hand.");
-              return;
+      }, [selectedGender, selectedNameSet]);
+
+      const canProceedFromIdentity = selectedGender && ((hasCustomNameUnlock && customName.trim()) || generatedName);
+      const canProceedFromCity = selectedCity !== null;
+      const canProceedFromEducation = !enrollInCollege || (collegeType && selectedMajor);
+
+      const startGame = () => {
+        // Apply education choices
+        if (enrollInCollege) {
+          if (collegeType === "Public University") {
+            setStudentDebt(10000);
+            addLog("Enrolled in public university with $10,000 in student loans.");
+          } else if (collegeType === "Ivy League" && hasIvyLeagueUnlock) {
+            if (hasSubscription) {
+              addLog("Enrolled in Ivy League university with full-ride scholarship!");
+            } else {
+              addLog("Enrolled in Ivy League university.");
             }
-            setCashOnHand((prev) => prev - payAmount);
-          } else {
-            // source is a debit account id
-            const debit = debitAccounts.find((a) => a.id === source);
-            if (!debit || debit.balance < payAmount) {
-              addLog("Payment blocked: insufficient debit funds.");
-              return;
-            }
-            setDebitAccounts((prev) => prev.map((a) => (a.id === source ? { ...a, balance: a.balance - payAmount } : a)));
+          } else if (collegeType === "Community College") {
+            addLog("Enrolled in community college (tuition-free).");
           }
+          setJobTitle("Student");
+          setMonthlyIncome(0);
+        } else {
+          setJobTitle("Entry-level Worker");
+          setMonthlyIncome(2400);
+        }
 
-          setCreditAccounts((prev) =>
-            prev.map((x) => {
-              if (x.id !== creditId) return x;
-              return { ...x, balance: Math.max(0, x.balance - payAmount), paymentsThisMonth: x.paymentsThisMonth + 1 };
-            })
-          );
+        setScreen("main");
+      };
 
-          addLog(`Credit payment: $${payAmount.toFixed(2)} applied.`);
-        };
+      return (
+        <main className="relative min-h-screen">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+          
+          <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8">
+            {/* Header */}
+            <header className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight text-slate-100">Liquid Society</h1>
+                <p className="text-sm text-slate-400">Navigate life in modern America</p>
+              </div>
 
-        // "Total Cash" remains liquidity metric (debit + available credit)
-        const totalCashLabel = useMemo(() => `$${totalCash.toFixed(2)} USD`, [totalCash]);
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowShop(true)}
+                  className="rounded-lg border border-slate-600 bg-slate-800/50 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-700/50"
+                >
+                  Store
+                </button>
 
-        return (
-          <main className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-slate-100">
-            <div className="absolute inset-0 scanlines opacity-60" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_55%)]" />
-
-            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10">
-              <header className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl font-semibold tracking-[0.2em] text-emerald-100">Into The Dark</h1>
-                  <p className="text-xs uppercase tracking-[0.6em] text-slate-400">Simulation</p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowShop(true)}
-                    className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
-                  >
-                    Shop
-                  </button>
-
-                  {screen === "dashboard" && (
-                    <div className="flex flex-wrap items-center gap-3 text-[11px] uppercase tracking-[0.25em]">
-                      {hasSubscription && (
-                        <span className="rounded-md border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-emerald-200">
-                          VIP
-                        </span>
-                      )}
-                      <span className="rounded-md border border-slate-700 px-3 py-1 text-slate-300">
-                        {selectedServer?.name}
+                {screen === "main" && (
+                  <div className="flex items-center gap-3 text-sm text-slate-300">
+                    {hasSubscription && (
+                      <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-emerald-300">
+                        Premium
                       </span>
-                      <span className="rounded-md border border-slate-700 px-3 py-1 text-slate-300">
-                        {selectedCity.city} · {localTimeLabel}
-                      </span>
-                      <span className="rounded-md border border-slate-700/80 bg-black/40 px-3 py-1 text-slate-300">
-                        Activity: <span className="text-emerald-200">{currentActivity}</span>
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </header>
-
-              {/* Shop Overlay */}
-              <div className={`panel-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-8 ${showShop ? "is-open" : ""}`}>
-                {showShop && (
-                  <div className="w-full max-w-2xl rounded-lg border border-emerald-400/30 bg-slate-950 p-6 shadow-2xl shadow-emerald-500/20">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-400/70">Store (Test)</p>
-                        <p className="text-sm text-slate-300">Entitlements for subscription + custom handle.</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowShop(false)}
-                        className="rounded-md border border-slate-700 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-300"
-                      >
-                        Close
-                      </button>
-                    </div>
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      <div className="rounded-md border border-slate-700/70 bg-black/70 p-4 text-sm text-slate-300">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Subscription</p>
-                        <p className="mt-2 text-sm text-slate-300">Unlock premium status for experimental features.</p>
-                        <button
-                          type="button"
-                          onClick={() => setHasSubscription(true)}
-                          className="mt-4 w-full rounded-md border border-emerald-400/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-300 hover:text-emerald-100"
-                        >
-                          Activate
-                        </button>
-                        {hasSubscription && <p className="mt-3 text-xs uppercase tracking-[0.3em] text-emerald-200">Active</p>}
-                      </div>
-
-                      <div className="rounded-md border border-amber-400/40 bg-black/70 p-4 text-sm text-slate-300">
-                        <p className="text-xs uppercase tracking-[0.3em] text-amber-300">Custom Handle</p>
-                        <p className="mt-2 text-sm text-slate-300">Permanent access to custom handles (test pass).</p>
-                        <button
-                          type="button"
-                          onClick={() => setHasCustomNamePass(true)}
-                          className="mt-4 w-full rounded-md border border-amber-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-200 hover:text-amber-100"
-                        >
-                          Unlock
-                        </button>
-                        {hasCustomNamePass && <p className="mt-3 text-xs uppercase tracking-[0.3em] text-amber-200">Active</p>}
-                      </div>
-                    </div>
+                    )}
+                    <span className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-1">
+                      Day {gameDay} · Month {gameMonth}
+                    </span>
                   </div>
                 )}
               </div>
+            </header>
 
-              {/* Landing */}
-              {screen === "landing" && (
-                <section className="relative overflow-hidden rounded-lg border border-emerald-500/30 bg-black/80 p-10 shadow-2xl shadow-emerald-500/10">
-                  <div className="terminal-flicker">
-                    <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">gateway</p>
-                    <h2 className="mt-4 text-3xl font-semibold text-emerald-100">Access granted</h2>
-                    <p className="mt-3 max-w-xl text-sm text-slate-300">Run an underground network. Decisions leave traces.</p>
-                  </div>
-                  <div className="mt-8 rounded-md border border-emerald-400/20 bg-slate-950/70 p-5 text-xs text-emerald-200/80">
-                    <p>root@grid:~$ access --portal dark.gateway</p>
-                    <p className="mt-2">status: READY</p>
-                    <p className="mt-2">signal: 98%</p>
-                    <div className="mt-3 flex items-center">
-                      <span>awaiting command</span>
-                      <span className="boot-cursor" />
-                    </div>
-                  </div>
-                  <div className="mt-8">
+            {/* Shop Modal */}
+            {showShop && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                <div className="w-full max-w-2xl rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                    <h2 className="text-xl font-semibold text-slate-100">Store</h2>
                     <button
                       type="button"
-                      onClick={() => setScreen("servers")}
-                      className="glow-pulse w-full rounded-md border border-emerald-400/60 bg-emerald-500/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.4em] text-emerald-100 transition hover:border-emerald-300 hover:bg-emerald-400/20"
+                      onClick={() => setShowShop(false)}
+                      className="rounded-lg border border-slate-600 px-3 py-1 text-sm text-slate-300 transition hover:bg-slate-800"
                     >
-                      Start
-                    </button>
-                  </div>
-                </section>
-              )}
-
-              {/* Servers */}
-              {screen === "servers" && (
-                <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/60">server browser</p>
-                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Select relay</h2>
-                      <p className="text-sm text-slate-300">Pick a node to begin.</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setScreen("landing")}
-                      className="rounded-md border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-emerald-300 hover:text-emerald-200"
-                    >
-                      Back
+                      Close
                     </button>
                   </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    {servers.map((server) => (
+                  <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                      <p className="text-sm font-semibold text-slate-200">Premium Subscription</p>
+                      <p className="mt-2 text-xs text-slate-400">Full-ride scholarships, advanced features</p>
                       <button
-                        key={server.id}
                         type="button"
-                        onClick={() => {
-                          setSelectedServer(server);
-                          setNextScreen("profile");
-                          setScreen("loading");
-                        }}
-                        className="group flex w-full flex-col gap-4 rounded-md border border-slate-700/70 bg-black/70 p-5 text-left transition hover:-translate-y-1 hover:border-emerald-300/70 hover:shadow-lg hover:shadow-emerald-500/20"
+                        onClick={() => { setHasSubscription(true); addLog("Premium subscription activated."); }}
+                        className="mt-4 w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold text-emerald-100 group-hover:text-emerald-200">{server.name}</h3>
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{server.location}</p>
-                          </div>
-                          <span className="rounded-md border border-emerald-400/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-emerald-200">{server.status}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-slate-400">
-                          <span>Load</span>
-                          <span>{server.load}</span>
-                        </div>
-                        <div className="h-2 w-full rounded-md bg-slate-800">
-                          <div className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400" style={{ width: server.load }} />
-                        </div>
-                        <span className="text-xs uppercase tracking-[0.4em] text-emerald-300">Connect →</span>
+                        {hasSubscription ? "Active" : "Activate"}
                       </button>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Loading */}
-              {screen === "loading" && (
-                <section className="rounded-lg border border-emerald-500/30 bg-black/80 p-8 text-left shadow-2xl shadow-emerald-500/20">
-                  <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">boot</p>
-                  <h2 className="mt-3 text-2xl font-semibold text-emerald-100">Establishing {selectedServer?.name || "relay"}</h2>
-                  <div className="mt-6 space-y-2 text-xs text-emerald-200/80">
-                    {loadingLines.slice(0, loadingLineIndex + 1).map((line, index) => <p key={index}>{line}</p>)}
-                  </div>
-                  <div className="mt-6">
-                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                      <span>Loading</span>
-                      <span>{loadingProgress}%</span>
                     </div>
-                    <div className="mt-3 h-3 w-full rounded-md bg-slate-800">
-                      <div className="h-3 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all" style={{ width: `${loadingProgress}%` }} />
+
+                    <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                      <p className="text-sm font-semibold text-slate-200">Custom Name</p>
+                      <p className="mt-2 text-xs text-slate-400">Permanent unlock for custom names</p>
+                      <button
+                        type="button"
+                        onClick={() => { setHasCustomNameUnlock(true); addLog("Custom name unlocked."); }}
+                        className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                      >
+                        {hasCustomNameUnlock ? "Unlocked" : "Unlock"}
+                      </button>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                      <p className="text-sm font-semibold text-slate-200">Ivy League Access</p>
+                      <p className="mt-2 text-xs text-slate-400">Unlock elite universities</p>
+                      <button
+                        type="button"
+                        onClick={() => { setHasIvyLeagueUnlock(true); addLog("Ivy League access unlocked."); }}
+                        className="mt-4 w-full rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-700"
+                      >
+                        {hasIvyLeagueUnlock ? "Unlocked" : "Unlock"}
+                      </button>
                     </div>
                   </div>
-                </section>
-              )}
+                </div>
+              </div>
+            )}
 
-              {/* Profile */}
-              {screen === "profile" && (
-                <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-8 shadow-2xl shadow-emerald-500/10">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* Landing */}
+            {screen === "landing" && (
+              <section className="flex flex-1 items-center justify-center">
+                <div className="w-full max-w-xl rounded-xl border border-slate-700 bg-slate-900/80 p-8 shadow-2xl backdrop-blur">
+                  <h2 className="text-2xl font-semibold text-slate-100">Welcome to Liquid Society</h2>
+                  <p className="mt-3 text-slate-300">
+                    A simulation of life in modern America. Navigate finances, education, careers, politics, and the choices that shape your path.
+                  </p>
+                  <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4 text-sm text-slate-300">
+                    <p>• Time flows quickly: 1 game day = 5 real minutes</p>
+                    <p>• Society comes first, underground is optional</p>
+                    <p>• Your choices have consequences</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setScreen("character")}
+                    className="mt-6 w-full rounded-lg bg-emerald-600 px-6 py-3 font-medium text-white transition hover:bg-emerald-700"
+                  >
+                    Create Character
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* Character Creation */}
+            {screen === "character" && (
+              <section className="flex-1">
+                <div className="mx-auto w-full max-w-4xl rounded-xl border border-slate-700 bg-slate-900/80 p-6 shadow-2xl backdrop-blur">
+                  <div className="flex items-center justify-between border-b border-slate-700 pb-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.4em] text-emerald-400/70">profile</p>
-                      <h2 className="mt-2 text-2xl font-semibold text-emerald-100">Build identity</h2>
-                      <p className="text-sm text-slate-300">Icon, handle, and city.</p>
+                      <h2 className="text-xl font-semibold text-slate-100">Character Creation</h2>
+                      <p className="text-sm text-slate-400">Step {charStep} of 3</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setScreen("servers")}
-                      className="rounded-md border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 transition hover:border-emerald-300 hover:text-emerald-200"
-                    >
-                      Back
-                    </button>
+                    {charStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setCharStep(charStep - 1)}
+                        className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800"
+                      >
+                        Back
+                      </button>
+                    )}
                   </div>
 
-                  <div className="mt-6 rounded-md border border-slate-700/70 bg-black/60 px-4 py-3">
-                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                      <span>Completion</span>
-                      <span>{profileProgress}%</span>
-                    </div>
-                    <div className="mt-2 h-2 w-full rounded-md bg-slate-800">
-                      <div className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-emerald-300 to-lime-400 transition-all" style={{ width: `${profileProgress}%` }} />
-                    </div>
-                  </div>
-
-                  <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="space-y-6">
-                      {profileStep === 1 && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 1 · Icon</p>
-                            <button type="button" onClick={() => setProfileStep(2)} className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400">
-                              Next →
+                  {/* Step 1: Identity */}
+                  {charStep === 1 && (
+                    <div className="mt-6 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">Gender</label>
+                        <div className="mt-2 grid grid-cols-2 gap-3">
+                          {["Male", "Female"].map(g => (
+                            <button
+                              key={g}
+                              type="button"
+                              onClick={() => setSelectedGender(g)}
+                              className={`rounded-lg border px-4 py-3 text-sm transition ${
+                                selectedGender === g
+                                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                                  : "border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                              }`}
+                            >
+                              {g}
                             </button>
-                          </div>
-
-                          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                            {profileIcons.map((icon, index) => (
-                              <button
-                                key={`${icon}-${index}`}
-                                type="button"
-                                onClick={() => setProfileIcon(icon)}
-                                className={`rounded-2xl border px-4 py-4 text-left text-sm transition ${
-                                  profileIcon === icon
-                                    ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
-                                    : "border-slate-700/70 text-slate-300 hover:border-emerald-400/70"
-                                }`}
-                              >
-                                <div className="flex h-12 w-12 items-center justify-center text-2xl">{icon}</div>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {profileStep === 2 && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 2 · Handle</p>
-                            <div className="flex gap-2">
-                              <button type="button" onClick={() => setProfileStep(1)} className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400">
-                                ← Back
-                              </button>
-                              <button type="button" onClick={() => setProfileStep(3)} className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400">
-                                Next →
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="mt-4 space-y-4">
-                            <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Generated</p>
-                                  <p className="mt-2 text-lg font-semibold text-emerald-100">{username || "--"}</p>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const seed = usernameSeeds[Math.floor(Math.random() * usernameSeeds.length)];
-                                    const suffix = usernameSuffixes[Math.floor(Math.random() * usernameSuffixes.length)];
-                                    const digits = Math.floor(Math.random() * 900 + 100);
-                                    setUsername(`${seed}${suffix}${digits}`);
-                                  }}
-                                  className="rounded-md border border-emerald-300/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-200 hover:text-emerald-100"
-                                >
-                                  Roll
-                                </button>
-                              </div>
-                            </div>
-
-                            <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4">
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Custom</p>
-
-                                <span
-                                  onClick={() => !hasCustomNamePass && setShowShop(true)}
-                                  className={`cursor-pointer rounded-md border px-3 py-1 text-[10px] uppercase tracking-[0.3em] ${
-                                    hasCustomNamePass
-                                      ? "border-amber-300 text-amber-200"
-                                      : "border-slate-700 text-slate-400 hover:border-amber-300/60 hover:text-amber-200"
-                                  }`}
-                                >
-                                  {hasCustomNamePass ? "Unlocked" : "Locked"}
-                                </span>
-                              </div>
-
-                              {hasCustomNamePass ? (
-                                <input
-                                  type="text"
-                                  value={customUsername}
-                                  onChange={(event) => setCustomUsername(event.target.value)}
-                                  placeholder="Enter custom handle"
-                                  className="mt-3 w-full rounded-md border border-slate-700 bg-black/70 px-4 py-3 text-sm text-slate-100 focus:border-emerald-300 focus:outline-none"
-                                />
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => setShowShop(true)}
-                                  className="mt-3 w-full rounded-md border border-dashed border-amber-400/40 bg-black/40 px-4 py-3 text-left text-xs uppercase tracking-[0.3em] text-amber-200/80 transition hover:border-amber-300/70"
-                                >
-                                  Click to unlock
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {profileStep === 3 && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step 3 · City</p>
-                            <button type="button" onClick={() => setProfileStep(2)} className="rounded-md border border-slate-700 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-slate-400">
-                              ← Back
-                            </button>
-                          </div>
-
-                          <div className="mt-4 grid max-h-64 gap-3 overflow-y-auto pr-2 sm:grid-cols-2">
-                            {cityOptions.map((city) => (
-                              <button
-                                key={`${city.city}-${city.country}`}
-                                type="button"
-                                onClick={() => setSelectedCity(city)}
-                                className={`rounded-md border px-4 py-3 text-left text-sm transition ${
-                                  selectedCity.city === city.city
-                                    ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
-                                    : "border-slate-700/70 text-slate-300 hover:border-emerald-400/70"
-                                }`}
-                              >
-                                <p className="text-sm font-semibold">{city.city}</p>
-                                <p className="text-xs text-slate-400">{city.country}</p>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col justify-between gap-6 rounded-md border border-slate-700/70 bg-black/60 p-6">
-                      <div className="space-y-3">
-                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Summary</p>
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/40 bg-slate-950/70 text-2xl">
-                            {profileIcon}
-                          </div>
-                          <div>
-                            <p className="text-base font-semibold text-emerald-100">{displayUsername || "Pending"}</p>
-                            <p className="text-xs text-slate-400">{selectedCity.city}</p>
-                          </div>
-                        </div>
-                        <div className="rounded-md border border-slate-700/70 bg-slate-950/70 p-4 text-xs text-slate-300">
-                          <p>• Starter balances loaded.</p>
-                          <p>• Deliveries can be courier or personal.</p>
-                          <p>• Personal delivery locks deliveries until complete.</p>
+                          ))}
                         </div>
                       </div>
 
-                      {profileComplete && profileStep === 3 && (
-                        <button
-                          type="button"
-                          onClick={() => setScreen("dashboard")}
-                          className="w-full rounded-md bg-emerald-500/20 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:bg-emerald-400/30"
-                        >
-                          Enter
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              {/* Dashboard */}
-              {screen === "dashboard" && (
-                <section className="rounded-lg border border-slate-700/60 bg-slate-950/80 p-6 shadow-2xl shadow-emerald-500/10">
-                  <div className="grid gap-6 lg:grid-cols-[0.28fr_1fr]">
-                    <aside className="rounded-md border border-slate-800/80 bg-black/70 p-4 text-sm text-slate-300">
-                      <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/40 bg-slate-950/70 text-2xl">
-                          {profileIcon}
-                        </div>
+                      {selectedGender && (
                         <div>
-                          <p className="text-base font-semibold text-emerald-100">{displayUsername || "Anonymous"}</p>
-                          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Operator · Day {gameDay}</p>
+                          <label className="block text-sm font-medium text-slate-300">Cultural Background</label>
+                          <select
+                            value={selectedNameSet}
+                            onChange={(e) => setSelectedNameSet(e.target.value)}
+                            className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-slate-200"
+                          >
+                            {Object.keys(nameSets).map(set => (
+                              <option key={set} value={set}>{set}</option>
+                            ))}
+                          </select>
                         </div>
-                      </div>
+                      )}
 
-                      {/* Contraband accordion */}
-                      <div className="mt-4 space-y-2 text-xs uppercase tracking-[0.3em] text-slate-400">
+                      {selectedGender && selectedNameSet && (
+                        <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-xs text-slate-400">Generated Name</p>
+                              <p className="mt-1 text-lg font-medium text-slate-100">{generatedName || "—"}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={generateNameFromSet}
+                              className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300 transition hover:bg-emerald-500/20"
+                            >
+                              Roll Again
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {hasCustomNameUnlock && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300">Custom Name (Unlocked)</label>
+                          <input
+                            type="text"
+                            value={customName}
+                            onChange={(e) => setCustomName(e.target.value)}
+                            placeholder="Enter your custom name"
+                            className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-slate-200"
+                          />
+                        </div>
+                      )}
+
+                      {!hasCustomNameUnlock && (
                         <button
                           type="button"
-                          onClick={() => setContrabandMenuOpen((v) => !v)}
-                          className={`w-full rounded-md border px-3 py-2 text-left transition ${
-                            ["supply", "contracts", "transit"].includes(activeApp)
-                              ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
-                              : "border-slate-800 bg-black/60 text-slate-300 hover:border-emerald-400/70"
-                          }`}
+                          onClick={() => setShowShop(true)}
+                          className="w-full rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-300 transition hover:bg-blue-500/20"
                         >
-                          <div className="flex items-center justify-between">
-                            <span>Contraband</span>
-                            <span className="text-[10px] text-slate-500">{contrabandMenuOpen ? "Hide" : "Expand"}</span>
-                          </div>
+                          Unlock Custom Names (Store)
                         </button>
+                      )}
 
-                        {contrabandMenuOpen && (
-                          <div className="ml-2 space-y-2 border-l border-slate-800 pl-3">
-                            {contrabandSubModules.map((app) => (
-                              <button
-                                key={app.id}
-                                type="button"
-                                onClick={() => setActiveApp(app.id)}
-                                className={`w-full rounded-md border px-3 py-2 text-left transition ${
-                                  activeApp === app.id
-                                    ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
-                                    : "border-slate-800 bg-black/60 text-slate-300 hover:border-emerald-400/70"
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span>{app.label}</span>
-                                  <span className="text-[10px] text-slate-500">{app.status}</span>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                      <button
+                        type="button"
+                        disabled={!canProceedFromIdentity}
+                        onClick={() => setCharStep(2)}
+                        className={`w-full rounded-lg px-6 py-3 font-medium transition ${
+                          canProceedFromIdentity
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : "cursor-not-allowed bg-slate-700 text-slate-500"
+                        }`}
+                      >
+                        Next: Choose City
+                      </button>
+                    </div>
+                  )}
 
-                        {appModules.map((app) => (
+                  {/* Step 2: City */}
+                  {charStep === 2 && (
+                    <div className="mt-6 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">Starting City</label>
+                        <p className="mt-1 text-xs text-slate-400">Each city affects cost of living, job markets, and opportunities (hidden modifiers)</p>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {usCities.map(city => (
                           <button
-                            key={app.id}
+                            key={city.name}
                             type="button"
-                            onClick={() => setActiveApp(app.id)}
-                            className={`w-full rounded-md border px-3 py-2 text-left transition ${
-                              activeApp === app.id
-                                ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
-                                : "border-slate-800 bg-black/60 text-slate-300 hover:border-emerald-400/70"
+                            onClick={() => setSelectedCity(city)}
+                            className={`rounded-lg border px-4 py-3 text-left transition ${
+                              selectedCity?.name === city.name
+                                ? "border-emerald-500 bg-emerald-500/10"
+                                : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
                             }`}
                           >
-                            <div className="flex items-center justify-between">
-                              <span>{menuEmojis[app.id] || "•"} {app.label}</span>
-                              <span className="text-[10px] text-slate-500">{app.status}</span>
-                            </div>
+                            <p className="font-medium text-slate-200">{city.name}</p>
+                            <p className="mt-1 text-xs text-slate-400">🏛️ Major metropolitan area</p>
                           </button>
                         ))}
                       </div>
 
-                      <div className="mt-6 rounded-md border border-emerald-400/30 bg-black/70 p-3 text-xs">
-                        <p className="uppercase tracking-[0.3em] text-emerald-300">Liquidity</p>
-                        <p className="mt-2 text-lg font-semibold text-emerald-100">{totalCashLabel}</p>
-                        <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">Cash on hand: ${cashOnHand.toFixed(2)}</p>
-                      </div>
-                    </aside>
+                      <button
+                        type="button"
+                        disabled={!canProceedFromCity}
+                        onClick={() => setCharStep(3)}
+                        className={`w-full rounded-lg px-6 py-3 font-medium transition ${
+                          canProceedFromCity
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : "cursor-not-allowed bg-slate-700 text-slate-500"
+                        }`}
+                      >
+                        Next: Education
+                      </button>
+                    </div>
+                  )}
 
-                    <div className="space-y-6">
-                      {/* Compact top bar */}
-                      <div className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-slate-800/80 bg-black/60 px-4 py-3">
-                        <div className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                          {selectedCity.city} · {selectedCity.country}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em]">
-                          <div className="rounded-md border border-amber-400/40 bg-black/60 px-3 py-2">
-                            <p className="text-[10px] text-slate-400">City Time</p>
-                            <p className="text-amber-200">{localTimeLabel}</p>
-                          </div>
-                          <div className="rounded-md border border-slate-700/80 bg-black/60 px-3 py-2">
-                            <p className="text-[10px] text-slate-400">Activity</p>
-                            <p className="text-emerald-100">{currentActivity}</p>
-                          </div>
-                        </div>
+                  {/* Step 3: Education */}
+                  {charStep === 3 && (
+                    <div className="mt-6 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">Higher Education</label>
+                        <p className="mt-1 text-xs text-slate-400">Start with education or enter the workforce immediately</p>
                       </div>
 
-                      {/* SUPPLY */}
-                      {activeApp === "supply" && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Supply</p>
-                            <span className="text-xs text-slate-500">
-                              {personalDeliveryActive ? "Delivery locked (personal)" : "Ready"}
-                            </span>
-                          </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => { setEnrollInCollege(true); setCollegeType("Community College"); }}
+                          className={`rounded-lg border px-4 py-3 text-left transition ${
+                            enrollInCollege && collegeType === "Community College"
+                              ? "border-emerald-500 bg-emerald-500/10"
+                              : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
+                          }`}
+                        >
+                          <p className="font-medium text-slate-200">🎓 Community College</p>
+                          <p className="mt-1 text-xs text-emerald-300">Free tuition</p>
+                        </button>
 
-                          <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={handlePlaceOrder}>
-                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                              City
-                              <select
-                                value={supplyDraft.city}
-                                onChange={(e) => setSupplyDraft((p) => ({ ...p, city: e.target.value }))}
-                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
-                              >
-                                {Object.values(cities).map((city) => (
-                                  <option key={city.name} value={city.name}>
-                                    {city.name} · Risk {city.transitRisk}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
+                        <button
+                          type="button"
+                          onClick={() => { setEnrollInCollege(true); setCollegeType("Public University"); }}
+                          className={`rounded-lg border px-4 py-3 text-left transition ${
+                            enrollInCollege && collegeType === "Public University"
+                              ? "border-amber-500 bg-amber-500/10"
+                              : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
+                          }`}
+                        >
+                          <p className="font-medium text-slate-200">🎓 Public University</p>
+                          <p className="mt-1 text-xs text-amber-300">$10,000 debt</p>
+                        </button>
 
-                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                              Tier
-                              <select
-                                value={supplyDraft.tier}
-                                onChange={(e) => setSupplyDraft((p) => ({ ...p, tier: e.target.value }))}
-                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
-                              >
-                                {verdantTierOptions.map((tier) => (
-                                  <option key={tier.tier} value={tier.tier}>
-                                    {tier.tier} · {tier.visibility}/{tier.stability}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
+                        {hasIvyLeagueUnlock ? (
+                          <button
+                            type="button"
+                            onClick={() => { setEnrollInCollege(true); setCollegeType("Ivy League"); }}
+                            className={`rounded-lg border px-4 py-3 text-left transition ${
+                              enrollInCollege && collegeType === "Ivy League"
+                                ? "border-purple-500 bg-purple-500/10"
+                                : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
+                            }`}
+                          >
+                            <p className="font-medium text-slate-200">🎓 Ivy League</p>
+                            <p className="mt-1 text-xs text-purple-300">
+                              {hasSubscription ? "Full scholarship" : "Elite access"}
+                            </p>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setShowShop(true)}
+                            className="rounded-lg border border-purple-500/30 bg-purple-500/10 px-4 py-3 text-left transition hover:bg-purple-500/20"
+                          >
+                            <p className="font-medium text-slate-200">🔒 Ivy League</p>
+                            <p className="mt-1 text-xs text-purple-300">Unlock in store</p>
+                          </button>
+                        )}
 
-                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                              Quantity
-                              <input
-                                type="number"
-                                min="10"
-                                value={supplyDraft.quantity}
-                                onChange={(e) => setSupplyDraft((p) => ({ ...p, quantity: Number(e.target.value) }))}
-                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
-                              />
-                            </label>
+                        <button
+                          type="button"
+                          onClick={() => { setEnrollInCollege(false); setCollegeType(""); setSelectedMajor(""); }}
+                          className={`rounded-lg border px-4 py-3 text-left transition ${
+                            !enrollInCollege
+                              ? "border-blue-500 bg-blue-500/10"
+                              : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
+                          }`}
+                        >
+                          <p className="font-medium text-slate-200">💼 Enter Workforce</p>
+                          <p className="mt-1 text-xs text-blue-300">Start earning now</p>
+                        </button>
+                      </div>
 
-                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                              Pay (Debit)
-                              <select
-                                value={supplyDraft.accountId}
-                                onChange={(e) => setSupplyDraft((p) => ({ ...p, accountId: e.target.value }))}
-                                className="mt-2 w-full rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-sm text-slate-100"
-                              >
-                                {debitAccounts.map((account) => (
-                                  <option key={account.id} value={account.id}>
-                                    {account.bank} · {account.label} (${account.balance.toFixed(0)})
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-
-                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400 sm:col-span-2">
-                              Delivery
-                              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setSupplyDraft((p) => ({ ...p, deliveryMethod: "Courier" }))}
-                                  className={`rounded-md border px-3 py-2 text-left text-xs transition ${
-                                    supplyDraft.deliveryMethod === "Courier"
-                                      ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
-                                      : "border-slate-700 bg-black/60 text-slate-300 hover:border-emerald-400/70"
-                                  }`}
-                                >
-                                  <p className="uppercase tracking-[0.25em]">Courier</p>
-                                  <p className="mt-1 text-[11px] text-slate-400">Small fee · normal ETA</p>
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => setSupplyDraft((p) => ({ ...p, deliveryMethod: "Personal" }))}
-                                  className={`rounded-md border px-3 py-2 text-left text-xs transition ${
-                                    supplyDraft.deliveryMethod === "Personal"
-                                      ? "border-amber-300 bg-amber-500/10 text-amber-100"
-                                      : "border-slate-700 bg-black/60 text-slate-300 hover:border-amber-300/70"
-                                  }`}
-                                >
-                                  <p className="uppercase tracking-[0.25em]">Personal</p>
-                                  <p className="mt-1 text-[11px] text-slate-400">No fee · much longer · locks deliveries</p>
-                                </button>
-                              </div>
-                            </label>
-
-                            <button
-                              type="submit"
-                              disabled={!canAfford || !canPlaceDelivery}
-                              className={`sm:col-span-2 rounded-md border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-                                canAfford && canPlaceDelivery
-                                  ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-100 hover:border-emerald-300"
-                                  : "cursor-not-allowed border-slate-800 bg-slate-900/40 text-slate-500"
-                              }`}
-                            >
-                              Place Order
-                            </button>
-                          </form>
-
-                          <div className="mt-4 rounded-md border border-slate-800 bg-slate-950/70 p-4 text-xs text-slate-300">
-                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cost preview</p>
-                            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                              <div className="flex items-center justify-between"><span>Unit</span><span>${draftUnit.toFixed(2)}</span></div>
-                              <div className="flex items-center justify-between"><span>Qty</span><span>{draftQty}</span></div>
-                              <div className="flex items-center justify-between"><span>Debit fee</span><span>${draftFee.toFixed(2)}</span></div>
-                              <div className="flex items-center justify-between"><span>Delivery fee</span><span>${deliveryFee.toFixed(2)}</span></div>
-                              <div className="flex items-center justify-between text-emerald-100"><span>Total</span><span>${draftTotal.toFixed(2)}</span></div>
-                              <div className="flex items-center justify-between"><span>After</span><span className={canAfford ? "text-emerald-200" : "text-rose-200"}>${postBalance.toFixed(2)}</span></div>
-                            </div>
-                            {!canPlaceDelivery && (
-                              <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-rose-200">
-                                Delivery locked: personal delivery in progress.
-                              </p>
-                            )}
-                            {!canAfford && (
-                              <p className="mt-2 text-[10px] uppercase tracking-[0.3em] text-rose-200">
-                                Insufficient debit funds.
-                              </p>
-                            )}
-                          </div>
+                      {enrollInCollege && collegeType && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300">Select Major</label>
+                          <select
+                            value={selectedMajor}
+                            onChange={(e) => setSelectedMajor(e.target.value)}
+                            className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-slate-200"
+                          >
+                            <option value="">Choose a major...</option>
+                            {collegeType === "Community College" && communityCollegeMajors.map(m => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                            {collegeType === "Public University" && publicUniversityMajors.map(m => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                            {collegeType === "Ivy League" && ivyLeagueMajors.map(m => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
                         </div>
                       )}
 
-                      {/* CONTRACTS */}
-                      {activeApp === "contracts" && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Contracts</p>
-                            <span className="text-xs text-slate-500">Short windows</span>
+                      <button
+                        type="button"
+                        disabled={!canProceedFromEducation}
+                        onClick={startGame}
+                        className={`w-full rounded-lg px-6 py-3 font-medium transition ${
+                          canProceedFromEducation
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : "cursor-not-allowed bg-slate-700 text-slate-500"
+                        }`}
+                      >
+                        Enter Liquid Society
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Main Game Interface */}
+            {screen === "main" && (
+              <section className="flex-1">
+                <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+                  {/* Sidebar */}
+                  <aside className="rounded-xl border border-slate-700 bg-slate-900/80 p-4 backdrop-blur">
+                    {/* Character Card */}
+                    <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                      <p className="text-lg font-semibold text-slate-100">{displayName}</p>
+                      <p className="text-xs text-slate-400">{selectedCity?.name}</p>
+                      <p className="mt-2 text-sm text-emerald-300">{jobTitle}</p>
+                      {enrollInCollege && selectedMajor && (
+                        <p className="text-xs text-slate-400">Major: {selectedMajor}</p>
+                      )}
+                    </div>
+
+                    {/* Quick Stats */}
+                    <div className="mt-4 space-y-2 rounded-lg border border-slate-700 bg-slate-800/50 p-3 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Liquidity</span>
+                        <span className="text-emerald-300">${totalLiquidity.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Total Debt</span>
+                        <span className="text-rose-300">${totalDebt.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Monthly Income</span>
+                        <span className="text-blue-300">${monthlyIncome.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Reputation</span>
+                        <span className="text-slate-200">{reputation}%</span>
+                      </div>
+                    </div>
+
+                    {/* Navigation */}
+                    <nav className="mt-4 space-y-2">
+                      {["finances", "education", "career", "politics"].map(tab => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setActiveTab(tab)}
+                          className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                            activeTab === tab
+                              ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                              : "border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                          }`}
+                        >
+                          {tab === "finances" && "💵 Finances"}
+                          {tab === "education" && "🎓 Education"}
+                          {tab === "career" && "💼 Career"}
+                          {tab === "politics" && "🏛️ Politics"}
+                        </button>
+                      ))}
+
+                      {/* Underground (nested) */}
+                      <div className="rounded-lg border border-slate-700 bg-slate-800/30">
+                        <button
+                          type="button"
+                          onClick={() => setUndergroundOpen(!undergroundOpen)}
+                          className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition hover:bg-slate-700/30"
+                        >
+                          🌿 Underground {undergroundOpen ? "▼" : "▶"}
+                        </button>
+                        {undergroundOpen && (
+                          <div className="space-y-1 p-2">
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("underground-market")}
+                              className={`w-full rounded px-3 py-2 text-left text-xs transition ${
+                                activeTab === "underground-market"
+                                  ? "bg-slate-700/50 text-slate-200"
+                                  : "text-slate-400 hover:bg-slate-700/30"
+                              }`}
+                            >
+                              Market
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("underground-contacts")}
+                              className={`w-full rounded px-3 py-2 text-left text-xs transition ${
+                                activeTab === "underground-contacts"
+                                  ? "bg-slate-700/50 text-slate-200"
+                                  : "text-slate-400 hover:bg-slate-700/30"
+                              }`}
+                            >
+                              Contacts
+                            </button>
                           </div>
+                        )}
+                      </div>
+                    </nav>
+                  </aside>
 
-                          <div className="mt-4 space-y-3 text-sm text-slate-300">
-                            {contracts.map((contract) => (
-                              <div key={contract.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                                <div className="flex flex-wrap items-center justify-between gap-2">
+                  {/* Main Content */}
+                  <div className="space-y-6">
+                    {/* FINANCES */}
+                    {activeTab === "finances" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">💵 Finances</h2>
+                          <span className="text-sm text-slate-400">Financial overview</span>
+                        </div>
+
+                        {/* Cash */}
+                        <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <p className="text-sm font-medium text-slate-300">Cash on Hand</p>
+                          <p className="mt-2 text-3xl font-bold text-emerald-300">${cashOnHand.toFixed(2)}</p>
+                          <p className="mt-2 text-xs text-slate-400">Physical currency for immediate use</p>
+                        </div>
+
+                        {/* Debit Accounts */}
+                        <div className="mt-6">
+                          <p className="text-sm font-medium text-slate-300">Debit Accounts</p>
+                          <div className="mt-3 space-y-3">
+                            {debitAccounts.map(acc => (
+                              <div key={acc.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                                <div className="flex items-start justify-between">
                                   <div>
-                                    <p className="text-emerald-100 font-semibold">{contract.title}</p>
-                                    <p className="text-xs text-slate-400">Tier {contract.tier} · Qty {contract.quantityRange.join("-")}</p>
-                                    <p className="text-xs text-slate-400">Band ${contract.priceBand.join("-")} · Risk {contract.risk}</p>
+                                    <p className="font-medium text-slate-200">{acc.bank} - {acc.type}</p>
+                                    <p className="mt-1 text-2xl font-semibold text-blue-300">${acc.balance.toFixed(2)}</p>
+                                    {acc.apr > 0 && (
+                                      <p className="mt-1 text-xs text-emerald-400">APY: {(acc.apr * 100).toFixed(2)}%</p>
+                                    )}
                                   </div>
-                                  <div className="text-xs text-slate-400">{Math.ceil(contract.remainingMs / 1000)}s</div>
                                 </div>
-
-                                {contract.status === "Open" ? (
-                                  <div className="mt-3 grid gap-2 sm:grid-cols-4">
-                                    <input type="number" min={contract.quantityRange[0]} max={contract.quantityRange[1]} placeholder="Qty"
-                                      className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                                      id={`${contract.id}-qty`} />
-                                    <input type="number" min={contract.priceBand[0]} max={contract.priceBand[1]} placeholder="$ / unit"
-                                      className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                                      id={`${contract.id}-price`} />
-                                    <select id={`${contract.id}-account`} className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100">
-                                      {debitAccounts.map((account) => (
-                                        <option key={account.id} value={account.id}>{account.bank} · {account.label}</option>
-                                      ))}
-                                    </select>
-                                    <button type="button"
-                                      onClick={() => {
-                                        const quantity = Number(document.getElementById(`${contract.id}-qty`).value);
-                                        const price = Number(document.getElementById(`${contract.id}-price`).value);
-                                        const payoutAccountId = document.getElementById(`${contract.id}-account`).value;
-                                        handleSubmitOffer(contract, quantity, price, payoutAccountId);
-                                      }}
-                                      className="rounded-md border border-emerald-400/50 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 hover:border-emerald-300">
-                                      Submit
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <p className="mt-3 text-xs text-slate-400">Status: {contract.status}</p>
-                                )}
+                                <div className="mt-3 grid grid-cols-2 gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const amt = prompt("Deposit amount:");
+                                      if (amt && !isNaN(amt)) {
+                                        const val = parseFloat(amt);
+                                        if (cashOnHand >= val) {
+                                          setCashOnHand(c => c - val);
+                                          setDebitAccounts(accs => accs.map(a => 
+                                            a.id === acc.id ? {...a, balance: a.balance + val} : a
+                                          ));
+                                          addLog(`Deposited ${val.toFixed(2)} to ${acc.bank}`);
+                                        } else {
+                                          addLog("Insufficient cash on hand");
+                                        }
+                                      }
+                                    }}
+                                    className="rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-500/20"
+                                  >
+                                    Deposit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const amt = prompt("Withdraw amount:");
+                                      if (amt && !isNaN(amt)) {
+                                        const val = parseFloat(amt);
+                                        if (acc.balance >= val) {
+                                          setDebitAccounts(accs => accs.map(a => 
+                                            a.id === acc.id ? {...a, balance: a.balance - val} : a
+                                          ));
+                                          setCashOnHand(c => c + val);
+                                          addLog(`Withdrew ${val.toFixed(2)} from ${acc.bank}`);
+                                        } else {
+                                          addLog("Insufficient account balance");
+                                        }
+                                      }
+                                    }}
+                                    className="rounded border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-300 transition hover:bg-blue-500/20"
+                                  >
+                                    Withdraw
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>
                         </div>
-                      )}
 
-                      {/* TRANSIT */}
-                      {activeApp === "transit" && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Transit</p>
-                          <div className="mt-4 space-y-3 text-sm text-slate-300">
-                            {shipments.length === 0 && <p className="text-slate-500">No deliveries in progress.</p>}
-                            {shipments.map((shipment) => {
-                              const elapsed = shipment.durationMs - shipment.remainingMs;
-                              const pct = shipment.durationMs > 0 ? Math.min((elapsed / shipment.durationMs) * 100, 100) : 0;
-                              const etaMin = Math.max(1, Math.ceil(shipment.remainingMs / 1000 / 60));
+                        {/* Credit Cards */}
+                        <div className="mt-6">
+                          <p className="text-sm font-medium text-slate-300">Credit Cards</p>
+                          <div className="mt-3 space-y-3">
+                            {creditAccounts.map(card => {
+                              const available = card.limit - card.balance;
+                              const utilization = (card.balance / card.limit * 100).toFixed(0);
                               return (
-                                <div key={shipment.id} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                                  <div className="flex items-center justify-between">
-                                    <p className="text-emerald-100">{shipment.id}</p>
-                                    <span className="text-xs text-slate-400">{shipment.deliveryMethod === "Personal" ? "Personal" : "Courier"}</span>
+                                <div key={card.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <p className="font-medium text-slate-200">{card.bank}</p>
+                                      <p className="mt-1 text-sm text-slate-400">
+                                        Balance: <span className="text-rose-300">${card.balance.toFixed(2)}</span>
+                                      </p>
+                                      <p className="text-sm text-slate-400">
+                                        Available: <span className="text-emerald-300">${available.toFixed(2)}</span>
+                                      </p>
+                                      <p className="mt-1 text-xs text-amber-400">APR: {(card.apr * 100).toFixed(2)}%</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs text-slate-400">Limit</p>
+                                      <p className="text-lg font-semibold text-slate-200">${card.limit.toFixed(0)}</p>
+                                    </div>
                                   </div>
-                                  <p className="text-xs text-slate-400">{shipment.city} · {shipment.quantity} units · {shipment.tier}</p>
-                                  <p className="text-xs text-slate-400">ETA: {etaMin}m</p>
-
-                                  <div className="mt-3 h-2 w-full rounded-md bg-slate-800">
-                                    <div className="h-2 rounded-md bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-400 transition-all" style={{ width: `${pct}%` }} />
+                                  <div className="mt-3">
+                                    <div className="flex items-center justify-between text-xs text-slate-400">
+                                      <span>Utilization</span>
+                                      <span>{utilization}%</span>
+                                    </div>
+                                    <div className="mt-1 h-2 w-full rounded-full bg-slate-700">
+                                      <div 
+                                        className="h-2 rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500"
+                                        style={{width: `${utilization}%`}}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="mt-3 grid grid-cols-2 gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const amt = prompt("Draw amount:");
+                                        if (amt && !isNaN(amt)) {
+                                          const val = parseFloat(amt);
+                                          if (available >= val) {
+                                            setCreditAccounts(cards => cards.map(c => 
+                                              c.id === card.id ? {...c, balance: c.balance + val} : c
+                                            ));
+                                            setCashOnHand(cash => cash + val);
+                                            addLog(`Drew ${val.toFixed(2)} from ${card.bank}`);
+                                          } else {
+                                            addLog("Exceeds available credit");
+                                          }
+                                        }
+                                      }}
+                                      className="rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300 transition hover:bg-amber-500/20"
+                                    >
+                                      Draw
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const amt = prompt("Payment amount:");
+                                        if (amt && !isNaN(amt)) {
+                                          const val = Math.min(parseFloat(amt), card.balance);
+                                          if (cashOnHand >= val) {
+                                            setCashOnHand(cash => cash - val);
+                                            setCreditAccounts(cards => cards.map(c => 
+                                              c.id === card.id ? {...c, balance: c.balance - val} : c
+                                            ));
+                                            addLog(`Paid ${val.toFixed(2)} to ${card.bank}`);
+                                          } else {
+                                            addLog("Insufficient cash for payment");
+                                          }
+                                        }
+                                      }}
+                                      className="rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-500/20"
+                                    >
+                                      Pay
+                                    </button>
                                   </div>
                                 </div>
                               );
                             })}
                           </div>
                         </div>
-                      )}
 
-                      {/* NETWORK */}
-                      {activeApp === "network" && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Network</p>
-                          <div className="mt-4 grid gap-4 md:grid-cols-2 text-sm text-slate-300">
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Reputation</p>
-                              <p className="mt-2 text-lg text-emerald-100">{reputation}%</p>
-                              <div className="mt-2 h-2 rounded-md bg-slate-800">
-                                <div className="h-2 rounded-md bg-gradient-to-r from-emerald-400 to-emerald-200" style={{ width: `${reputation}%` }} />
+                        {/* Student Debt */}
+                        {studentDebt > 0 && (
+                          <div className="mt-6 rounded-lg border border-rose-500/30 bg-rose-500/5 p-4">
+                            <p className="text-sm font-medium text-slate-300">Student Loans</p>
+                            <p className="mt-2 text-2xl font-semibold text-rose-400">${studentDebt.toFixed(2)}</p>
+                            <p className="mt-1 text-xs text-slate-400">Federal student loan debt</p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const amt = prompt("Payment amount:");
+                                if (amt && !isNaN(amt)) {
+                                  const val = Math.min(parseFloat(amt), studentDebt);
+                                  if (cashOnHand >= val) {
+                                    setCashOnHand(cash => cash - val);
+                                    setStudentDebt(debt => debt - val);
+                                    addLog(`Paid ${val.toFixed(2)} toward student loans`);
+                                  } else {
+                                    addLog("Insufficient cash for payment");
+                                  }
+                                }
+                              }}
+                              className="mt-3 rounded border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20"
+                            >
+                              Make Payment
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* EDUCATION */}
+                    {activeTab === "education" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">🎓 Education</h2>
+                        </div>
+
+                        {enrollInCollege ? (
+                          <div className="mt-6 space-y-4">
+                            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                              <p className="text-sm font-medium text-slate-300">Current Program</p>
+                              <p className="mt-2 text-lg font-semibold text-emerald-300">{collegeType}</p>
+                              <p className="text-sm text-slate-400">Major: {selectedMajor}</p>
+                              
+                              <div className="mt-4">
+                                <div className="flex items-center justify-between text-xs text-slate-400">
+                                  <span>Progress</span>
+                                  <span>{educationProgress}%</span>
+                                </div>
+                                <div className="mt-2 h-2 w-full rounded-full bg-slate-700">
+                                  <div 
+                                    className="h-2 rounded-full bg-emerald-500"
+                                    style={{width: `${educationProgress}%`}}
+                                  />
+                                </div>
                               </div>
                             </div>
 
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Exposure</p>
-                              <p className="mt-2 text-lg text-rose-200">{heat}%</p>
-                              <div className="mt-2 h-2 rounded-md bg-slate-800">
-                                <div className="h-2 rounded-md bg-gradient-to-r from-rose-400 to-amber-300" style={{ width: `${heat}%` }} />
-                              </div>
-                            </div>
-
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Inventory</p>
-                              <div className="mt-2 space-y-2 text-xs">
-                                <div className="flex items-center justify-between"><span>Standard</span><span>{inventory.Standard}</span></div>
-                                <div className="flex items-center justify-between"><span>Premium</span><span>{inventory.Premium}</span></div>
-                              </div>
-                            </div>
-
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cash</p>
-                              <div className="mt-2 space-y-2 text-xs">
-                                <div className="flex items-center justify-between"><span>On hand</span><span>${cashOnHand.toFixed(2)}</span></div>
-                                <div className="flex items-center justify-between text-slate-500"><span>Stash (locked)</span><span>${cashStash.toFixed(2)}</span></div>
-                              </div>
+                            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                              <p className="text-sm text-slate-300">Education increases income potential, unlocks career opportunities, and builds reputation in society.</p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEducationProgress(prev => Math.min(prev + 5, 100));
+                                  addLog("Completed coursework");
+                                }}
+                                className="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
+                              >
+                                Study (Advance Progress)
+                              </button>
                             </div>
                           </div>
+                        ) : (
+                          <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm text-slate-300">Not currently enrolled in higher education.</p>
+                            <p className="mt-2 text-xs text-slate-400">You can enroll later through the career advancement system.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* CAREER */}
+                    {activeTab === "career" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">💼 Career</h2>
                         </div>
-                      )}
 
-                      {/* MAP */}
-                      {/* MAP */}
-{activeApp === "map" && (
-  <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-    <div className="flex items-center justify-between">
-      <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Map</p>
-      <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">SVG projection · code-only</p>
-    </div>
-
-    {(() => {
-      // Real-ish coordinates (lat/lon) for placing markers "where they'd actually be"
-      const cityGeo = {
-        "New York": { lat: 40.7128, lon: -74.006 },
-        "Chicago": { lat: 41.8781, lon: -87.6298 },
-        "Los Angeles": { lat: 34.0522, lon: -118.2437 },
-        "London": { lat: 51.5072, lon: -0.1276 },
-        "Berlin": { lat: 52.52, lon: 13.405 },
-        "Tokyo": { lat: 35.6762, lon: 139.6503 },
-        "Singapore": { lat: 1.3521, lon: 103.8198 },
-        "Toronto": { lat: 43.6532, lon: -79.3832 },
-        "São Paulo": { lat: -23.5505, lon: -46.6333 },
-        "Frankfurt": { lat: 50.1109, lon: 8.6821 },
-      };
-
-      // If you want ONLY your "cities" list (not servers), use Object.keys(cities)
-      const mapCities = Object.values(cities).map((c) => c.name);
-
-      // Equirectangular projection (simple + stable)
-      const W = 920;
-      const H = 420;
-
-      const project = (lat, lon) => {
-        const x = ((lon + 180) / 360) * W;
-        const y = ((90 - lat) / 180) * H;
-        return { x, y };
-      };
-
-      const isSelected = (name) => selectedCity?.city === name;
-
-      const getMarkerTone = (risk) => {
-        if (risk === "High") return "rose";
-        if (risk === "Medium") return "amber";
-        return "emerald";
-      };
-
-      const toneClasses = {
-        emerald: {
-          ring: "stroke-emerald-300/70",
-          fill: "fill-emerald-300",
-          glow: "drop-shadow-[0_0_10px_rgba(16,185,129,0.35)]",
-          text: "text-emerald-200",
-          badge: "border-emerald-400/40 bg-emerald-500/10 text-emerald-200",
-        },
-        amber: {
-          ring: "stroke-amber-300/70",
-          fill: "fill-amber-300",
-          glow: "drop-shadow-[0_0_10px_rgba(245,158,11,0.35)]",
-          text: "text-amber-200",
-          badge: "border-amber-300/40 bg-amber-500/10 text-amber-200",
-        },
-        rose: {
-          ring: "stroke-rose-300/70",
-          fill: "fill-rose-300",
-          glow: "drop-shadow-[0_0_10px_rgba(244,63,94,0.35)]",
-          text: "text-rose-200",
-          badge: "border-rose-300/40 bg-rose-500/10 text-rose-200",
-        },
-      };
-
-      // Build marker list from your cities + any extras present in cityGeo
-      const markers = mapCities
-        .map((name) => {
-          const geo = cityGeo[name];
-          const data = cities[name];
-          if (!geo || !data) return null;
-          const { x, y } = project(geo.lat, geo.lon);
-          const tone = getMarkerTone(data.transitRisk);
-          return { name, ...geo, ...data, x, y, tone };
-        })
-        .filter(Boolean);
-
-      // Optional: include server locations if you ever add coords for them
-      // For now, only your city market nodes.
-
-      return (
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          {/* Map canvas */}
-          <div className="rounded-md border border-slate-800 bg-slate-950/70 p-3">
-            <div className="flex items-center justify-between pb-3">
-              <p className="text-[10px] uppercase tracking-[0.35em] text-slate-400">World (approx)</p>
-              <p className="text-[10px] uppercase tracking-[0.35em] text-slate-500">click a node to select</p>
-            </div>
-
-            <div className="relative overflow-hidden rounded-md border border-slate-800 bg-black/60">
-              <svg
-                viewBox={`0 0 ${W} ${H}`}
-                className="h-[300px] w-full"
-                role="img"
-                aria-label="World map with city markers"
-              >
-                {/* Background grid */}
-                <defs>
-                  <pattern id="grid" width="46" height="35" patternUnits="userSpaceOnUse">
-                    <path d="M 46 0 L 0 0 0 35" fill="none" stroke="rgba(148,163,184,0.12)" strokeWidth="1" />
-                  </pattern>
-
-                  {/* Subtle glow */}
-                  <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="3" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-
-                <rect x="0" y="0" width={W} height={H} fill="rgba(0,0,0,0.35)" />
-                <rect x="0" y="0" width={W} height={H} fill="url(#grid)" />
-
-                {/* Simplified “continent bands” (stylized, not cartographic) */}
-                <path
-                  d="M40,95 C140,55 260,55 360,95 C460,135 610,130 720,90 C820,55 890,70 900,100 L900,170 C820,195 735,205 650,190 C540,170 460,185 360,205 C250,230 120,220 40,180 Z"
-                  fill="rgba(16,185,129,0.07)"
-                  stroke="rgba(16,185,129,0.14)"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M70,250 C160,210 260,210 330,250 C410,295 520,290 610,255 C705,220 790,230 860,260 L860,330 C790,360 700,375 610,360 C520,340 430,360 330,385 C235,410 135,400 70,360 Z"
-                  fill="rgba(56,244,201,0.05)"
-                  stroke="rgba(56,244,201,0.12)"
-                  strokeWidth="2"
-                />
-
-                {/* Markers */}
-                {markers.map((m) => {
-                  const selected = isSelected(m.name);
-                  const tone = toneClasses[m.tone] || toneClasses.emerald;
-
-                  return (
-                    <g
-                      key={m.name}
-                      onClick={() => {
-                        // Select the city (ties into your existing "selectedCity" state used for time display)
-                        const opt = cityOptions.find((c) => c.city === m.name);
-                        if (opt) setSelectedCity(opt);
-
-                        // Optional: also sync Supply draft city so it "follows" selection
-                        setSupplyDraft((p) => ({ ...p, city: m.name }));
-                      }}
-                      style={{ cursor: "pointer" }}
-                      filter="url(#softGlow)"
-                    >
-                      {/* Ping ring if selected */}
-                      {selected && (
-                        <circle
-                          cx={m.x}
-                          cy={m.y}
-                          r="13"
-                          fill="none"
-                          stroke="rgba(16,185,129,0.55)"
-                          strokeWidth="2"
-                        />
-                      )}
-
-                      <circle
-                        cx={m.x}
-                        cy={m.y}
-                        r={selected ? 6.5 : 5}
-                        className={`${tone.fill} ${tone.glow}`}
-                      />
-                      <circle
-                        cx={m.x}
-                        cy={m.y}
-                        r={selected ? 10 : 9}
-                        fill="none"
-                        className={tone.ring}
-                        strokeWidth="2"
-                      />
-
-                      {/* Label */}
-                      <text
-                        x={m.x + 10}
-                        y={m.y + 4}
-                        fill="rgba(226,232,240,0.82)"
-                        fontSize="12"
-                        fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
-                      >
-                        {m.name}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
-              <span className="rounded-md border border-slate-800 bg-black/40 px-2 py-1">Projection: equirectangular</span>
-              <span className="rounded-md border border-slate-800 bg-black/40 px-2 py-1">Markers: lat/lon</span>
-              <span className="rounded-md border border-slate-800 bg-black/40 px-2 py-1">Click: selects city + supply</span>
-            </div>
-          </div>
-
-          {/* Details panel */}
-          <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Selected node</p>
-
-            {(() => {
-              const name = selectedCity?.city;
-              const data = cities[name];
-              if (!name || !data) {
-                return <p className="mt-3 text-slate-500">Select a city marker to view details.</p>;
-              }
-
-              const tone = toneClasses[getMarkerTone(data.transitRisk)] || toneClasses.emerald;
-
-              return (
-                <div className="mt-3 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-lg font-semibold text-emerald-100">{name}</p>
-                      <p className="text-xs text-slate-400">Reliability: {data.reliability}</p>
-                      <p className="text-xs text-slate-400">Culture: {data.culture}</p>
-                    </div>
-
-                    <span className={`rounded-md border px-3 py-1 text-[10px] uppercase tracking-[0.3em] ${tone.badge}`}>
-                      Risk {data.transitRisk}
-                    </span>
-                  </div>
-
-                  <div className="rounded-md border border-slate-800 bg-black/50 p-3 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400">Base price (low)</span>
-                      <span className="text-slate-200">${data.basePrice[0]}</span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-slate-400">Base price (high)</span>
-                      <span className="text-slate-200">${data.basePrice[1]}</span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-slate-400">Transit</span>
-                      <span className="text-slate-200">{data.transitHours}h</span>
-                    </div>
-                  </div>
-
-                  <div className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                    Tip: clicking nodes also updates your Supply city.
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-      );
-    })()}
-  </div>
-)}
-
-
-                      {/* MESSAGES */}
-                      {activeApp === "messages" && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Messages</p>
-                            <span className="text-xs text-slate-500">Mode: {OPENAI_API_KEY === "PUT_YOUR_KEY_HERE" ? "Scripted" : "Configured"}</span>
+                        <div className="mt-6 space-y-4">
+                          <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm font-medium text-slate-300">Current Position</p>
+                            <p className="mt-2 text-lg font-semibold text-blue-300">{jobTitle}</p>
+                            <p className="mt-1 text-sm text-slate-400">
+                              Monthly Income: <span className="text-emerald-300">${monthlyIncome.toFixed(0)}</span>
+                            </p>
                           </div>
 
-                          <div className="mt-4 grid gap-4 lg:grid-cols-[0.35fr_1fr]">
-                            <div className="space-y-2">
-                              {brokers.map((broker) => (
-                                <button
-                                  key={broker.id}
-                                  type="button"
-                                  onClick={() => setSelectedBroker(broker)}
-                                  className={`w-full rounded-md border px-3 py-2 text-left text-xs uppercase tracking-[0.3em] transition ${
-                                    selectedBroker.id === broker.id
-                                      ? "border-emerald-300 bg-emerald-500/10 text-emerald-100"
-                                      : "border-slate-800 bg-black/60 text-slate-300"
-                                  }`}
-                                >
-                                  {broker.name}
-                                </button>
-                              ))}
-                            </div>
-
-                            <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Thread · {selectedBroker.name}</p>
-                              <div className="mt-3 h-52 space-y-3 overflow-y-auto text-xs text-slate-300">
-                                {activeMessages.length === 0 && <p className="text-slate-500">Open a negotiation.</p>}
-                                {activeMessages.map((message) => (
-                                  <div key={message.id} className="rounded-md border border-slate-800 bg-black/60 p-2">
-                                    <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">{message.sender}</p>
-                                    <p>{message.text}</p>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <div className="mt-3 flex gap-2">
-                                <input
-                                  type="text"
-                                  value={messageInput}
-                                  onChange={(event) => setMessageInput(event.target.value)}
-                                  placeholder="Message..."
-                                  className="flex-1 rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={handleSendMessage}
-                                  className="rounded-md border border-emerald-400/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 hover:border-emerald-300"
-                                >
-                                  Send
-                                </button>
-                              </div>
-                            </div>
+                          <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm font-medium text-slate-300">Career Development</p>
+                            <p className="mt-2 text-xs text-slate-400">
+                              Your education, reputation, and network determine available opportunities. Build skills and connections to advance.
+                            </p>
                           </div>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* FINANCES (cleaner, LOC-style) */}
-                      {/* FINANCES (recamped: cash + debit + credit slider) */}
-{activeApp === "finances" && (
-  <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-    <div className="flex items-center justify-between">
-      <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Finances</p>
-      <span className="text-xs text-slate-500">Cash / Debit / Credit</span>
-    </div>
-
-    <div className="mt-4 grid gap-4 lg:grid-cols-3">
-      {/* Cash panel */}
-      <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cash</p>
-        <p className="mt-2 text-2xl font-semibold text-emerald-100">💵 ${cashOnHand.toFixed(2)}</p>
-        <p className="mt-2 text-xs text-slate-500">Stash (locked): ${cashStash.toFixed(2)}</p>
-        <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-slate-500">
-          Use cash for deposits or credit payments.
-        </p>
-      </div>
-
-      {/* Debit accounts */}
-      <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 lg:col-span-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Debit Accounts</p>
-        <div className="mt-3 space-y-3">
-          {debitAccounts.map((a) => {
-            const input = debitMoveInputs[a.id] || { amt: "" };
-            return (
-              <div key={a.id} className="rounded-md border border-slate-800 bg-black/50 p-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-emerald-100">🏦 {a.bank} · {a.label}</p>
-                    <p className="text-xs text-slate-400">
-                      Balance: ${a.balance.toFixed(2)} · Fee {(a.feePct * 100).toFixed(1)}%
-                    </p>
-                  </div>
-                  <div className="text-xs text-slate-400">Delay: {a.delayMinutes}m</div>
-                </div>
-
-                <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_1fr]">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={input.amt}
-                    onChange={(e) =>
-                      setDebitMoveInputs((p) => ({ ...p, [a.id]: { ...input, amt: e.target.value } }))
-                    }
-                    placeholder="Amount"
-                    className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      depositToDebit(a.id, input.amt);
-                      setDebitMoveInputs((p) => ({ ...p, [a.id]: { amt: "" } }));
-                    }}
-                    className="rounded-md border border-emerald-400/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200 hover:border-emerald-300"
-                  >
-                    Deposit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      withdrawFromDebit(a.id, input.amt);
-                      setDebitMoveInputs((p) => ({ ...p, [a.id]: { amt: "" } }));
-                    }}
-                    className="rounded-md border border-amber-300/60 px-3 py-2 text-xs uppercase tracking-[0.3em] text-amber-200 hover:border-amber-200"
-                  >
-                    Withdraw
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Credit accounts (slider + fill bar) */}
-      <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 lg:col-span-3">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Credit Cards</p>
-
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          {creditAccounts.map((c) => {
-            const limit = c.limit;
-            const used = c.balance; // utilized / borrowed
-            const available = Math.max(limit - used, 0);
-            const aprPct = (c.apr * 100).toFixed(2);
-
-            const inp = creditActionInputs[c.id] || { targetBalance: used, amount: "", source: "cash" };
-            const rawTarget = Number(inp.targetBalance);
-            const targetBalance = Number.isFinite(rawTarget) ? rawTarget : used;
-            const clampedTarget = Math.min(Math.max(targetBalance, 0), limit);
-
-            const delta = clampedTarget - used; // + draw, - pay
-            const deltaAbs = Math.abs(delta);
-
-            const availPct = limit > 0 ? Math.min((available / limit) * 100, 100) : 0;
-
-            const applyTargetBalance = () => {
-              const target = clampedTarget;
-
-              const current = used;
-              const d = target - current; // + draw, - pay
-              const amt = Math.round(Math.abs(d) * 100) / 100;
-              if (amt <= 0) return;
-
-              if (d > 0) {
-                // DRAW to cash
-                const canDraw = Math.max(limit - current, 0);
-                if (amt > canDraw) {
-                  addLog("Draw blocked: exceeds available credit.");
-                  return;
-                }
-                setCreditAccounts((prev) =>
-                  prev.map((x) => (x.id === c.id ? { ...x, balance: x.balance + amt } : x))
-                );
-                setCashOnHand((prev) => prev + amt);
-                addLog(`Credit draw: $${amt.toFixed(2)} to cash on hand.`);
-                return;
-              }
-
-              // PAY
-              payCredit(c.id, amt, inp.source);
-            };
-
-            return (
-              <div key={c.id} className="rounded-md border border-slate-800 bg-black/50 p-4">
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-emerald-100">💳 {c.bank}</p>
-                    <p className="text-xs text-slate-400">{c.label} · APR {aprPct}%</p>
-                  </div>
-
-                  <div className="text-right text-xs text-slate-400">
-                    <div className="text-emerald-200">${available.toFixed(2)} left</div>
-                    <div className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                      of ${limit.toFixed(2)} total
-                    </div>
-                  </div>
-                </div>
-
-                {/* Availability bar */}
-                <div className="mt-3">
-                  <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                    <span>Available</span>
-                    <span>{availPct.toFixed(0)}%</span>
-                  </div>
-                  <div className="mt-2 h-2 w-full rounded-md bg-slate-800">
-                    <div className="h-2 rounded-md bg-emerald-400/80" style={{ width: `${availPct}%` }} />
-                  </div>
-                </div>
-
-                {/* Slider = target utilized balance */}
-                <div className="mt-4 rounded-md border border-slate-800 bg-black/40 p-3">
-                  <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                    <span>Target balance</span>
-                    <span className={delta > 0 ? "text-emerald-200" : delta < 0 ? "text-amber-200" : "text-slate-400"}>
-                      {delta > 0 ? `Draw: $${deltaAbs.toFixed(2)}` : delta < 0 ? `Pay: $${deltaAbs.toFixed(2)}` : "No change"}
-                    </span>
-                  </div>
-
-                  <input
-                    type="range"
-                    min={0}
-                    max={limit}
-                    step="0.01"
-                    value={clampedTarget}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      setCreditActionInputs((p) => ({
-                        ...p,
-                        [c.id]: { ...inp, targetBalance: v },
-                      }));
-                    }}
-                    className="mt-3 w-full"
-                  />
-
-                  <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
-                    <span>0</span>
-                    <span>Current: ${used.toFixed(2)}</span>
-                    <span>${limit.toFixed(0)}</span>
-                  </div>
-                </div>
-
-                {/* Inputs + apply */}
-                <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                  {/* Type target balance */}
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={clampedTarget}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      setCreditActionInputs((p) => ({ ...p, [c.id]: { ...inp, targetBalance: v } }));
-                    }}
-                    className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                    placeholder="Target balance"
-                  />
-
-                  {/* Type amount (relative) */}
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={inp.amount || ""}
-                    onChange={(e) =>
-                      setCreditActionInputs((p) => ({ ...p, [c.id]: { ...inp, amount: e.target.value } }))
-                    }
-                    className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                    placeholder="Amount"
-                  />
-
-                  {/* Payment source */}
-                  <select
-                    value={inp.source || "cash"}
-                    onChange={(e) =>
-                      setCreditActionInputs((p) => ({ ...p, [c.id]: { ...inp, source: e.target.value } }))
-                    }
-                    className="rounded-md border border-slate-700 bg-black/70 px-3 py-2 text-xs text-slate-100"
-                  >
-                    <option value="cash">Cash</option>
-                    {debitAccounts.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.bank}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Apply amount -> move slider */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const amt = clampMoney(inp.amount);
-                      if (amt <= 0) return;
-
-                      // If slider implies a direction, follow it; otherwise default: pay if you have a balance else draw.
-                      const impliedDir = clampedTarget !== used ? (clampedTarget > used ? "draw" : "pay") : used > 0 ? "pay" : "draw";
-                      const nextTarget = impliedDir === "draw" ? used + amt : used - amt;
-
-                      setCreditActionInputs((p) => ({
-                        ...p,
-                        [c.id]: { ...inp, targetBalance: nextTarget, amount: "" },
-                      }));
-                    }}
-                    className="sm:col-span-2 rounded-md border border-slate-700 px-3 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 hover:border-emerald-300"
-                  >
-                    Apply Amount → Slider
-                  </button>
-
-                  {/* Apply target balance (pay or draw) */}
-                  <button
-                    type="button"
-                    onClick={applyTargetBalance}
-                    disabled={deltaAbs <= 0}
-                    className={`rounded-md border px-3 py-2 text-xs uppercase tracking-[0.3em] transition ${
-                      delta > 0
-                        ? "border-emerald-400/60 text-emerald-200 hover:border-emerald-300"
-                        : delta < 0
-                        ? "border-amber-300/60 text-amber-200 hover:border-amber-200"
-                        : "border-slate-800 text-slate-500 cursor-not-allowed"
-                    }`}
-                  >
-                    {delta > 0 ? "Draw" : delta < 0 ? "Pay" : "Apply"}
-                  </button>
-                </div>
-
-                <div className="mt-3 text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                  Utilized: ${used.toFixed(2)} · Available: ${available.toFixed(2)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-
-                      {/* FACILITIES */}
-                      {activeApp === "facilities" && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5 text-sm text-slate-300">
-                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Facilities</p>
-                          <p className="mt-3 text-slate-400">Locked. Unlock via reputation tiers.</p>
+                    {/* POLITICS */}
+                    {activeTab === "politics" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">🏛️ Politics & Government</h2>
                         </div>
-                      )}
 
-                      {/* Event Log */}
-                      <div className="rounded-md border border-slate-800 bg-black/60 p-4 text-xs text-slate-400">
-                        <p className="uppercase tracking-[0.3em] text-slate-500">Event Log</p>
-                        <div className="mt-2 space-y-1">
-                          {eventLogRef.current.length === 0 && <p className="text-slate-500">No events yet.</p>}
-                          {eventLogRef.current.map((entry) => <p key={entry.id}>• {entry.text}</p>)}
+                        <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <p className="text-sm text-slate-300">Engage with political systems, vote, lobby, or run for office.</p>
+                          <p className="mt-2 text-xs text-slate-400">System under development - available in future updates.</p>
                         </div>
+                      </div>
+                    )}
+
+                    {/* UNDERGROUND MARKET */}
+                    {activeTab === "underground-market" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">🌿 Underground Market</h2>
+                          <span className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-300">
+                            High Risk
+                          </span>
+                        </div>
+
+                        <div className="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                          <p className="text-sm text-slate-300">
+                            Access to contraband markets. Activities here increase suspicion and carry legal risks.
+                          </p>
+                          <p className="mt-2 text-xs text-slate-400">
+                            Current Suspicion Level: <span className="text-rose-300">{suspicion}%</span>
+                          </p>
+                        </div>
+
+                        <div className="mt-4 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <p className="text-xs text-slate-400">This system is optional and unlocks progressively through gameplay.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* UNDERGROUND CONTACTS */}
+                    {activeTab === "underground-contacts" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">Underground Contacts</h2>
+                        </div>
+
+                        <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <p className="text-sm text-slate-300">
+                            Contacts: <span className="font-semibold">{undergroundContacts}</span>
+                          </p>
+                          <p className="mt-2 text-xs text-slate-400">Build network through careful interaction and trust.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Event Log */}
+                    <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-4 backdrop-blur">
+                      <p className="text-sm font-medium text-slate-300">Recent Activity</p>
+                      <div className="mt-3 space-y-1 text-xs text-slate-400">
+                        {eventLogRef.current.length === 0 ? (
+                          <p>No recent activity</p>
+                        ) : (
+                          eventLogRef.current.map(log => (
+                            <p key={log.id}>• {log.text}</p>
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
-                </section>
-              )}
-            </div>
-          </main>
-        );
-      };
+                </div>
+              </section>
+            )}
+          </div>
+        </main>
+      );
+    };
 
-      const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(<App />);
-    </script>
-  </body>
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
 </html>
