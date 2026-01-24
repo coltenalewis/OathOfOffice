@@ -65,7 +65,8 @@
     const publicUniversityMajors = ["Business", "Engineering", "Psychology", "Biology", "Communications", "Computer Science", "Economics", "Political Science", "Sociology", "Marketing"];
     const ivyLeagueMajors = ["Economics", "Political Science", "Law (Pre-Law)", "International Relations", "Finance", "Philosophy", "Government", "Public Policy", "Business Analytics", "Strategic Management"];
 
-    const MS_PER_GAME_MINUTE = (5 * 60 * 1000) / (24 * 60); // 5 real minutes = 1 game day
+    // 1 real minute = 1 game day
+const MS_PER_GAME_MINUTE = (1 * 60 * 1000) / (24 * 60); // ≈ 41.67 ms
 
     const App = () => {
       const [screen, setScreen] = useState("landing");
