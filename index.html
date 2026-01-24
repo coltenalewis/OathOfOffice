@@ -313,6 +313,7 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
       // Core gameplay state
       const [activeTab, setActiveTab] = useState("finances");
       const [undergroundOpen, setUndergroundOpen] = useState(false);
+      const [contractDrafts, setContractDrafts] = useState({});
 
       // Notifications (badges)
       const [notif, setNotif] = useState({
@@ -802,6 +803,11 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
         );
       };
 
+const safeClone = (obj) => {
+  if (typeof structuredClone === "function") return structuredClone(obj);
+  return JSON.parse(JSON.stringify(obj));
+};
+
       const resolveShipmentOutcome = (shipment) => {
         // Deterministic-ish: weighted by reliability and riskMult
         // roll decreases with reliability, increases with risk
@@ -821,7 +827,8 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
 
         // apply inventory impact
         setInventory(prev => {
-          const next = structuredClone(prev);
+          const next = safeClone(prev);
+
           const p = shipment.productId;
           const q = shipment.qualityId;
 
@@ -867,21 +874,28 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
       };
 
       const updateShipments = useCallback(() => {
-        setShipments(prev =>
-          prev
-            .map(shipment => {
-              const elapsed = Date.now() - shipment.createdAt;
-              const remaining = shipment.durationMs - elapsed;
-              if (remaining <= 0 && shipment.status === "In Transit") {
-                const outcome = resolveShipmentOutcome(shipment);
-                addLog(`Shipment ${shipment.id}: ${outcome}.`);
-                return { ...shipment, status: outcome, remainingMs: 0 };
-              }
-              return { ...shipment, remainingMs: Math.max(remaining, 0) };
-            })
-            .filter(s => s.status === "In Transit")
-        );
-      }, []);
+  setShipments((prev) => {
+    if (!prev || prev.length === 0) return prev;
+
+    const next = prev
+      .map((shipment) => {
+        const elapsed = Date.now() - shipment.createdAt;
+        const remaining = shipment.durationMs - elapsed;
+
+        if (remaining <= 0 && shipment.status === "In Transit") {
+          const outcome = resolveShipmentOutcome(shipment);
+          addLog(`Shipment ${shipment.id}: ${outcome}.`);
+          return { ...shipment, status: outcome, remainingMs: 0 };
+        }
+
+        return { ...shipment, remainingMs: Math.max(remaining, 0) };
+      })
+      .filter((s) => s.status === "In Transit");
+
+    return next;
+  });
+}, []);
+
 
       // Contracts generation (deterministic bands by courtier access)
       const contractIdRef = useRef(0);
@@ -944,28 +958,39 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
       }, [screen, contracts.length, generateContracts]);
 
       const updateContracts = useCallback(() => {
-        setContracts(prev =>
-          prev
-            .map(contract => {
-              const elapsed = Date.now() - contract.createdAt;
-              const remaining = contract.durationMs - elapsed;
-              if (remaining <= 0 && contract.status === "Open") {
-                addLog(`Contract expired: ${contract.title}.`);
-                return { ...contract, status: "Expired", remainingMs: 0 };
-              }
-              return { ...contract, remainingMs: Math.max(remaining, 0) };
-            })
-            .filter(c => c.status !== "Expired")
-        );
-      }, []);
+  setContracts((prev) => {
+    if (!prev || prev.length === 0) return prev;
 
-      useEffect(() => {
-        const interval = setInterval(() => {
-          updateShipments();
-          updateContracts();
-        }, 1000);
-        return () => clearInterval(interval);
-      }, [updateShipments, updateContracts]);
+    const next = prev
+      .map((contract) => {
+        const elapsed = Date.now() - contract.createdAt;
+        const remaining = contract.durationMs - elapsed;
+
+        if (remaining <= 0 && contract.status === "Open") {
+          addLog(`Contract expired: ${contract.title}.`);
+          return { ...contract, status: "Expired", remainingMs: 0 };
+        }
+
+        return { ...contract, remainingMs: Math.max(remaining, 0) };
+      })
+      .filter((c) => c.status !== "Expired");
+
+    return next;
+  });
+}, []);
+
+
+     useEffect(() => {
+  if (screen !== "main") return;
+
+  const interval = setInterval(() => {
+    updateShipments();
+    updateContracts();
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [screen, updateShipments, updateContracts]);
+
 
       // Message threads (deterministic branch selection)
       const [branchPick, setBranchPick] = useState("passive");
@@ -1073,7 +1098,8 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
 
           // remove inventory
           setInventory(prev => {
-            const next = structuredClone(prev);
+            const next = safeClone(prev);
+
             next[contract.productId][contract.qualityId] = Math.max(0, (next[contract.productId][contract.qualityId] || 0) - qtyNum);
             return next;
           });
@@ -2270,48 +2296,117 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
         </span>
       </div>
 
-      <form className="mt-5 grid gap-4 sm:grid-cols-2" onSubmit={handlePlaceOrder}>
+      <form className="mt-5 grid gap-4 sm:grid-cols-2" onSubmit={placeSupplyOrder}>
+        {/* Source type */}
+        <div className="sm:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
+          <p className="text-sm font-semibold text-slate-100">🌐 Source Type</p>
+          <p className="mt-1 text-xs text-slate-400">Domestic is safer/faster. International is slower with extra risk fee.</p>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() =>
+                setSupplyDraft((p) => ({
+                  ...p,
+                  sourceType: "Domestic",
+                  sourceKey: Object.keys(DOMESTIC_MARKETS)[0]
+                }))
+              }
+              className={`rounded-2xl border px-4 py-4 text-left transition ${
+                supplyDraft.sourceType === "Domestic"
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-200"
+                  : "border-slate-800 bg-slate-950/40 text-slate-200 hover:bg-slate-800/50"
+              }`}
+            >
+              <p className="text-sm font-semibold">🏙️ Domestic</p>
+              <p className="mt-1 text-xs text-slate-400">Lower friction · Standard lanes</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setSupplyDraft((p) => ({
+                  ...p,
+                  sourceType: "International",
+                  sourceKey: Object.keys(INTERNATIONAL_REGIONS)[0]
+                }))
+              }
+              className={`rounded-2xl border px-4 py-4 text-left transition ${
+                supplyDraft.sourceType === "International"
+                  ? "border-purple-500 bg-purple-500/10 text-purple-200"
+                  : "border-slate-800 bg-slate-950/40 text-slate-200 hover:bg-slate-800/50"
+              }`}
+            >
+              <p className="text-sm font-semibold">🗺️ International</p>
+              <p className="mt-1 text-xs text-slate-400">Long routes · Higher disruption</p>
+            </button>
+          </div>
+        </div>
+
+        {/* Source key */}
         <label className="text-sm font-semibold text-slate-200">
-          🏙️ Source City
+          🧭 Source
           <select
-            value={supplyDraft.city}
-            onChange={(e) => setSupplyDraft((p) => ({ ...p, city: e.target.value }))}
+            value={supplyDraft.sourceKey}
+            onChange={(e) => setSupplyDraft((p) => ({ ...p, sourceKey: e.target.value }))}
             className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-3 text-sm text-slate-200"
           >
-            {Object.values(cities).map((city) => (
-              <option key={city.name} value={city.name}>
-                {city.name} · Risk {city.transitRisk}
+            {(supplyDraft.sourceType === "International"
+              ? Object.keys(INTERNATIONAL_REGIONS)
+              : Object.keys(DOMESTIC_MARKETS)
+            ).map((k) => (
+              <option key={k} value={k}>
+                {k}
               </option>
             ))}
           </select>
         </label>
 
+        {/* Product */}
         <label className="text-sm font-semibold text-slate-200">
-          🧪 Product Tier
+          🧪 Product
           <select
-            value={supplyDraft.tier}
-            onChange={(e) => setSupplyDraft((p) => ({ ...p, tier: e.target.value }))}
+            value={supplyDraft.productId}
+            onChange={(e) => setSupplyDraft((p) => ({ ...p, productId: e.target.value }))}
             className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-3 text-sm text-slate-200"
           >
-            {verdantTierOptions.map((tier) => (
-              <option key={tier.tier} value={tier.tier}>
-                {tier.tier} · {tier.visibility}/{tier.stability}
+            {PRODUCT_FAMILIES.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.emoji} {p.name}
               </option>
             ))}
           </select>
         </label>
 
+        {/* Quality */}
+        <label className="text-sm font-semibold text-slate-200">
+          🏷️ Quality
+          <select
+            value={supplyDraft.qualityId}
+            onChange={(e) => setSupplyDraft((p) => ({ ...p, qualityId: e.target.value }))}
+            className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-3 text-sm text-slate-200"
+          >
+            {QUALITY_TIERS.map((q) => (
+              <option key={q.id} value={q.id}>
+                {q.name} · Risk x{q.risk} · Reliability {Math.round(q.reliability * 100)}%
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* Quantity */}
         <label className="text-sm font-semibold text-slate-200">
           🔢 Quantity
           <input
             type="number"
-            min="10"
+            min="1"
             value={supplyDraft.quantity}
             onChange={(e) => setSupplyDraft((p) => ({ ...p, quantity: Number(e.target.value) }))}
             className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-3 text-sm text-slate-200"
           />
         </label>
 
+        {/* Payment */}
         <label className="text-sm font-semibold text-slate-200">
           🏦 Payment Account
           <select
@@ -2319,14 +2414,15 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
             onChange={(e) => setSupplyDraft((p) => ({ ...p, accountId: e.target.value }))}
             className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-3 text-sm text-slate-200"
           >
-            {debitAccounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.bank} · {account.type} (${account.balance.toFixed(0)})
+            {debitAccounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.bank} · {a.type} (${a.balance.toFixed(0)})
               </option>
             ))}
           </select>
         </label>
 
+        {/* Delivery Method */}
         <div className="sm:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
           <p className="text-sm font-semibold text-slate-100">🚚 Delivery Method</p>
           <p className="mt-1 text-xs text-slate-400">Courier is faster (fee). Personal is slower (locks deliveries).</p>
@@ -2355,39 +2451,47 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
               }`}
             >
               <p className="text-sm font-semibold">🚶 Personal</p>
-              <p className="mt-1 text-xs text-slate-400">No fee · 2.6x longer · Locks all deliveries</p>
+              <p className="mt-1 text-xs text-slate-400">No fee · 2.6x longer · Locks deliveries</p>
             </button>
           </div>
         </div>
 
+        {/* Cost Breakdown */}
         <div className="sm:col-span-2 rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
           <p className="text-sm font-semibold text-slate-100">🧾 Cost Breakdown</p>
+
           <div className="mt-3 grid gap-2 text-sm">
             <div className="flex justify-between">
               <span className="text-slate-400">Unit Price</span>
-              <span className="text-slate-200">${draftUnit.toFixed(2)}</span>
+              <span className="text-slate-200">${unitPrice.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Quantity</span>
-              <span className="text-slate-200">{draftQty}</span>
+              <span className="text-slate-200">{qty}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Subtotal</span>
-              <span className="text-slate-200">${draftSubtotal.toFixed(2)}</span>
+              <span className="text-slate-200">${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Processing Fee</span>
-              <span className="text-slate-200">${draftFee.toFixed(2)}</span>
+              <span className="text-slate-200">${processingFee.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Delivery Fee</span>
-              <span className="text-slate-200">${courierServiceFee.toFixed(2)}</span>
+              <span className="text-slate-400">Courier Fee</span>
+              <span className="text-slate-200">${courierFee.toFixed(2)}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">International Risk Fee</span>
+              <span className="text-slate-200">${internationalRiskFee.toFixed(2)}</span>
+            </div>
+
             <div className="flex justify-between border-t border-slate-800 pt-2 font-semibold">
               <span className="text-emerald-300">Total</span>
-              <span className="text-emerald-300">${draftTotal.toFixed(2)}</span>
+              <span className="text-emerald-300">${totalCost.toFixed(2)}</span>
             </div>
-            {!canAfford && (
+
+            {!canAffordSupply && (
               <p className="text-xs text-rose-300">Insufficient funds in selected account.</p>
             )}
           </div>
@@ -2395,28 +2499,13 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
 
         <button
           type="submit"
-          disabled={!canAfford || (personalDeliveryActive && supplyDraft.deliveryMethod === "Personal")}
-          onClick={() => {
-            // Pre-toast for redirect suggestion
-            // Actual order logging occurs inside handlePlaceOrder
-            // After placing an order, suggest redirect to Transit.
-            setTimeout(() => {
-              // only if an order likely placed (can't be perfect without refactor)
-              showToast(
-                "Order action submitted",
-                "Want to track it in real-time?",
-                "Go to Transit",
-                "transit"
-              );
-              bumpNotif("transit");
-              bumpNotif("supply");
-            }, 50);
-          }}
+          disabled={!canAffordSupply || (personalDeliveryActive && supplyDraft.deliveryMethod === "Personal")}
           className={`sm:col-span-2 rounded-2xl px-6 py-4 text-sm font-semibold transition ${
-            canAfford && !(personalDeliveryActive && supplyDraft.deliveryMethod === "Personal")
+            canAffordSupply && !(personalDeliveryActive && supplyDraft.deliveryMethod === "Personal")
               ? "bg-emerald-600 text-white hover:bg-emerald-700"
               : "cursor-not-allowed bg-slate-800 text-slate-500"
           }`}
+          onClick={() => bumpNotif("supply", 1)}
         >
           ✅ Place Order
         </button>
@@ -2436,7 +2525,12 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
         </div>
         <button
           type="button"
-          onClick={() => { bumpNotif("contracts"); showToast("Contracts refreshed", "New windows are rotating.", null, null); }}
+          onClick={() => {
+            const next = generateContracts();
+            setContracts(next);
+            bumpNotif("contracts", next.length);
+            showToast("Contracts refreshed", "New windows posted.", null, null);
+          }}
           className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
         >
           🔄 Refresh
@@ -2444,80 +2538,97 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
       </div>
 
       <div className="mt-5 space-y-4">
-        {contracts.length === 0 && (
-          <p className="text-sm text-slate-400">No active contracts.</p>
-        )}
+        {contracts.length === 0 && <p className="text-sm text-slate-400">No active contracts.</p>}
 
-        {contracts.map((contract) => (
-          <div key={contract.id} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-emerald-200">{contract.title}</p>
-                <p className="mt-1 text-xs text-slate-400">
-                  Tier: {contract.tier} · Qty: {contract.quantityRange.join("-")} · Risk: {contract.risk}
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  Price band: ${contract.priceBand.join("-")}
-                </p>
+        {contracts.map((k) => {
+          const prod = PRODUCT_FAMILIES.find((p) => p.id === k.productId);
+          const qual = QUALITY_TIERS.find((q) => q.id === k.qualityId);
+
+          const d = contractDrafts[k.id] || {
+            qty: "",
+            price: "",
+            acct: debitAccounts[0]?.id || "",
+            branch: "passive"
+          };
+
+          const locked = k.lockUntil && k.lockUntil > Date.now();
+
+          return (
+            <div key={k.id} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-emerald-200">{k.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {prod?.emoji} {prod?.name} · {qual?.name} · Qty {k.quantityRange[0]}–{k.quantityRange[1]} · Risk {k.risk}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Price band: ${k.priceBand[0]}–${k.priceBand[1]}
+                    {locked ? <span className="ml-2 text-rose-300">· Locked</span> : null}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-slate-400">⏳ Expires</p>
+                  <p className="text-sm font-semibold text-amber-200">{Math.max(1, Math.ceil(k.remainingMs / 1000 / 60))}m</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-slate-400">⏳ Expires</p>
-                <p className="text-sm font-semibold text-amber-200">
-                  {Math.ceil(contract.remainingMs / 1000 / 60)}m
-                </p>
-              </div>
+
+              {k.status === "Open" && !locked && (
+                <div className="mt-4 grid gap-2 sm:grid-cols-5">
+                  <MoneyInput
+                    value={d.qty}
+                    onChange={(v) => setContractDrafts((p) => ({ ...p, [k.id]: { ...d, qty: v } }))}
+                    placeholder="Qty"
+                    prefix="x"
+                  />
+                  <MoneyInput
+                    value={d.price}
+                    onChange={(v) => setContractDrafts((p) => ({ ...p, [k.id]: { ...d, price: v } }))}
+                    placeholder="$/unit"
+                    prefix="$"
+                  />
+                  <select
+                    value={d.acct}
+                    onChange={(e) => setContractDrafts((p) => ({ ...p, [k.id]: { ...d, acct: e.target.value } }))}
+                    className="rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-3 text-sm text-slate-200"
+                  >
+                    {debitAccounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.bank}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={d.branch}
+                    onChange={(e) => setContractDrafts((p) => ({ ...p, [k.id]: { ...d, branch: e.target.value } }))}
+                    className="rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-3 text-sm text-slate-200"
+                  >
+                    {NEGOTIATION_BRANCHES.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.emoji} {b.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      submitOffer(k, d.qty, d.price, d.acct, d.branch);
+                      showToast("Offer submitted", "Track consequences in Inventory / Finances.", "Go to Inventory", "inventory");
+                    }}
+                    className="rounded-2xl bg-emerald-600 px-3 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
+                  >
+                    📤 Submit
+                  </button>
+                </div>
+              )}
+
+              {(k.status !== "Open" || locked) && (
+                <p className="mt-3 text-sm text-slate-400">Status: {locked ? "Locked" : k.status}</p>
+              )}
             </div>
-
-            {contract.status === "Open" && (
-              <div className="mt-4 grid gap-2 sm:grid-cols-4">
-                <MoneyInput
-                  value={contractDrafts[contract.id]?.qty ?? ""}
-                  onChange={(v) => setContractDrafts((p) => ({ ...p, [contract.id]: { ...(p[contract.id] || {}), qty: v } }))}
-                  placeholder="Qty"
-                  prefix="x"
-                />
-                <MoneyInput
-                  value={contractDrafts[contract.id]?.price ?? ""}
-                  onChange={(v) => setContractDrafts((p) => ({ ...p, [contract.id]: { ...(p[contract.id] || {}), price: v } }))}
-                  placeholder="$/unit"
-                  prefix="$"
-                />
-                <select
-                  value={contractDrafts[contract.id]?.acct ?? debitAccounts[0]?.id}
-                  onChange={(e) => setContractDrafts((p) => ({ ...p, [contract.id]: { ...(p[contract.id] || {}), acct: e.target.value } }))}
-                  className="rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-3 text-sm text-slate-200"
-                >
-                  {debitAccounts.map((a) => (
-                    <option key={a.id} value={a.id}>{a.bank}</option>
-                  ))}
-                </select>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const qty = Number(String(contractDrafts[contract.id]?.qty || "").replace(/[^0-9.-]/g, ""));
-                    const price = Number(String(contractDrafts[contract.id]?.price || "").replace(/[^0-9.-]/g, ""));
-                    const acct = contractDrafts[contract.id]?.acct || debitAccounts[0]?.id;
-
-                    handleSubmitOffer(contract, qty, price, acct);
-
-                    bumpNotif("contracts");
-                    bumpNotif("inventory");
-
-                    showToast("Offer submitted", "You can track consequences in Inventory / Finances.", "Go to Inventory", "inventory");
-                  }}
-                  className="rounded-2xl bg-emerald-600 px-3 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
-                >
-                  📤 Submit
-                </button>
-              </div>
-            )}
-
-            {contract.status !== "Open" && (
-              <p className="mt-3 text-sm text-slate-400">Status: {contract.status}</p>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   )}
@@ -2535,7 +2646,10 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
 
         <button
           type="button"
-          onClick={() => { clearNotif("transit"); showToast("Transit cleared", "Notifications reset for Transit.", null, null); }}
+          onClick={() => {
+            clearNotif("transit");
+            showToast("Transit cleared", "Notifications reset for Transit.", null, null);
+          }}
           className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
         >
           🧹 Clear Badge
@@ -2543,14 +2657,15 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
       </div>
 
       <div className="mt-5 space-y-4">
-        {shipments.length === 0 && (
-          <p className="text-sm text-slate-400">No shipments in transit.</p>
-        )}
+        {shipments.length === 0 && <p className="text-sm text-slate-400">No shipments in transit.</p>}
 
         {shipments.map((s) => {
           const elapsed = s.durationMs - s.remainingMs;
           const pct = s.durationMs > 0 ? Math.min((elapsed / s.durationMs) * 100, 100) : 0;
           const etaMin = Math.max(1, Math.ceil(s.remainingMs / 1000 / 60));
+
+          const prod = PRODUCT_FAMILIES.find((p) => p.id === s.productId);
+          const qual = QUALITY_TIERS.find((q) => q.id === s.qualityId);
 
           return (
             <div key={s.id} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
@@ -2558,7 +2673,7 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
                 <div>
                   <p className="text-sm font-semibold text-emerald-200">{s.id}</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    {s.city} · {s.quantity} units · {s.tier} · {s.deliveryMethod}
+                    {s.sourceType}: {s.sourceKey} · {s.quantity} units · {prod?.emoji} {prod?.name} ({qual?.name}) · {s.deliveryMethod}
                   </p>
                 </div>
                 <div className="text-right">
@@ -2591,7 +2706,10 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
         </div>
         <button
           type="button"
-          onClick={() => { clearNotif("messages"); showToast("Messages cleared", "Unread badge reset.", null, null); }}
+          onClick={() => {
+            clearNotif("messages");
+            showToast("Messages cleared", "Unread badge reset.", null, null);
+          }}
           className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
         >
           🧹 Clear Badge
@@ -2600,37 +2718,38 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[240px_1fr]">
         <div className="space-y-2">
-          {brokers.map((b) => (
+          {courtiers.map((c) => (
             <button
-              key={b.id}
+              key={c.id}
               type="button"
-              onClick={() => setSelectedBroker(b)}
+              onClick={() => setSelectedCourtierId(c.id)}
               className={`w-full rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
-                selectedBroker.id === b.id
+                selectedCourtierId === c.id
                   ? "border-purple-500 bg-purple-500/10 text-purple-200"
                   : "border-slate-800 bg-slate-900/40 text-slate-200 hover:bg-slate-800/50"
               }`}
             >
-              {b.name} <span className="text-xs text-slate-500">· {b.city}</span>
+              {c.name} <span className="text-xs text-slate-500">· {c.city}</span>
             </button>
           ))}
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-semibold text-slate-100">
-              {selectedBroker.name} <span className="text-xs text-slate-500">· {selectedBroker.city}</span>
+              {selectedCourtier?.name} <span className="text-xs text-slate-500">· {selectedCourtier?.city}</span>
             </p>
             <p className="text-xs text-slate-400">
-              Messages used: {messageCounts[selectedBroker.id] || 0}/5
+              Access: {access[selectedCourtierId] ?? 10} · {courtierLocked(selectedCourtierId) ? "Locked" : "Open"}
             </p>
           </div>
 
           <div className="mt-4 h-64 space-y-2 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
-            {activeMessages.length === 0 && (
+            {(messages[selectedCourtierId] || []).length === 0 && (
               <p className="text-sm text-slate-400">No messages yet. Start a negotiation.</p>
             )}
-            {activeMessages.map((m) => (
+
+            {(messages[selectedCourtierId] || []).map((m) => (
               <div
                 key={m.id}
                 className={`rounded-2xl p-3 text-sm ${
@@ -2643,18 +2762,36 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
             ))}
           </div>
 
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 grid gap-2 sm:grid-cols-[180px_1fr_auto]">
+            <select
+              value={branchPick}
+              onChange={(e) => setBranchPick(e.target.value)}
+              className="rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm text-slate-200"
+            >
+              {NEGOTIATION_BRANCHES.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.emoji} {b.label}
+                </option>
+              ))}
+            </select>
+
             <input
               type="text"
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
               placeholder="Type message..."
-              className="flex-1 rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500"
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSendMessage(); bumpNotif("messages"); } }}
+              className="rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  sendNegotiationMessage();
+                }
+              }}
             />
+
             <button
               type="button"
-              onClick={() => { handleSendMessage(); bumpNotif("messages"); }}
+              onClick={sendNegotiationMessage}
               className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
             >
               📩 Send
@@ -2678,43 +2815,63 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
 
         <button
           type="button"
-          onClick={() => { clearNotif("inventory"); showToast("Inventory reviewed", "Badge cleared.", null, null); }}
+          onClick={() => {
+            clearNotif("inventory");
+            showToast("Inventory reviewed", "Badge cleared.", null, null);
+          }}
           className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
         >
           🧹 Clear Badge
         </button>
       </div>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
-          <p className="text-sm font-semibold text-slate-100">Standard</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-100">{inventory.Standard || 0}</p>
-          <p className="mt-1 text-xs text-slate-400">units</p>
-        </div>
+      <div className="mt-5 space-y-4">
+        {PRODUCT_FAMILIES.map((p) => (
+          <div key={p.id} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-100">
+                {p.emoji} {p.name}
+              </p>
+              <p className="text-xs text-slate-400">
+                Total:{" "}
+                {Object.values(inventory[p.id] || {}).reduce((sum, v) => sum + (Number(v) || 0), 0)} units
+              </p>
+            </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
-          <p className="text-sm font-semibold text-slate-100">Premium</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-100">{inventory.Premium || 0}</p>
-          <p className="mt-1 text-xs text-slate-400">units</p>
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/30 p-5">
-        <p className="text-sm font-semibold text-slate-100">⚠️ Risk Metrics</p>
-
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>Heat</span>
-            <span>{heat}%</span>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              {QUALITY_TIERS.map((q) => (
+                <div key={q.id} className="rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+                  <p className="text-xs text-slate-400">{q.name}</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-100">
+                    {(inventory[p.id]?.[q.id] || 0).toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Risk x{q.risk} · Rel {Math.round(q.reliability * 100)}%
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="mt-2 h-2 w-full rounded-full bg-slate-950/60">
-            <div className="h-2 rounded-full bg-emerald-500/70" style={{ width: `${heat}%` }} />
+        ))}
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5">
+          <p className="text-sm font-semibold text-slate-100">⚠️ Risk Metrics</p>
+
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <span>Heat</span>
+              <span>{heat}%</span>
+            </div>
+            <div className="mt-2 h-2 w-full rounded-full bg-slate-950/60">
+              <div className="h-2 rounded-full bg-emerald-500/70" style={{ width: `${heat}%` }} />
+            </div>
           </div>
         </div>
       </div>
     </div>
   )}
 </div>
+
       )}
     </div>
   </div>
