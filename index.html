@@ -1,55 +1,1806 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oath Of Office</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.0/dist/tailwind.min.css">
-    <style>
-        .notification-bubble {
-            background-color: #f0f0f0;
-            border-radius: 50%;
-            position: relative;
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            text-align: center;
-        }
-        .notification-bubble::after {
-            content: '';
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: red;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liquid Society</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
-    <header class="bg-blue-600 p-4 text-white">
-        <h1 class="text-2xl font-bold">Welcome to Oath Of Office</h1>
-        <nav>
-            <ul class="flex space-x-4">
-                <li><a href="#" class="text-lg"><span>🔔</span> Notifications <span class="notification-bubble"></span></a></li>
-                <li><a href="#" class="text-lg"><span>⚙️</span> Settings</a></li>
-                <li><a href="#" class="text-lg"><span>❓</span> Help</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main class="p-4">
-        <h2 class="text-xl font-semibold">Enhanced Landing Page</h2>
-        <p class="mb-4">This is an improved design with custom-styled inputs and emoji integration.</p>
-        <form>
-            <label for="name" class="block text-sm font-medium text-gray-700">Name:</label>
-            <input type="text" id="name" class="mt-1 block w-full border rounded-md p-2" placeholder="Your Name" />
-            
-            <label for="email" class="block text-sm font-medium text-gray-700 mt-4">Email:</label>
-            <input type="email" id="email" class="mt-1 block w-full border rounded-md p-2" placeholder="Your Email" />
-            
-            <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md">Submit <span>🚀</span></button>
-        </form>
-    </main>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+    // Name sets representing US cultural backgrounds
+    const nameSets = {
+      "General US": {
+        male: ["James", "Robert", "John", "Michael", "David", "William", "Richard", "Joseph", "Thomas", "Christopher"],
+        female: ["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen"],
+        surnames: ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
+      },
+      "African American": {
+        male: ["DeAndre", "Jamal", "Marcus", "Terrell", "Darius", "Isaiah", "Malik", "Xavier", "Andre", "Tyrone"],
+        female: ["Aaliyah", "Destiny", "Diamond", "Ebony", "Imani", "Jasmine", "Keisha", "Latoya", "Tamika", "Zara"],
+        surnames: ["Washington", "Jefferson", "Jackson", "Harris", "Robinson", "Williams", "Thompson", "Moore", "Taylor", "Anderson"]
+      },
+      "Hispanic American": {
+        male: ["Carlos", "Jose", "Juan", "Luis", "Miguel", "Pedro", "Antonio", "Francisco", "Rafael", "Jorge"],
+        female: ["Maria", "Carmen", "Rosa", "Ana", "Elena", "Isabel", "Sofia", "Lucia", "Gloria", "Teresa"],
+        surnames: ["Garcia", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Perez", "Sanchez", "Ramirez", "Torres"]
+      },
+      "Asian American": {
+        male: ["David", "Daniel", "Kevin", "Ryan", "Andrew", "James", "Michael", "Steven", "Brian", "Jason"],
+        female: ["Jennifer", "Michelle", "Jessica", "Emily", "Amy", "Lisa", "Angela", "Christina", "Sarah", "Stephanie"],
+        surnames: ["Lee", "Kim", "Park", "Chen", "Wang", "Liu", "Nguyen", "Patel", "Singh", "Chang"]
+      }
+    };
+
+    const usCities = [
+      { name: "New York, NY", cost: 1.8, jobs: 1.4, education: 1.3, networking: 1.5, underground: 1.2 },
+      { name: "Los Angeles, CA", cost: 1.6, jobs: 1.2, education: 1.1, networking: 1.3, underground: 1.4 },
+      { name: "Chicago, IL", cost: 1.3, jobs: 1.1, education: 1.2, networking: 1.1, underground: 1.1 },
+      { name: "Houston, TX", cost: 1.1, jobs: 1.3, education: 0.9, networking: 1.0, underground: 1.3 },
+      { name: "Phoenix, AZ", cost: 1.0, jobs: 1.0, education: 0.8, networking: 0.9, underground: 1.2 },
+      { name: "Philadelphia, PA", cost: 1.2, jobs: 1.0, education: 1.1, networking: 1.0, underground: 1.0 },
+      { name: "San Antonio, TX", cost: 0.9, jobs: 0.9, education: 0.8, networking: 0.8, underground: 1.1 },
+      { name: "San Diego, CA", cost: 1.5, jobs: 1.1, education: 1.0, networking: 1.1, underground: 0.9 },
+      { name: "Dallas, TX", cost: 1.2, jobs: 1.2, education: 1.0, networking: 1.1, underground: 1.2 },
+      { name: "Austin, TX", cost: 1.3, jobs: 1.3, education: 1.1, networking: 1.2, underground: 0.8 }
+    ];
+
+    const communityCollegeMajors = ["General Studies", "Business Admin", "Computer Science", "Nursing", "Automotive Tech", "Culinary Arts"];
+    const publicUniversityMajors = ["Business", "Engineering", "Psychology", "Biology", "Communications", "Computer Science", "Economics", "Political Science", "Sociology", "Marketing"];
+    const ivyLeagueMajors = ["Economics", "Political Science", "Law (Pre-Law)", "International Relations", "Finance", "Philosophy", "Government", "Public Policy", "Business Analytics", "Strategic Management"];
+
+    const MS_PER_GAME_MINUTE = (5 * 60 * 1000) / (24 * 60); // 5 real minutes = 1 game day
+
+    const App = () => {
+      const [screen, setScreen] = useState("landing");
+      const [bootTimestamp] = useState(Date.now());
+
+      // Shop state
+      const [hasSubscription, setHasSubscription] = useState(false);
+      const [hasCustomNameUnlock, setHasCustomNameUnlock] = useState(false);
+      const [hasIvyLeagueUnlock, setHasIvyLeagueUnlock] = useState(false);
+      const [showShop, setShowShop] = useState(false);
+
+      // Character creation
+      const [charStep, setCharStep] = useState(1);
+      const [selectedGender, setSelectedGender] = useState("");
+      const [selectedNameSet, setSelectedNameSet] = useState("General US");
+      const [generatedName, setGeneratedName] = useState("");
+      const [customName, setCustomName] = useState("");
+      const [selectedCity, setSelectedCity] = useState(null);
+      const [enrollInCollege, setEnrollInCollege] = useState(false);
+      const [collegeType, setCollegeType] = useState("");
+      const [selectedMajor, setSelectedMajor] = useState("");
+
+      // Core gameplay state
+      const [activeTab, setActiveTab] = useState("finances");
+      const [undergroundOpen, setUndergroundOpen] = useState(false);
+
+      // Finances
+      const [cashOnHand, setCashOnHand] = useState(500);
+      const [debitAccounts, setDebitAccounts] = useState([
+        { id: "d1", bank: "Chase", type: "Checking", balance: 1200, apr: 0 },
+        { id: "d2", bank: "Bank of America", type: "Savings", balance: 3000, apr: 0.02 }
+      ]);
+      const [creditAccounts, setCreditAccounts] = useState([
+        { id: "c1", bank: "Capital One", balance: 0, limit: 2000, apr: 0.1999 },
+        { id: "c2", bank: "Discover", balance: 150, limit: 5000, apr: 0.1799 }
+      ]);
+      const [studentDebt, setStudentDebt] = useState(0);
+
+      // Education & Career
+      const [jobTitle, setJobTitle] = useState("Unemployed");
+      const [monthlyIncome, setMonthlyIncome] = useState(0);
+      const [educationProgress, setEducationProgress] = useState(0);
+
+      // Social metrics
+      const [reputation, setReputation] = useState(50);
+      const [suspicion, setSuspicion] = useState(5);
+
+      // Underground (full mechanics restored)
+      const [inventory, setInventory] = useState({ Standard: 0, Premium: 0 });
+      const [heat, setHeat] = useState(8);
+      const [shipments, setShipments] = useState([]);
+      const [contracts, setContracts] = useState([]);
+      const [messages, setMessages] = useState({});
+      const [messageInput, setMessageInput] = useState("");
+      const [messageCounts, setMessageCounts] = useState({});
+      const [personalDeliveryActive, setPersonalDeliveryActive] = useState(false);
+
+      // Supply draft state
+      const [supplyDraft, setSupplyDraft] = useState({
+        city: "New York",
+        tier: "Standard",
+        quantity: 30,
+        accountId: "d1",
+        deliveryMethod: "Courier"
+      });
+
+      // Broker selection
+      const brokers = useMemo(() => [
+        {
+          id: "broker-onyx",
+          name: "Broker 01",
+          city: "New York",
+          personality: { fearTolerance: 0.4, patience: 0.6, pride: 0.7, aggressionResponse: 0.5, riskAppetite: 0.6 }
+        },
+        {
+          id: "broker-veil",
+          name: "Broker 02",
+          city: "Chicago",
+          personality: { fearTolerance: 0.7, patience: 0.5, pride: 0.4, aggressionResponse: 0.6, riskAppetite: 0.7 }
+        },
+        {
+          id: "broker-kite",
+          name: "Broker 03",
+          city: "Los Angeles",
+          personality: { fearTolerance: 0.3, patience: 0.8, pride: 0.5, aggressionResponse: 0.4, riskAppetite: 0.5 }
+        }
+      ], []);
+
+      const [selectedBroker, setSelectedBroker] = useState(brokers[0]);
+
+      // Market data
+      const cities = useMemo(() => ({
+        "New York": { name: "New York", basePrice: [140, 190], reliability: "Stable", transitRisk: "Medium", transitHours: 10, culture: "Direct" },
+        "Chicago": { name: "Chicago", basePrice: [130, 175], reliability: "Moderate", transitRisk: "Low", transitHours: 8, culture: "Formal" },
+        "Los Angeles": { name: "Los Angeles", basePrice: [120, 170], reliability: "Volatile", transitRisk: "High", transitHours: 14, culture: "Guarded" },
+        "Houston": { name: "Houston", basePrice: [125, 165], reliability: "Stable", transitRisk: "Medium", transitHours: 9, culture: "Direct" },
+        "Phoenix": { name: "Phoenix", basePrice: [115, 160], reliability: "Moderate", transitRisk: "High", transitHours: 12, culture: "Casual" },
+        "Philadelphia": { name: "Philadelphia", basePrice: [135, 180], reliability: "Stable", transitRisk: "Low", transitHours: 8, culture: "Reserved" }
+      }), []);
+
+      const verdantTierOptions = [
+        { tier: "Standard", visibility: "Low", stability: "Stable" },
+        { tier: "Premium", visibility: "High", stability: "Fragile" }
+      ];
+
+      const eventLogRef = useRef([]);
+
+      const gameElapsedMs = Date.now() - bootTimestamp;
+      const gameMinutes = Math.floor(gameElapsedMs / MS_PER_GAME_MINUTE);
+      const gameDay = Math.floor(gameMinutes / 1440) + 1;
+      const gameMonth = Math.floor(gameDay / 30) + 1;
+      const gameHour = Math.floor((gameMinutes % 1440) / 60);
+      const gameMinute = gameMinutes % 60;
+      const gameTimeStr = `${String(gameHour).padStart(2, '0')}:${String(gameMinute).padStart(2, '0')}`;
+
+      const displayName = (hasCustomNameUnlock && customName.trim()) ? customName : generatedName;
+
+      const totalLiquidity = useMemo(() => {
+        const debitTotal = debitAccounts.reduce((sum, a) => sum + a.balance, 0);
+        const creditAvail = creditAccounts.reduce((sum, c) => sum + Math.max(c.limit - c.balance, 0), 0);
+        return debitTotal + creditAvail + cashOnHand;
+      }, [debitAccounts, creditAccounts, cashOnHand]);
+
+      const totalDebt = useMemo(() => {
+        const creditDebt = creditAccounts.reduce((sum, c) => sum + c.balance, 0);
+        return creditDebt + studentDebt;
+      }, [creditAccounts, studentDebt]);
+
+      const addLog = (msg) => {
+        eventLogRef.current = [{ id: Date.now() + Math.random(), text: msg }, ...eventLogRef.current].slice(0, 12);
+      };
+
+      // Generate contracts
+      const generateContracts = useCallback(() => {
+        return brokers.map((broker, index) => {
+          const tier = index % 2 === 0 ? "Standard" : "Premium";
+          const base = tier === "Premium" ? 190 : 130;
+          const windowHours = Math.floor(Math.random() * 18 + 6);
+          const durationMs = windowHours * 60 * MS_PER_GAME_MINUTE;
+          return {
+            id: `contract-${broker.id}-${Date.now()}-${index}`,
+            brokerId: broker.id,
+            title: `${broker.name} · ${broker.city}`,
+            tier,
+            quantityRange: [20, 80],
+            priceBand: [base, base + 40],
+            risk: index % 2 === 0 ? "Medium" : "High",
+            createdAt: Date.now(),
+            durationMs,
+            remainingMs: durationMs,
+            status: "Open"
+          };
+        });
+      }, [brokers]);
+
+      useEffect(() => {
+        if (screen === "main" && contracts.length === 0) {
+          setContracts(generateContracts());
+        }
+      }, [screen, contracts.length, generateContracts]);
+
+      // Resolve shipment outcomes
+      const resolveShipmentOutcome = (shipment) => {
+        const outcomes = ["Delivered", "Delayed", "Partial Loss", "Disrupted"];
+        const roll = Math.random();
+        let outcome = outcomes[0];
+        if (roll > 0.85) outcome = outcomes[3];
+        else if (roll > 0.7) outcome = outcomes[2];
+        else if (roll > 0.5) outcome = outcomes[1];
+
+        setInventory((prev) => {
+          const newInventory = { ...prev };
+          if (outcome === "Delivered") newInventory[shipment.tier] = (newInventory[shipment.tier] || 0) + shipment.quantity;
+          else if (outcome === "Delayed") newInventory[shipment.tier] = (newInventory[shipment.tier] || 0) + Math.floor(shipment.quantity * 0.8);
+          else if (outcome === "Partial Loss") newInventory[shipment.tier] = (newInventory[shipment.tier] || 0) + Math.floor(shipment.quantity * 0.5);
+          return newInventory;
+        });
+
+        setHeat((prev) => Math.min(prev + (outcome === "Disrupted" ? 6 : 2), 100));
+        setReputation((prev) => Math.max(prev - (outcome === "Disrupted" ? 5 : 1), 0));
+
+        if (shipment.deliveryMethod === "Personal") {
+          setPersonalDeliveryActive(false);
+        }
+
+        return outcome;
+      };
+
+      // Update shipments and contracts
+      const updateShipments = useCallback(() => {
+        setShipments((prev) =>
+          prev
+            .map((shipment) => {
+              const elapsed = Date.now() - shipment.createdAt;
+              const remaining = shipment.durationMs - elapsed;
+              if (remaining <= 0 && shipment.status === "In Transit") {
+                const outcome = resolveShipmentOutcome(shipment);
+                addLog(`Shipment ${shipment.id}: ${outcome}.`);
+                return { ...shipment, status: outcome, remainingMs: 0 };
+              }
+              return { ...shipment, remainingMs: Math.max(remaining, 0) };
+            })
+            .filter((shipment) => shipment.status === "In Transit")
+        );
+      }, []);
+
+      const updateContracts = useCallback(() => {
+        setContracts((prev) =>
+          prev
+            .map((contract) => {
+              const elapsed = Date.now() - contract.createdAt;
+              const remaining = contract.durationMs - elapsed;
+              if (remaining <= 0 && contract.status === "Open") {
+                addLog(`Contract expired: ${contract.title}.`);
+                return { ...contract, status: "Expired", remainingMs: 0 };
+              }
+              return { ...contract, remainingMs: Math.max(remaining, 0) };
+            })
+            .filter((contract) => contract.status !== "Expired")
+        );
+      }, []);
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          updateShipments();
+          updateContracts();
+        }, 1000);
+        return () => clearInterval(interval);
+      }, [updateShipments, updateContracts]);
+
+      // Supply cost calculations
+      const draftCityData = cities[supplyDraft.city] || cities["New York"];
+      const payingDebit = debitAccounts.find((a) => a.id === supplyDraft.accountId);
+
+      const draftUnit = useMemo(() => {
+        if (!draftCityData) return 0;
+        return supplyDraft.tier === "Premium" ? draftCityData.basePrice[1] : draftCityData.basePrice[0];
+      }, [draftCityData, supplyDraft.tier]);
+
+      const draftQty = useMemo(() => {
+        const q = Number(supplyDraft.quantity);
+        if (!Number.isFinite(q)) return 0;
+        return Math.max(0, q);
+      }, [supplyDraft.quantity]);
+
+      const draftSubtotal = Number(draftUnit) * Number(draftQty);
+      const courierServiceFee = supplyDraft.deliveryMethod === "Courier" ? draftSubtotal * 0.10 : 0;
+      const draftFee = payingDebit ? draftSubtotal * 0.01 : 0;
+      const draftTotal = draftSubtotal + draftFee + courierServiceFee;
+      const canAfford = payingDebit ? payingDebit.balance >= draftTotal : false;
+
+      // Place supply order
+      const handlePlaceOrder = (event) => {
+        event.preventDefault();
+
+        if (personalDeliveryActive && supplyDraft.deliveryMethod === "Personal") {
+          addLog("Delivery locked: you are currently delivering in person.");
+          return;
+        }
+
+        const city = supplyDraft.city;
+        const tier = supplyDraft.tier;
+        const quantity = Number(supplyDraft.quantity);
+        const accountId = supplyDraft.accountId;
+        const deliveryMethod = supplyDraft.deliveryMethod;
+
+        const cityData = cities[city];
+        if (!cityData) {
+          addLog("Market not found.");
+          return;
+        }
+
+        const unit = tier === "Premium" ? cityData.basePrice[1] : cityData.basePrice[0];
+        const subtotal = unit * quantity;
+        const debit = debitAccounts.find((a) => a.id === accountId);
+        if (!debit) {
+          addLog("Payment account not found.");
+          return;
+        }
+
+        const fee = subtotal * 0.01;
+        const serviceFee = deliveryMethod === "Courier" ? subtotal * 0.10 : 0;
+        const total = subtotal + fee + serviceFee;
+
+        if (debit.balance < total) {
+          addLog("Purchase blocked: insufficient funds.");
+          return;
+        }
+
+        setDebitAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, balance: a.balance - total } : a)));
+
+        const transitMinutes = cityData.transitHours * 60;
+        const baseDurationMs = transitMinutes * MS_PER_GAME_MINUTE;
+        const durationMultiplier = deliveryMethod === "Personal" ? 2.6 : 1.0;
+        const durationMs = baseDurationMs * durationMultiplier;
+
+        const shipmentId = `S-${Math.floor(Math.random() * 9000 + 1000)}`;
+
+        setShipments((prev) => [
+          {
+            id: shipmentId,
+            city,
+            tier,
+            quantity,
+            status: "In Transit",
+            createdAt: Date.now(),
+            durationMs,
+            remainingMs: durationMs,
+            deliveryMethod,
+            serviceFee
+          },
+          ...prev
+        ]);
+
+        if (deliveryMethod === "Personal") {
+          setPersonalDeliveryActive(true);
+          addLog(`Personal delivery started: ${shipmentId} (${city}).`);
+        } else {
+          addLog(`Courier delivery queued: ${shipmentId} (${city}).`);
+        }
+
+        addLog(`Order placed: ${quantity} units (${tier}) from ${city}.`);
+      };
+
+      // Submit contract offer
+      const handleSubmitOffer = (contract, quantity, price, payoutAccountId) => {
+        const tierInventory = inventory[contract.tier] || 0;
+        if (quantity > tierInventory) {
+          addLog("Insufficient inventory for that offer.");
+          return;
+        }
+        const accepted = Math.random() > 0.35;
+        const status = accepted ? "Accepted" : "Counter";
+
+        setContracts((prev) =>
+          prev.map((item) => (item.id === contract.id ? { ...item, status, offer: { quantity, price } } : item))
+        );
+
+        if (accepted) {
+          const revenue = quantity * price;
+          setInventory((prev) => ({ ...prev, [contract.tier]: prev[contract.tier] - quantity }));
+
+          setDebitAccounts((prev) =>
+            prev.map((account) => (account.id === payoutAccountId ? { ...account, balance: account.balance + revenue } : account))
+          );
+
+          setReputation((prev) => Math.min(prev + 4, 100));
+          setHeat((prev) => Math.min(prev + 3, 100));
+          addLog(`Contract fulfilled: ${contract.title} (${revenue}).`);
+        } else {
+          addLog(`Countered: ${contract.title}.`);
+        }
+      };
+
+      // Message system
+      const toneKeywords = {
+        polite: ["please", "appreciate", "thank", "respect"],
+        pushy: ["urgent", "now", "immediately", "fast"],
+        threatening: ["or else", "threat", "consequence", "pressure"],
+        flattering: ["admire", "legend", "impressive", "trusted"]
+      };
+
+      const analyzeTone = (text) => {
+        const lower = text.toLowerCase();
+        let tone = "neutral";
+        Object.entries(toneKeywords).forEach(([key, words]) => {
+          if (words.some((word) => lower.includes(word))) tone = key;
+        });
+        return tone;
+      };
+
+      const getScriptedReply = (broker, tone) => {
+        const base = {
+          polite: "Noted. Keep the offer within the band and we can move.",
+          neutral: "Send numbers you can stand behind.",
+          pushy: "Don't rush the ledger. Window closes fast.",
+          threatening: "That tone adds heat. Dial it back or we walk.",
+          flattering: "Flattery helps. Bring a tight proposal and we'll listen."
+        };
+        return base[tone] || base.neutral;
+      };
+
+      const handleSendMessage = () => {
+        const trimmed = messageInput.trim();
+        if (!trimmed) return;
+
+        const count = messageCounts[selectedBroker.id] || 0;
+        if (count >= 5) {
+          addLog(`Negotiation window closed for ${selectedBroker.name}.`);
+          return;
+        }
+
+        const tone = analyzeTone(trimmed);
+        const broker = selectedBroker;
+        const reply = getScriptedReply(broker, tone);
+
+        setMessages((prev) => {
+          const existing = prev[broker.id] || [];
+          return {
+            ...prev,
+            [broker.id]: [
+              ...existing,
+              { id: Date.now(), sender: "You", text: trimmed },
+              { id: Date.now() + 1, sender: broker.name, text: reply }
+            ]
+          };
+        });
+
+        setMessageCounts((prev) => ({ ...prev, [broker.id]: (prev[broker.id] || 0) + 1 }));
+
+        if (tone === "threatening") {
+          setHeat((prev) => Math.min(prev + 6, 100));
+          setReputation((prev) => Math.max(prev - 4, 0));
+        } else if (tone === "pushy") {
+          setHeat((prev) => Math.min(prev + 2, 100));
+        }
+
+        setMessageInput("");
+      };
+
+      const activeMessages = messages[selectedBroker.id] || [];
+
+      const generateNameFromSet = () => {
+        if (!selectedGender || !selectedNameSet) return;
+        const set = nameSets[selectedNameSet];
+        const firstNames = selectedGender === "Male" ? set.male : set.female;
+        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const lastName = set.surnames[Math.floor(Math.random() * set.surnames.length)];
+        setGeneratedName(`${firstName} ${lastName}`);
+      };
+
+      useEffect(() => {
+        if (selectedGender && selectedNameSet) {
+          generateNameFromSet();
+        }
+      }, [selectedGender, selectedNameSet]);
+
+      const canProceedFromIdentity = selectedGender && ((hasCustomNameUnlock && customName.trim()) || generatedName);
+      const canProceedFromCity = selectedCity !== null;
+      const canProceedFromEducation = !enrollInCollege || (collegeType && selectedMajor);
+
+      const startGame = () => {
+        // Apply education choices
+        if (enrollInCollege) {
+          if (collegeType === "Public University") {
+            setStudentDebt(10000);
+            addLog("Enrolled in public university with $10,000 in student loans.");
+          } else if (collegeType === "Ivy League" && hasIvyLeagueUnlock) {
+            if (hasSubscription) {
+              addLog("Enrolled in Ivy League university with full-ride scholarship!");
+            } else {
+              addLog("Enrolled in Ivy League university.");
+            }
+          } else if (collegeType === "Community College") {
+            addLog("Enrolled in community college (tuition-free).");
+          }
+          setJobTitle("Student");
+          setMonthlyIncome(0);
+        } else {
+          setJobTitle("Entry-level Worker");
+          setMonthlyIncome(2400);
+        }
+
+        setScreen("main");
+      };
+
+      return (
+        <main className="relative min-h-screen">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+          
+          <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-8">
+            {/* Header */}
+            <header className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight text-slate-100">Liquid Society</h1>
+                <p className="text-sm text-slate-400">Navigate life in modern America</p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowShop(true)}
+                  className="rounded-lg border border-slate-600 bg-slate-800/50 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-700/50"
+                >
+                  Store
+                </button>
+
+                {screen === "main" && (
+                  <div className="flex items-center gap-3">
+                    {hasSubscription && (
+                      <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-emerald-300">
+                        Premium
+                      </span>
+                    )}
+                    <span className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-1">
+                      Day {gameDay} · {gameTimeStr}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </header>
+
+            {/* Shop Modal */}
+            {showShop && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+                <div className="w-full max-w-2xl rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                    <h2 className="text-xl font-semibold text-slate-100">Store</h2>
+                    <button
+                      type="button"
+                      onClick={() => setShowShop(false)}
+                      className="rounded-lg border border-slate-600 px-3 py-1 text-sm text-slate-300 transition hover:bg-slate-800"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                      <p className="text-sm font-semibold text-slate-200">Premium Subscription</p>
+                      <p className="mt-2 text-xs text-slate-400">Full-ride scholarships, advanced features</p>
+                      <button
+                        type="button"
+                        onClick={() => { setHasSubscription(true); addLog("Premium subscription activated."); }}
+                        className="mt-4 w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
+                      >
+                        {hasSubscription ? "Active" : "Activate"}
+                      </button>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                      <p className="text-sm font-semibold text-slate-200">Custom Name</p>
+                      <p className="mt-2 text-xs text-slate-400">Permanent unlock for custom names</p>
+                      <button
+                        type="button"
+                        onClick={() => { setHasCustomNameUnlock(true); addLog("Custom name unlocked."); }}
+                        className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                      >
+                        {hasCustomNameUnlock ? "Unlocked" : "Unlock"}
+                      </button>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                      <p className="text-sm font-semibold text-slate-200">Ivy League Access</p>
+                      <p className="mt-2 text-xs text-slate-400">Unlock elite universities</p>
+                      <button
+                        type="button"
+                        onClick={() => { setHasIvyLeagueUnlock(true); addLog("Ivy League access unlocked."); }}
+                        className="mt-4 w-full rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-700"
+                      >
+                        {hasIvyLeagueUnlock ? "Unlocked" : "Unlock"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Landing */}
+            {screen === "landing" && (
+              <section className="flex flex-1 items-center justify-center">
+                <div className="w-full max-w-xl rounded-xl border border-slate-700 bg-slate-900/80 p-8 shadow-2xl backdrop-blur">
+                  <h2 className="text-2xl font-semibold text-slate-100">Welcome to Liquid Society</h2>
+                  <p className="mt-3 text-slate-300">
+                    A simulation of life in modern America. Navigate finances, education, careers, politics, and the choices that shape your path.
+                  </p>
+                  <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4 text-sm text-slate-300">
+                    <p>• Time flows quickly: 1 game day = 5 real minutes</p>
+                    <p>• Society comes first, underground is optional</p>
+                    <p>• Your choices have consequences</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setScreen("character")}
+                    className="mt-6 w-full rounded-lg bg-emerald-600 px-6 py-3 font-medium text-white transition hover:bg-emerald-700"
+                  >
+                    Create Character
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* Character Creation */}
+            {screen === "character" && (
+              <section className="flex-1">
+                <div className="mx-auto w-full max-w-4xl rounded-xl border border-slate-700 bg-slate-900/80 p-6 shadow-2xl backdrop-blur">
+                  <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                    <div>
+                      <h2 className="text-xl font-semibold text-slate-100">Character Creation</h2>
+                      <p className="text-sm text-slate-400">Step {charStep} of 3</p>
+                    </div>
+                    {charStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setCharStep(charStep - 1)}
+                        className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800"
+                      >
+                        Back
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Step 1: Identity */}
+                  {charStep === 1 && (
+                    <div className="mt-6 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">Gender</label>
+                        <div className="mt-2 grid grid-cols-2 gap-3">
+                          {["Male", "Female"].map(g => (
+                            <button
+                              key={g}
+                              type="button"
+                              onClick={() => setSelectedGender(g)}
+                              className={`rounded-lg border px-4 py-3 text-sm transition ${
+                                selectedGender === g
+                                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                                  : "border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                              }`}
+                            >
+                              {g}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {selectedGender && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300">Cultural Background</label>
+                          <select
+                            value={selectedNameSet}
+                            onChange={(e) => setSelectedNameSet(e.target.value)}
+                            className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-slate-200"
+                          >
+                            {Object.keys(nameSets).map(set => (
+                              <option key={set} value={set}>{set}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {selectedGender && selectedNameSet && (
+                        <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-xs text-slate-400">Generated Name</p>
+                              <p className="mt-1 text-lg font-medium text-slate-100">{generatedName || "—"}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={generateNameFromSet}
+                              className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300 transition hover:bg-emerald-500/20"
+                            >
+                              Roll Again
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {hasCustomNameUnlock && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300">Custom Name (Unlocked)</label>
+                          <input
+                            type="text"
+                            value={customName}
+                            onChange={(e) => setCustomName(e.target.value)}
+                            placeholder="Enter your custom name"
+                            className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-slate-200"
+                          />
+                        </div>
+                      )}
+
+                      {!hasCustomNameUnlock && (
+                        <button
+                          type="button"
+                          onClick={() => setShowShop(true)}
+                          className="w-full rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-300 transition hover:bg-blue-500/20"
+                        >
+                          Unlock Custom Names (Store)
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        disabled={!canProceedFromIdentity}
+                        onClick={() => setCharStep(2)}
+                        className={`w-full rounded-lg px-6 py-3 font-medium transition ${
+                          canProceedFromIdentity
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : "cursor-not-allowed bg-slate-700 text-slate-500"
+                        }`}
+                      >
+                        Next: Choose City
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Step 2: City */}
+                  {charStep === 2 && (
+                    <div className="mt-6 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">Starting City</label>
+                        <p className="mt-1 text-xs text-slate-400">Each city affects cost of living, job markets, and opportunities (hidden modifiers)</p>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {usCities.map(city => (
+                          <button
+                            key={city.name}
+                            type="button"
+                            onClick={() => setSelectedCity(city)}
+                            className={`rounded-lg border px-4 py-3 text-left transition ${
+                              selectedCity?.name === city.name
+                                ? "border-emerald-500 bg-emerald-500/10"
+                                : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
+                            }`}
+                          >
+                            <p className="font-medium text-slate-200">{city.name}</p>
+                            <p className="mt-1 text-xs text-slate-400">🏛️ Major metropolitan area</p>
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={!canProceedFromCity}
+                        onClick={() => setCharStep(3)}
+                        className={`w-full rounded-lg px-6 py-3 font-medium transition ${
+                          canProceedFromCity
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : "cursor-not-allowed bg-slate-700 text-slate-500"
+                        }`}
+                      >
+                        Next: Education
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Step 3: Education */}
+                  {charStep === 3 && (
+                    <div className="mt-6 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">Higher Education</label>
+                        <p className="mt-1 text-xs text-slate-400">Start with education or enter the workforce immediately</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => { setEnrollInCollege(true); setCollegeType("Community College"); }}
+                          className={`rounded-lg border px-4 py-3 text-left transition ${
+                            enrollInCollege && collegeType === "Community College"
+                              ? "border-emerald-500 bg-emerald-500/10"
+                              : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
+                          }`}
+                        >
+                          <p className="font-medium text-slate-200">🎓 Community College</p>
+                          <p className="mt-1 text-xs text-emerald-300">Free tuition</p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setEnrollInCollege(true); setCollegeType("Public University"); }}
+                          className={`rounded-lg border px-4 py-3 text-left transition ${
+                            enrollInCollege && collegeType === "Public University"
+                              ? "border-amber-500 bg-amber-500/10"
+                              : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
+                          }`}
+                        >
+                          <p className="font-medium text-slate-200">🎓 Public University</p>
+                          <p className="mt-1 text-xs text-amber-300">$10,000 debt</p>
+                        </button>
+
+                        {hasIvyLeagueUnlock ? (
+                          <button
+                            type="button"
+                            onClick={() => { setEnrollInCollege(true); setCollegeType("Ivy League"); }}
+                            className={`rounded-lg border px-4 py-3 text-left transition ${
+                              enrollInCollege && collegeType === "Ivy League"
+                                ? "border-purple-500 bg-purple-500/10"
+                                : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
+                            }`}
+                          >
+                            <p className="font-medium text-slate-200">🎓 Ivy League</p>
+                            <p className="mt-1 text-xs text-purple-300">
+                              {hasSubscription ? "Full scholarship" : "Elite access"}
+                            </p>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setShowShop(true)}
+                            className="rounded-lg border border-purple-500/30 bg-purple-500/10 px-4 py-3 text-left transition hover:bg-purple-500/20"
+                          >
+                            <p className="font-medium text-slate-200">🔒 Ivy League</p>
+                            <p className="mt-1 text-xs text-purple-300">Unlock in store</p>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => { setEnrollInCollege(false); setCollegeType(""); setSelectedMajor(""); }}
+                          className={`rounded-lg border px-4 py-3 text-left transition ${
+                            !enrollInCollege
+                              ? "border-blue-500 bg-blue-500/10"
+                              : "border-slate-700 bg-slate-800/50 hover:bg-slate-700/50"
+                          }`}
+                        >
+                          <p className="font-medium text-slate-200">💼 Enter Workforce</p>
+                          <p className="mt-1 text-xs text-blue-300">Start earning now</p>
+                        </button>
+                      </div>
+
+                      {enrollInCollege && collegeType && (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300">Select Major</label>
+                          <select
+                            value={selectedMajor}
+                            onChange={(e) => setSelectedMajor(e.target.value)}
+                            className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-slate-200"
+                          >
+                            <option value="">Choose a major...</option>
+                            {collegeType === "Community College" && communityCollegeMajors.map(m => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                            {collegeType === "Public University" && publicUniversityMajors.map(m => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                            {collegeType === "Ivy League" && ivyLeagueMajors.map(m => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        disabled={!canProceedFromEducation}
+                        onClick={startGame}
+                        className={`w-full rounded-lg px-6 py-3 font-medium transition ${
+                          canProceedFromEducation
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : "cursor-not-allowed bg-slate-700 text-slate-500"
+                        }`}
+                      >
+                        Enter Liquid Society
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Main Game Interface */}
+            {screen === "main" && (
+              <section className="flex-1">
+                <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+                  {/* Sidebar */}
+                  <aside className="rounded-xl border border-slate-700 bg-slate-900/80 p-4 backdrop-blur">
+                    {/* Character Card */}
+                    <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                      <p className="text-lg font-semibold text-slate-100">{displayName}</p>
+                      <p className="text-xs text-slate-400">{selectedCity?.name}</p>
+                      <p className="mt-2 text-sm text-emerald-300">{jobTitle}</p>
+                      {enrollInCollege && selectedMajor && (
+                        <p className="text-xs text-slate-400">Major: {selectedMajor}</p>
+                      )}
+                    </div>
+
+                    {/* Quick Stats */}
+                    <div className="mt-4 space-y-2 rounded-lg border border-slate-700 bg-slate-800/50 p-3 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Liquidity</span>
+                        <span className="text-emerald-300">${totalLiquidity.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Total Debt</span>
+                        <span className="text-rose-300">${totalDebt.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Monthly Income</span>
+                        <span className="text-blue-300">${monthlyIncome.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Reputation</span>
+                        <span className="text-slate-200">{reputation}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Heat</span>
+                        <span className="text-rose-300">{heat}%</span>
+                      </div>
+                    </div>
+
+                    {/* Navigation */}
+                    <nav className="mt-4 space-y-2">
+                      {["finances", "education", "career", "politics"].map(tab => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setActiveTab(tab)}
+                          className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                            activeTab === tab
+                              ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                              : "border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                          }`}
+                        >
+                          {tab === "finances" && "💵 Finances"}
+                          {tab === "education" && "🎓 Education"}
+                          {tab === "career" && "💼 Career"}
+                          {tab === "politics" && "🏛️ Politics"}
+                        </button>
+                      ))}
+
+                      {/* Underground (nested) */}
+                      <div className="rounded-lg border border-slate-700 bg-slate-800/30">
+                        <button
+                          type="button"
+                          onClick={() => setUndergroundOpen(!undergroundOpen)}
+                          className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition hover:bg-slate-700/30"
+                        >
+                          🌿 Underground {undergroundOpen ? "▼" : "▶"}
+                        </button>
+                        {undergroundOpen && (
+                          <div className="space-y-1 p-2">
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("supply")}
+                              className={`w-full rounded px-3 py-2 text-left text-xs transition ${
+                                activeTab === "supply"
+                                  ? "bg-slate-700/50 text-slate-200"
+                                  : "text-slate-400 hover:bg-slate-700/30"
+                              }`}
+                            >
+                              Supply
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("contracts")}
+                              className={`w-full rounded px-3 py-2 text-left text-xs transition ${
+                                activeTab === "contracts"
+                                  ? "bg-slate-700/50 text-slate-200"
+                                  : "text-slate-400 hover:bg-slate-700/30"
+                              }`}
+                            >
+                              Contracts
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("transit")}
+                              className={`w-full rounded px-3 py-2 text-left text-xs transition ${
+                                activeTab === "transit"
+                                  ? "bg-slate-700/50 text-slate-200"
+                                  : "text-slate-400 hover:bg-slate-700/30"
+                              }`}
+                            >
+                              Transit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("underground-messages")}
+                              className={`w-full rounded px-3 py-2 text-left text-xs transition ${
+                                activeTab === "underground-messages"
+                                  ? "bg-slate-700/50 text-slate-200"
+                                  : "text-slate-400 hover:bg-slate-700/30"
+                              }`}
+                            >
+                              Messages
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("inventory")}
+                              className={`w-full rounded px-3 py-2 text-left text-xs transition ${
+                                activeTab === "inventory"
+                                  ? "bg-slate-700/50 text-slate-200"
+                                  : "text-slate-400 hover:bg-slate-700/30"
+                              }`}
+                            >
+                              Inventory
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </nav>
+                  </aside>
+
+                  {/* Main Content */}
+                  <div className="space-y-6">
+                    {/* FINANCES */}
+                    {activeTab === "finances" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">💵 Finances</h2>
+                          <span className="text-sm text-slate-400">Financial overview</span>
+                        </div>
+
+                        {/* Cash */}
+                        <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <p className="text-sm font-medium text-slate-300">Cash on Hand</p>
+                          <p className="mt-2 text-3xl font-bold text-emerald-300">${cashOnHand.toFixed(2)}</p>
+                          <p className="mt-2 text-xs text-slate-400">Physical currency for immediate use</p>
+                        </div>
+
+                        {/* Debit Accounts */}
+                        <div className="mt-6">
+                          <p className="text-sm font-medium text-slate-300">Debit Accounts</p>
+                          <div className="mt-3 space-y-3">
+                            {debitAccounts.map(acc => (
+                              <div key={acc.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <p className="font-medium text-slate-200">{acc.bank} - {acc.type}</p>
+                                    <p className="mt-1 text-2xl font-semibold text-blue-300">${acc.balance.toFixed(2)}</p>
+                                    {acc.apr > 0 && (
+                                      <p className="mt-1 text-xs text-emerald-400">APY: {(acc.apr * 100).toFixed(2)}%</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="mt-3 grid grid-cols-2 gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const amt = prompt("Deposit amount:");
+                                      if (amt && !isNaN(amt)) {
+                                        const val = parseFloat(amt);
+                                        if (cashOnHand >= val) {
+                                          setCashOnHand(c => c - val);
+                                          setDebitAccounts(accs => accs.map(a => 
+                                            a.id === acc.id ? {...a, balance: a.balance + val} : a
+                                          ));
+                                          addLog(`Deposited ${val.toFixed(2)} to ${acc.bank}`);
+                                        } else {
+                                          addLog("Insufficient cash on hand");
+                                        }
+                                      }
+                                    }}
+                                    className="rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-500/20"
+                                  >
+                                    Deposit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const amt = prompt("Withdraw amount:");
+                                      if (amt && !isNaN(amt)) {
+                                        const val = parseFloat(amt);
+                                        if (acc.balance >= val) {
+                                          setDebitAccounts(accs => accs.map(a => 
+                                            a.id === acc.id ? {...a, balance: a.balance - val} : a
+                                          ));
+                                          setCashOnHand(c => c + val);
+                                          addLog(`Withdrew ${val.toFixed(2)} from ${acc.bank}`);
+                                        } else {
+                                          addLog("Insufficient account balance");
+                                        }
+                                      }
+                                    }}
+                                    className="rounded border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-300 transition hover:bg-blue-500/20"
+                                  >
+                                    Withdraw
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Credit Cards */}
+                        <div className="mt-6">
+                          <p className="text-sm font-medium text-slate-300">Credit Cards</p>
+                          <div className="mt-3 space-y-3">
+                            {creditAccounts.map(card => {
+                              const available = card.limit - card.balance;
+                              const utilization = (card.balance / card.limit * 100).toFixed(0);
+                              return (
+                                <div key={card.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <p className="font-medium text-slate-200">{card.bank}</p>
+                                      <p className="mt-1 text-sm text-slate-400">
+                                        Balance: <span className="text-rose-300">${card.balance.toFixed(2)}</span>
+                                      </p>
+                                      <p className="text-sm text-slate-400">
+                                        Available: <span className="text-emerald-300">${available.toFixed(2)}</span>
+                                      </p>
+                                      <p className="mt-1 text-xs text-amber-400">APR: {(card.apr * 100).toFixed(2)}%</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs text-slate-400">Limit</p>
+                                      <p className="text-lg font-semibold text-slate-200">${card.limit.toFixed(0)}</p>
+                                    </div>
+                                  </div>
+                                  <div className="mt-3">
+                                    <div className="flex items-center justify-between text-xs text-slate-400">
+                                      <span>Utilization</span>
+                                      <span>{utilization}%</span>
+                                    </div>
+                                    <div className="mt-1 h-2 w-full rounded-full bg-slate-700">
+                                      <div 
+                                        className="h-2 rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500"
+                                        style={{width: `${utilization}%`}}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="mt-3 grid grid-cols-2 gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const amt = prompt("Draw amount:");
+                                        if (amt && !isNaN(amt)) {
+                                          const val = parseFloat(amt);
+                                          if (available >= val) {
+                                            setCreditAccounts(cards => cards.map(c => 
+                                              c.id === card.id ? {...c, balance: c.balance + val} : c
+                                            ));
+                                            setCashOnHand(cash => cash + val);
+                                            addLog(`Drew ${val.toFixed(2)} from ${card.bank}`);
+                                          } else {
+                                            addLog("Exceeds available credit");
+                                          }
+                                        }
+                                      }}
+                                      className="rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300 transition hover:bg-amber-500/20"
+                                    >
+                                      Draw
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const amt = prompt("Payment amount:");
+                                        if (amt && !isNaN(amt)) {
+                                          const val = Math.min(parseFloat(amt), card.balance);
+                                          if (cashOnHand >= val) {
+                                            setCashOnHand(cash => cash - val);
+                                            setCreditAccounts(cards => cards.map(c => 
+                                              c.id === card.id ? {...c, balance: c.balance - val} : c
+                                            ));
+                                            addLog(`Paid ${val.toFixed(2)} to ${card.bank}`);
+                                          } else {
+                                            addLog("Insufficient cash for payment");
+                                          }
+                                        }
+                                      }}
+                                      className="rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-500/20"
+                                    >
+                                      Pay
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Student Debt */}
+                        {studentDebt > 0 && (
+                          <div className="mt-6 rounded-lg border border-rose-500/30 bg-rose-500/5 p-4">
+                            <p className="text-sm font-medium text-slate-300">Student Loans</p>
+                            <p className="mt-2 text-2xl font-semibold text-rose-400">${studentDebt.toFixed(2)}</p>
+                            <p className="mt-1 text-xs text-slate-400">Federal student loan debt</p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const amt = prompt("Payment amount:");
+                                if (amt && !isNaN(amt)) {
+                                  const val = Math.min(parseFloat(amt), studentDebt);
+                                  if (cashOnHand >= val) {
+                                    setCashOnHand(cash => cash - val);
+                                    setStudentDebt(debt => debt - val);
+                                    addLog(`Paid ${val.toFixed(2)} toward student loans`);
+                                  } else {
+                                    addLog("Insufficient cash for payment");
+                                  }
+                                }
+                              }}
+                              className="mt-3 rounded border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20"
+                            >
+                              Make Payment
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* EDUCATION */}
+                    {activeTab === "education" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">🎓 Education</h2>
+                        </div>
+
+                        {enrollInCollege ? (
+                          <div className="mt-6 space-y-4">
+                            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                              <p className="text-sm font-medium text-slate-300">Current Program</p>
+                              <p className="mt-2 text-lg font-semibold text-emerald-300">{collegeType}</p>
+                              <p className="text-sm text-slate-400">Major: {selectedMajor}</p>
+                              
+                              <div className="mt-4">
+                                <div className="flex items-center justify-between text-xs text-slate-400">
+                                  <span>Progress</span>
+                                  <span>{educationProgress}%</span>
+                                </div>
+                                <div className="mt-2 h-2 w-full rounded-full bg-slate-700">
+                                  <div 
+                                    className="h-2 rounded-full bg-emerald-500"
+                                    style={{width: `${educationProgress}%`}}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                              <p className="text-sm text-slate-300">Education increases income potential, unlocks career opportunities, and builds reputation in society.</p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEducationProgress(prev => Math.min(prev + 5, 100));
+                                  addLog("Completed coursework");
+                                }}
+                                className="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
+                              >
+                                Study (Advance Progress)
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm text-slate-300">Not currently enrolled in higher education.</p>
+                            <p className="mt-2 text-xs text-slate-400">You can enroll later through the career advancement system.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* CAREER */}
+                    {activeTab === "career" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">💼 Career</h2>
+                        </div>
+
+                        <div className="mt-6 space-y-4">
+                          <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm font-medium text-slate-300">Current Position</p>
+                            <p className="mt-2 text-lg font-semibold text-blue-300">{jobTitle}</p>
+                            <p className="mt-1 text-sm text-slate-400">
+                              Monthly Income: <span className="text-emerald-300">${monthlyIncome.toFixed(0)}</span>
+                            </p>
+                          </div>
+
+                          <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm font-medium text-slate-300">Career Development</p>
+                            <p className="mt-2 text-xs text-slate-400">
+                              Your education, reputation, and network determine available opportunities. Build skills and connections to advance.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* POLITICS */}
+                    {activeTab === "politics" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">🏛️ Politics & Government</h2>
+                        </div>
+
+                        <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <p className="text-sm text-slate-300">Engage with political systems, vote, lobby, or run for office.</p>
+                          <p className="mt-2 text-xs text-slate-400">System under development - available in future updates.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SUPPLY */}
+                    {activeTab === "supply" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">📦 Supply</h2>
+                          <span className="text-xs text-slate-400">
+                            {personalDeliveryActive ? "🔒 Personal delivery active" : "Ready"}
+                          </span>
+                        </div>
+
+                        <form className="mt-6 grid gap-4 sm:grid-cols-2" onSubmit={handlePlaceOrder}>
+                          <label className="text-sm font-medium text-slate-300">
+                            Source City
+                            <select
+                              value={supplyDraft.city}
+                              onChange={(e) => setSupplyDraft((p) => ({ ...p, city: e.target.value }))}
+                              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-200"
+                            >
+                              {Object.values(cities).map((city) => (
+                                <option key={city.name} value={city.name}>
+                                  {city.name} · Risk {city.transitRisk}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label className="text-sm font-medium text-slate-300">
+                            Product Tier
+                            <select
+                              value={supplyDraft.tier}
+                              onChange={(e) => setSupplyDraft((p) => ({ ...p, tier: e.target.value }))}
+                              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-200"
+                            >
+                              {verdantTierOptions.map((tier) => (
+                                <option key={tier.tier} value={tier.tier}>
+                                  {tier.tier} · {tier.visibility}/{tier.stability}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label className="text-sm font-medium text-slate-300">
+                            Quantity
+                            <input
+                              type="number"
+                              min="10"
+                              value={supplyDraft.quantity}
+                              onChange={(e) => setSupplyDraft((p) => ({ ...p, quantity: Number(e.target.value) }))}
+                              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-200"
+                            />
+                          </label>
+
+                          <label className="text-sm font-medium text-slate-300">
+                            Payment Account
+                            <select
+                              value={supplyDraft.accountId}
+                              onChange={(e) => setSupplyDraft((p) => ({ ...p, accountId: e.target.value }))}
+                              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-200"
+                            >
+                              {debitAccounts.map((account) => (
+                                <option key={account.id} value={account.id}>
+                                  {account.bank} · {account.type} (${account.balance.toFixed(0)})
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label className="text-sm font-medium text-slate-300 sm:col-span-2">
+                            Delivery Method
+                            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                              <button
+                                type="button"
+                                onClick={() => setSupplyDraft((p) => ({ ...p, deliveryMethod: "Courier" }))}
+                                className={`rounded-lg border px-4 py-3 text-left transition ${
+                                  supplyDraft.deliveryMethod === "Courier"
+                                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                                    : "border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                                }`}
+                              >
+                                <p className="text-sm font-medium">Courier</p>
+                                <p className="mt-1 text-xs text-slate-400">10% fee · Normal ETA</p>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setSupplyDraft((p) => ({ ...p, deliveryMethod: "Personal" }))}
+                                className={`rounded-lg border px-4 py-3 text-left transition ${
+                                  supplyDraft.deliveryMethod === "Personal"
+                                    ? "border-amber-500 bg-amber-500/10 text-amber-300"
+                                    : "border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                                }`}
+                              >
+                                <p className="text-sm font-medium">Personal</p>
+                                <p className="mt-1 text-xs text-slate-400">No fee · 2.6x longer · Locks all deliveries</p>
+                              </button>
+                            </div>
+                          </label>
+
+                          <div className="sm:col-span-2 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm font-medium text-slate-300">Cost Breakdown</p>
+                            <div className="mt-3 grid gap-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Unit Price</span>
+                                <span className="text-slate-200">${draftUnit.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Quantity</span>
+                                <span className="text-slate-200">{draftQty}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Subtotal</span>
+                                <span className="text-slate-200">${draftSubtotal.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Processing Fee</span>
+                                <span className="text-slate-200">${draftFee.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Delivery Fee</span>
+                                <span className="text-slate-200">${courierServiceFee.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between border-t border-slate-700 pt-2 font-semibold">
+                                <span className="text-emerald-300">Total</span>
+                                <span className="text-emerald-300">${draftTotal.toFixed(2)}</span>
+                              </div>
+                              {!canAfford && (
+                                <p className="text-xs text-rose-300">Insufficient funds in selected account</p>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={!canAfford || (personalDeliveryActive && supplyDraft.deliveryMethod === "Personal")}
+                            className={`sm:col-span-2 rounded-lg px-6 py-3 font-medium transition ${
+                              canAfford && !(personalDeliveryActive && supplyDraft.deliveryMethod === "Personal")
+                                ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                                : "cursor-not-allowed bg-slate-700 text-slate-500"
+                            }`}
+                          >
+                            Place Order
+                          </button>
+                        </form>
+                      </div>
+                    )}
+
+                    {/* CONTRACTS */}
+                    {activeTab === "contracts" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">🧾 Contracts</h2>
+                          <span className="text-xs text-slate-400">Limited-time offers</span>
+                        </div>
+
+                        <div className="mt-6 space-y-4">
+                          {contracts.length === 0 && (
+                            <p className="text-sm text-slate-400">No active contracts available</p>
+                          )}
+                          {contracts.map((contract) => (
+                            <div key={contract.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="font-medium text-emerald-300">{contract.title}</p>
+                                  <p className="mt-1 text-sm text-slate-400">
+                                    Tier: {contract.tier} · Qty: {contract.quantityRange.join("-")}
+                                  </p>
+                                  <p className="text-sm text-slate-400">
+                                    Price: ${contract.priceBand.join("-")} · Risk: {contract.risk}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-slate-400">Expires in</p>
+                                  <p className="text-sm font-semibold text-amber-300">
+                                    {Math.ceil(contract.remainingMs / 1000 / 60)}m
+                                  </p>
+                                </div>
+                              </div>
+
+                              {contract.status === "Open" && (
+                                <div className="mt-4 grid gap-2 sm:grid-cols-4">
+                                  <input
+                                    type="number"
+                                    min={contract.quantityRange[0]}
+                                    max={contract.quantityRange[1]}
+                                    placeholder="Qty"
+                                    className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+                                    id={`${contract.id}-qty`}
+                                  />
+                                  <input
+                                    type="number"
+                                    min={contract.priceBand[0]}
+                                    max={contract.priceBand[1]}
+                                    placeholder="$/unit"
+                                    className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+                                    id={`${contract.id}-price`}
+                                  />
+                                  <select
+                                    id={`${contract.id}-account`}
+                                    className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+                                  >
+                                    {debitAccounts.map((account) => (
+                                      <option key={account.id} value={account.id}>
+                                        {account.bank}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const quantity = Number(document.getElementById(`${contract.id}-qty`).value);
+                                      const price = Number(document.getElementById(`${contract.id}-price`).value);
+                                      const payoutAccountId = document.getElementById(`${contract.id}-account`).value;
+                                      handleSubmitOffer(contract, quantity, price, payoutAccountId);
+                                    }}
+                                    className="rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300 transition hover:bg-emerald-500/20"
+                                  >
+                                    Submit
+                                  </button>
+                                </div>
+                              )}
+
+                              {contract.status !== "Open" && (
+                                <p className="mt-3 text-sm text-slate-400">Status: {contract.status}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TRANSIT */}
+                    {activeTab === "transit" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">🚚 Transit</h2>
+                          <span className="text-xs text-slate-400">Active shipments</span>
+                        </div>
+
+                        <div className="mt-6 space-y-4">
+                          {shipments.length === 0 && (
+                            <p className="text-sm text-slate-400">No shipments in transit</p>
+                          )}
+                          {shipments.map((shipment) => {
+                            const elapsed = shipment.durationMs - shipment.remainingMs;
+                            const pct = shipment.durationMs > 0 ? Math.min((elapsed / shipment.durationMs) * 100, 100) : 0;
+                            const etaMin = Math.max(1, Math.ceil(shipment.remainingMs / 1000 / 60));
+                            return (
+                              <div key={shipment.id} className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <p className="font-medium text-emerald-300">{shipment.id}</p>
+                                    <p className="mt-1 text-sm text-slate-400">
+                                      {shipment.city} · {shipment.quantity} units · {shipment.tier}
+                                    </p>
+                                    <p className="text-xs text-slate-400">
+                                      Method: {shipment.deliveryMethod}
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-xs text-slate-400">ETA</p>
+                                    <p className="text-sm font-semibold text-blue-300">{etaMin}m</p>
+                                  </div>
+                                </div>
+
+                                <div className="mt-3">
+                                  <div className="h-2 w-full rounded-full bg-slate-700">
+                                    <div
+                                      className="h-2 rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-blue-500"
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* MESSAGES */}
+                    {activeTab === "underground-messages" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">💬 Messages</h2>
+                          <span className="text-xs text-slate-400">Broker negotiations</span>
+                        </div>
+
+                        <div className="mt-6 grid gap-4 lg:grid-cols-[200px_1fr]">
+                          <div className="space-y-2">
+                            {brokers.map((broker) => (
+                              <button
+                                key={broker.id}
+                                type="button"
+                                onClick={() => setSelectedBroker(broker)}
+                                className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                                  selectedBroker.id === broker.id
+                                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                                    : "border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                                }`}
+                              >
+                                {broker.name}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm font-medium text-slate-300">{selectedBroker.name} · {selectedBroker.city}</p>
+                            
+                            <div className="mt-4 h-64 space-y-2 overflow-y-auto rounded border border-slate-700 bg-slate-900 p-3">
+                              {activeMessages.length === 0 && (
+                                <p className="text-sm text-slate-400">No messages yet. Start a negotiation.</p>
+                              )}
+                              {activeMessages.map((message) => (
+                                <div
+                                  key={message.id}
+                                  className={`rounded p-2 text-sm ${
+                                    message.sender === "You"
+                                      ? "bg-emerald-500/10 text-emerald-200"
+                                      : "bg-slate-800 text-slate-300"
+                                  }`}
+                                >
+                                  <p className="text-xs text-slate-500">{message.sender}</p>
+                                  <p className="mt-1">{message.text}</p>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="mt-3 flex gap-2">
+                              <input
+                                type="text"
+                                value={messageInput}
+                                onChange={(e) => setMessageInput(e.target.value)}
+                                placeholder="Type message..."
+                                className="flex-1 rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200"
+                                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                              />
+                              <button
+                                type="button"
+                                onClick={handleSendMessage}
+                                className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
+                              >
+                                Send
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* INVENTORY */}
+                    {activeTab === "inventory" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">📦 Inventory</h2>
+                        </div>
+
+                        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                          <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm font-medium text-slate-300">Standard</p>
+                            <p className="mt-2 text-3xl font-bold text-blue-300">{inventory.Standard || 0}</p>
+                            <p className="mt-1 text-xs text-slate-400">units</p>
+                          </div>
+
+                          <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                            <p className="text-sm font-medium text-slate-300">Premium</p>
+                            <p className="mt-2 text-3xl font-bold text-purple-300">{inventory.Premium || 0}</p>
+                            <p className="mt-1 text-xs text-slate-400">units</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                          <p className="text-sm font-medium text-amber-300">Risk Metrics</p>
+                          <div className="mt-3 space-y-3">
+                            <div>
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-slate-400">Heat Level</span>
+                                <span className="text-rose-300">{heat}%</span>
+                              </div>
+                              <div className="mt-1 h-2 w-full rounded-full bg-slate-700">
+                                <div
+                                  className="h-2 rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500"
+                                  style={{ width: `${heat}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* UNDERGROUND MARKET - Redirects to supply */}
+                    {activeTab === "underground-market" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">🌿 Underground Market</h2>
+                          <span className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-300">
+                            High Risk
+                          </span>
+                        </div>
+
+                        <div className="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                          <p className="text-sm text-slate-300">
+                            Access to contraband markets. Activities here increase suspicion and carry legal risks.
+                          </p>
+                          <p className="mt-2 text-xs text-slate-400">
+                            Current Suspicion Level: <span className="text-rose-300">{suspicion}%</span>
+                          </p>
+                        </div>
+
+                        <div className="mt-4 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <p className="text-xs text-slate-400">This system is optional and unlocks progressively through gameplay.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* UNDERGROUND CONTACTS */}
+                    {activeTab === "underground-contacts" && (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-6 backdrop-blur">
+                        <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+                          <h2 className="text-xl font-semibold text-slate-100">Underground Contacts</h2>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab("contracts")}
+                            className="text-sm text-emerald-300 hover:text-emerald-200"
+                          >
+                            Go to Contracts →
+                          </button>
+                        </div>
+
+                        <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                          <p className="text-sm text-slate-300">
+                            Build relationships with brokers through the Contracts and Messages tabs.
+                          </p>
+                          <p className="mt-2 text-xs text-slate-400">Active Brokers: {brokers.length}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Event Log */}
+                    <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-4 backdrop-blur">
+                      <p className="text-sm font-medium text-slate-300">Recent Activity</p>
+                      <div className="mt-3 space-y-1 text-xs text-slate-400">
+                        {eventLogRef.current.length === 0 ? (
+                          <p>No recent activity</p>
+                        ) : (
+                          eventLogRef.current.map(log => (
+                            <p key={log.id}>• {log.text}</p>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+          </div>
+        </main>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
 </body>
 </html>
