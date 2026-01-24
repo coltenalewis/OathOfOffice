@@ -1501,21 +1501,262 @@ const draftTotal = draftSubtotal + draftFee + deliveryFee;
                       )}
 
                       {/* MAP */}
-                      {activeApp === "map" && (
-                        <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
-                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Map</p>
-                          <div className="mt-4 grid gap-3 md:grid-cols-3 text-sm text-slate-300">
-                            {Object.values(cities).map((city) => (
-                              <div key={city.name} className="rounded-md border border-slate-800 bg-slate-950/70 p-4">
-                                <p className="text-emerald-100">{city.name}</p>
-                                <p className="text-xs text-slate-400">Reliability: {city.reliability}</p>
-                                <p className="text-xs text-slate-400">Culture: {city.culture}</p>
-                                <p className="text-xs text-slate-400">Risk: {city.transitRisk}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                      {/* MAP */}
+{activeApp === "map" && (
+  <div className="rounded-md border border-slate-700/70 bg-black/60 p-5">
+    <div className="flex items-center justify-between">
+      <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Map</p>
+      <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500">SVG projection · code-only</p>
+    </div>
+
+    {(() => {
+      // Real-ish coordinates (lat/lon) for placing markers "where they'd actually be"
+      const cityGeo = {
+        "New York": { lat: 40.7128, lon: -74.006 },
+        "Chicago": { lat: 41.8781, lon: -87.6298 },
+        "Los Angeles": { lat: 34.0522, lon: -118.2437 },
+        "London": { lat: 51.5072, lon: -0.1276 },
+        "Berlin": { lat: 52.52, lon: 13.405 },
+        "Tokyo": { lat: 35.6762, lon: 139.6503 },
+        "Singapore": { lat: 1.3521, lon: 103.8198 },
+        "Toronto": { lat: 43.6532, lon: -79.3832 },
+        "São Paulo": { lat: -23.5505, lon: -46.6333 },
+        "Frankfurt": { lat: 50.1109, lon: 8.6821 },
+      };
+
+      // If you want ONLY your "cities" list (not servers), use Object.keys(cities)
+      const mapCities = Object.values(cities).map((c) => c.name);
+
+      // Equirectangular projection (simple + stable)
+      const W = 920;
+      const H = 420;
+
+      const project = (lat, lon) => {
+        const x = ((lon + 180) / 360) * W;
+        const y = ((90 - lat) / 180) * H;
+        return { x, y };
+      };
+
+      const isSelected = (name) => selectedCity?.city === name;
+
+      const getMarkerTone = (risk) => {
+        if (risk === "High") return "rose";
+        if (risk === "Medium") return "amber";
+        return "emerald";
+      };
+
+      const toneClasses = {
+        emerald: {
+          ring: "stroke-emerald-300/70",
+          fill: "fill-emerald-300",
+          glow: "drop-shadow-[0_0_10px_rgba(16,185,129,0.35)]",
+          text: "text-emerald-200",
+          badge: "border-emerald-400/40 bg-emerald-500/10 text-emerald-200",
+        },
+        amber: {
+          ring: "stroke-amber-300/70",
+          fill: "fill-amber-300",
+          glow: "drop-shadow-[0_0_10px_rgba(245,158,11,0.35)]",
+          text: "text-amber-200",
+          badge: "border-amber-300/40 bg-amber-500/10 text-amber-200",
+        },
+        rose: {
+          ring: "stroke-rose-300/70",
+          fill: "fill-rose-300",
+          glow: "drop-shadow-[0_0_10px_rgba(244,63,94,0.35)]",
+          text: "text-rose-200",
+          badge: "border-rose-300/40 bg-rose-500/10 text-rose-200",
+        },
+      };
+
+      // Build marker list from your cities + any extras present in cityGeo
+      const markers = mapCities
+        .map((name) => {
+          const geo = cityGeo[name];
+          const data = cities[name];
+          if (!geo || !data) return null;
+          const { x, y } = project(geo.lat, geo.lon);
+          const tone = getMarkerTone(data.transitRisk);
+          return { name, ...geo, ...data, x, y, tone };
+        })
+        .filter(Boolean);
+
+      // Optional: include server locations if you ever add coords for them
+      // For now, only your city market nodes.
+
+      return (
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          {/* Map canvas */}
+          <div className="rounded-md border border-slate-800 bg-slate-950/70 p-3">
+            <div className="flex items-center justify-between pb-3">
+              <p className="text-[10px] uppercase tracking-[0.35em] text-slate-400">World (approx)</p>
+              <p className="text-[10px] uppercase tracking-[0.35em] text-slate-500">click a node to select</p>
+            </div>
+
+            <div className="relative overflow-hidden rounded-md border border-slate-800 bg-black/60">
+              <svg
+                viewBox={`0 0 ${W} ${H}`}
+                className="h-[300px] w-full"
+                role="img"
+                aria-label="World map with city markers"
+              >
+                {/* Background grid */}
+                <defs>
+                  <pattern id="grid" width="46" height="35" patternUnits="userSpaceOnUse">
+                    <path d="M 46 0 L 0 0 0 35" fill="none" stroke="rgba(148,163,184,0.12)" strokeWidth="1" />
+                  </pattern>
+
+                  {/* Subtle glow */}
+                  <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                <rect x="0" y="0" width={W} height={H} fill="rgba(0,0,0,0.35)" />
+                <rect x="0" y="0" width={W} height={H} fill="url(#grid)" />
+
+                {/* Simplified “continent bands” (stylized, not cartographic) */}
+                <path
+                  d="M40,95 C140,55 260,55 360,95 C460,135 610,130 720,90 C820,55 890,70 900,100 L900,170 C820,195 735,205 650,190 C540,170 460,185 360,205 C250,230 120,220 40,180 Z"
+                  fill="rgba(16,185,129,0.07)"
+                  stroke="rgba(16,185,129,0.14)"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M70,250 C160,210 260,210 330,250 C410,295 520,290 610,255 C705,220 790,230 860,260 L860,330 C790,360 700,375 610,360 C520,340 430,360 330,385 C235,410 135,400 70,360 Z"
+                  fill="rgba(56,244,201,0.05)"
+                  stroke="rgba(56,244,201,0.12)"
+                  strokeWidth="2"
+                />
+
+                {/* Markers */}
+                {markers.map((m) => {
+                  const selected = isSelected(m.name);
+                  const tone = toneClasses[m.tone] || toneClasses.emerald;
+
+                  return (
+                    <g
+                      key={m.name}
+                      onClick={() => {
+                        // Select the city (ties into your existing "selectedCity" state used for time display)
+                        const opt = cityOptions.find((c) => c.city === m.name);
+                        if (opt) setSelectedCity(opt);
+
+                        // Optional: also sync Supply draft city so it "follows" selection
+                        setSupplyDraft((p) => ({ ...p, city: m.name }));
+                      }}
+                      style={{ cursor: "pointer" }}
+                      filter="url(#softGlow)"
+                    >
+                      {/* Ping ring if selected */}
+                      {selected && (
+                        <circle
+                          cx={m.x}
+                          cy={m.y}
+                          r="13"
+                          fill="none"
+                          stroke="rgba(16,185,129,0.55)"
+                          strokeWidth="2"
+                        />
                       )}
+
+                      <circle
+                        cx={m.x}
+                        cy={m.y}
+                        r={selected ? 6.5 : 5}
+                        className={`${tone.fill} ${tone.glow}`}
+                      />
+                      <circle
+                        cx={m.x}
+                        cy={m.y}
+                        r={selected ? 10 : 9}
+                        fill="none"
+                        className={tone.ring}
+                        strokeWidth="2"
+                      />
+
+                      {/* Label */}
+                      <text
+                        x={m.x + 10}
+                        y={m.y + 4}
+                        fill="rgba(226,232,240,0.82)"
+                        fontSize="12"
+                        fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+                      >
+                        {m.name}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.3em] text-slate-500">
+              <span className="rounded-md border border-slate-800 bg-black/40 px-2 py-1">Projection: equirectangular</span>
+              <span className="rounded-md border border-slate-800 bg-black/40 px-2 py-1">Markers: lat/lon</span>
+              <span className="rounded-md border border-slate-800 bg-black/40 px-2 py-1">Click: selects city + supply</span>
+            </div>
+          </div>
+
+          {/* Details panel */}
+          <div className="rounded-md border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Selected node</p>
+
+            {(() => {
+              const name = selectedCity?.city;
+              const data = cities[name];
+              if (!name || !data) {
+                return <p className="mt-3 text-slate-500">Select a city marker to view details.</p>;
+              }
+
+              const tone = toneClasses[getMarkerTone(data.transitRisk)] || toneClasses.emerald;
+
+              return (
+                <div className="mt-3 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-emerald-100">{name}</p>
+                      <p className="text-xs text-slate-400">Reliability: {data.reliability}</p>
+                      <p className="text-xs text-slate-400">Culture: {data.culture}</p>
+                    </div>
+
+                    <span className={`rounded-md border px-3 py-1 text-[10px] uppercase tracking-[0.3em] ${tone.badge}`}>
+                      Risk {data.transitRisk}
+                    </span>
+                  </div>
+
+                  <div className="rounded-md border border-slate-800 bg-black/50 p-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Base price (low)</span>
+                      <span className="text-slate-200">${data.basePrice[0]}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-slate-400">Base price (high)</span>
+                      <span className="text-slate-200">${data.basePrice[1]}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-slate-400">Transit</span>
+                      <span className="text-slate-200">{data.transitHours}h</span>
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                    Tip: clicking nodes also updates your Supply city.
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      );
+    })()}
+  </div>
+)}
+
 
                       {/* MESSAGES */}
                       {activeApp === "messages" && (
