@@ -105,8 +105,20 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
     // Portraits for character creation
     const portraitByGender = {
       Male: "https://i.imgur.com/MQiTPfC.png",
-      Female: "https://imgur.com/5dSdv1p"
+      Female: "https://i.imgur.com/5dSdv1p.png"
     };
+
+// Character skin tones (tints the white base portrait while preserving shading)
+const SKIN_TONES = [
+  { id: "st1", name: "Porcelain", hex: "#F5E7DE" },
+  { id: "st2", name: "Fair",      hex: "#F1D2BF" },
+  { id: "st3", name: "Light",     hex: "#E7BF9A" },
+  { id: "st4", name: "Medium",    hex: "#D8A071" },
+  { id: "st5", name: "Olive",     hex: "#C8895B" },
+  { id: "st6", name: "Tan",       hex: "#B2744B" },
+  { id: "st7", name: "Deep",      hex: "#8E583C" },
+  { id: "st8", name: "Ebony",     hex: "#6B3D2C" }
+];
 
     // Name sets representing US cultural backgrounds
     const nameSets = {
@@ -309,6 +321,8 @@ Do NOT add extra <html>/<head> wrappers in the later parts.
       const [enrollInCollege, setEnrollInCollege] = useState(false);
       const [collegeType, setCollegeType] = useState("");
       const [selectedMajor, setSelectedMajor] = useState("");
+      const [selectedSkinToneId, setSelectedSkinToneId] = useState("st4"); // default to Medium
+
 
       // Core gameplay state
       const [activeTab, setActiveTab] = useState("finances");
@@ -1319,6 +1333,11 @@ const safeClone = (obj) => {
       const CharacterCreation = () => {
         const portrait = selectedGender ? portraitByGender[selectedGender] : null;
 
+const skinTone = useMemo(
+  () => SKIN_TONES.find(t => t.id === selectedSkinToneId) || SKIN_TONES[3],
+  [selectedSkinToneId]
+);
+
         return (
           <section className="flex-1">
             <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-2xl border border-slate-700 bg-slate-950/40 soft-shadow">
@@ -1340,13 +1359,24 @@ const safeClone = (obj) => {
                       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-purple-500/10"></div>
                       <div className="relative flex items-center justify-center p-6">
                         {portrait ? (
-                          <img
-                            src={portrait}
-                            alt="Character portrait"
-                            className="h-[340px] w-auto select-none rounded-xl border border-slate-800 bg-slate-950/40 object-contain"
-                            draggable="false"
-                          />
-                        ) : (
+  <div className="relative h-[340px] w-auto select-none overflow-hidden rounded-xl border border-slate-800 bg-slate-950/40">
+    <img
+      src={portrait}
+      alt="Character portrait"
+      className="h-[340px] w-auto object-contain"
+      draggable="false"
+    />
+    {/* Skin tone tint overlay (preserves shading on a white base) */}
+    <div
+      className="pointer-events-none absolute inset-0"
+      style={{
+        backgroundColor: skinTone.hex,
+        mixBlendMode: "multiply",
+        opacity: 0.88
+      }}
+    />
+  </div>
+) : (
                           <div className="flex h-[340px] w-full items-center justify-center rounded-xl border border-dashed border-slate-700 bg-slate-950/30">
                             <p className="text-xs text-slate-400">Select a gender to load the base body portrait.</p>
                           </div>
@@ -1396,6 +1426,35 @@ const safeClone = (obj) => {
                   {/* Step 1: Identity */}
                   {charStep === 1 && (
                     <div className="mt-6 space-y-6">
+                      <div>
+  <label className="block text-sm font-semibold text-slate-200">Skin Tone</label>
+  <p className="mt-1 text-xs text-slate-500">Select a tone to tint the base body portrait.</p>
+
+  <div className="mt-3 flex flex-wrap gap-2">
+    {SKIN_TONES.map((t) => {
+      const active = t.id === selectedSkinToneId;
+      return (
+        <button
+          key={t.id}
+          type="button"
+          onClick={() => setSelectedSkinToneId(t.id)}
+          className={`group flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+            active
+              ? "border-amber-400 bg-amber-500/10 text-amber-200"
+              : "border-slate-800 bg-slate-900/40 text-slate-300 hover:bg-slate-800/50"
+          }`}
+          title={t.name}
+        >
+          <span
+            className="h-5 w-5 rounded-full border border-slate-700"
+            style={{ backgroundColor: t.hex }}
+          />
+          <span className="whitespace-nowrap">{t.name}</span>
+        </button>
+      );
+    })}
+  </div>
+</div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-200">Gender</label>
                         <div className="mt-2 grid grid-cols-2 gap-3">
