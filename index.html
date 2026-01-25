@@ -1426,35 +1426,7 @@ const skinTone = useMemo(
                   {/* Step 1: Identity */}
                   {charStep === 1 && (
                     <div className="mt-6 space-y-6">
-                      <div>
-  <label className="block text-sm font-semibold text-slate-200">Skin Tone</label>
-  <p className="mt-1 text-xs text-slate-500">Select a tone to tint the base body portrait.</p>
-
-  <div className="mt-3 flex flex-wrap gap-2">
-    {SKIN_TONES.map((t) => {
-      const active = t.id === selectedSkinToneId;
-      return (
-        <button
-          key={t.id}
-          type="button"
-          onClick={() => setSelectedSkinToneId(t.id)}
-          className={`group flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
-            active
-              ? "border-amber-400 bg-amber-500/10 text-amber-200"
-              : "border-slate-800 bg-slate-900/40 text-slate-300 hover:bg-slate-800/50"
-          }`}
-          title={t.name}
-        >
-          <span
-            className="h-5 w-5 rounded-full border border-slate-700"
-            style={{ backgroundColor: t.hex }}
-          />
-          <span className="whitespace-nowrap">{t.name}</span>
-        </button>
-      );
-    })}
-  </div>
-</div>
+          
                       <div>
                         <label className="block text-sm font-semibold text-slate-200">Gender</label>
                         <div className="mt-2 grid grid-cols-2 gap-3">
@@ -1474,6 +1446,41 @@ const skinTone = useMemo(
                           ))}
                         </div>
                       </div>
+                      {selectedGender && (
+  <div>
+    <label className="block text-sm font-semibold text-slate-200">
+      Skin Tone
+    </label>
+    <p className="mt-1 text-xs text-slate-500">
+      Select a realistic skin tone for your character.
+    </p>
+
+    <div className="mt-3 flex flex-wrap gap-2">
+      {SKIN_TONES.map((t) => {
+        const active = t.id === selectedSkinToneId;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setSelectedSkinToneId(t.id)}
+            className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+              active
+                ? "border-amber-400 bg-amber-500/10 text-amber-200"
+                : "border-slate-800 bg-slate-900/40 text-slate-300 hover:bg-slate-800/50"
+            }`}
+            title={t.name}
+          >
+            <span
+              className="h-5 w-5 rounded-full border border-slate-700"
+              style={{ backgroundColor: t.hex }}
+            />
+            <span>{t.name}</span>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+)}
 
                       {selectedGender && (
                         <div className="grid gap-4 sm:grid-cols-2">
